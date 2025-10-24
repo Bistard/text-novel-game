@@ -1,11 +1,6 @@
 import { parseStory } from "./storyParser.js";
 
-const DEFAULT_DICE = { count: 1, sides: 6 };
-
-/** Utility to deep copy plain objects */
-function clone(value) {
-	return JSON.parse(JSON.stringify(value));
-}
+const MAX_JOURNAL_ENTRIES = 8;
 
 export class StoryEngine {
 	/**
@@ -42,18 +37,17 @@ export class StoryEngine {
 
 		this.story = null;
 		this.state = {
-			currentNodeId: null,
+			currentBranchId: null,
 			stats: {},
-			inventory: [],
+			inventory: {},
 			journal: [],
-			history: [],
-			flags: new Set(),
-			lastTestResult: null,
+			lastRoll: null,
+			systemError: null,
 		};
 	}
 
 	/**
-	 * Loads and initializes the story file.
+	 * Loads the story text file and initialises the engine.
 	 * @param {string} url
 	 */
 	async load(url) {
@@ -67,413 +61,459 @@ export class StoryEngine {
 		this.render();
 	}
 
-	/** Resets state to defaults defined in meta */
+	/** Resets the runtime state to the defaults. */
 	resetState() {
-		const { meta } = this.story;
-		this.state.stats = clone(meta.stats || {});
-		this.state.inventory = Array.isArray(meta.inventory) ? [...meta.inventory] : [];
+		if (!this.story) return;
+		this.state.currentBranchId = this.story.start;
+		this.state.stats = {};
+		this.state.inventory = {};
 		this.state.journal = [];
-		this.state.history = [];
-		this.state.flags = new Set(meta.tags || []);
-		this.state.lastTestResult = null;
-		this.state.currentNodeId = meta.start;
+		this.state.lastRoll = null;
+		this.state.systemError = null;
 
-		if (this.elements.titleElement) {
-			this.elements.titleElement.textContent = meta.title || "Untitled Story";
+		const startBranch = this.getCurrentBranch();
+		if (this.elements.titleElement && startBranch) {
+			this.elements.titleElement.textContent = startBranch.title;
 		}
-		document.title = meta.title ? `${meta.title} — Narrative Engine` : "Narrative Engine";
-
-		this.applyEntryEffects(meta.start);
+		if (startBranch) {
+			document.title = `${startBranch.title} — Narrative Demo`;
+		}
 	}
 
-	/**
-	 * Restart story
-	 */
+	/** Returns the active branch, or null if unavailable. */
+	getCurrentBranch() {
+		if (!this.story || !this.state.currentBranchId) return null;
+		return this.story.branches[this.state.currentBranchId] || null;
+	}
+
+	/** Restart the story from the first branch. */
 	restart() {
-		if (!this.story) return;
 		this.resetState();
 		this.render();
 	}
 
 	/**
+	 * Handles the player picking a choice button.
 	 * @param {string} choiceId
 	 */
 	handleChoice(choiceId) {
-		const node = this.getCurrentNode();
-		if (!node) return;
-		const choice = node.choices.find((entry) => entry.id === choiceId);
+		const branch = this.getCurrentBranch();
+		if (!branch) return;
+
+		const choice = branch.choices.find((entry) => entry.id === choiceId);
 		if (!choice) return;
 
-		const requirementCheck = this.evaluateRequirements(choice);
-		if (!requirementCheck.allowed) return;
+		this.state.systemError = null;
 
-		this.state.lastTestResult = null;
+		const summaries = [];
 
-		// Apply base adjustments & inventory effects regardless of branching outcome.
-		this.applyAdjustments(choice.adjust);
-		this.applyInventoryEffects(choice.inventory);
-		if (choice.log) {
-			this.appendJournal(choice.log);
+		if (choice.stats.length) {
+			this.applyStatEffects(choice.stats);
+			const labels = choice.stats.map((effect) => `${effect.stat} ${formatSigned(effect.delta)}`);
+			summaries.push(`Stats: ${labels.join(", ")}`);
 		}
 
-		let nextNodeId = choice.target;
-
-		if (choice.test) {
-			const result = this.runTest(choice.test);
-			this.state.lastTestResult = result;
-			nextNodeId = result.success ? choice.test.success : choice.test.failure;
-
-			// Log dice outcome for transparency.
-			const labelParts = [];
-			if (choice.test.stat) {
-				labelParts.push(`${choice.test.stat}: ${result.statValue}`);
-			}
-			if (result.rollDetails.length) {
-				const diceLabel = `Roll ${result.rollDetails.join(" + ")} = ${result.rollTotal}`;
-				labelParts.push(diceLabel);
-			}
-			if (choice.test.modifier) {
-				labelParts.push(`Modifier ${formatSigned(choice.test.modifier)}`);
-			}
-			labelParts.push(
-				`Total ${result.total} ${choice.test.comparator} ${choice.test.threshold} → ${result.success ? "Success" : "Failure"
-				}`
-			);
-			const message = `${choice.text}: ${labelParts.join(" | ")}`;
-			this.appendJournal(message);
+		if (choice.inventory.length) {
+			this.applyInventoryEffects(choice.inventory);
+			const labels = choice.inventory.map((effect) => `${effect.item} ${formatSigned(effect.delta)}`);
+			summaries.push(`Inventory: ${labels.join(", ")}`);
 		}
 
-		if (!nextNodeId) {
-			this.state.lastTestResult = null;
+		let nextBranchId = choice.next || null;
+		let rollResult = null;
+
+		if (choice.roll) {
+			rollResult = this.runRoll(choice.roll);
+			this.state.lastRoll = rollResult;
+			nextBranchId = rollResult.success ? choice.roll.ok : choice.roll.fail;
+			summaries.push(buildRollSummary(rollResult));
+		} else {
+			this.state.lastRoll = null;
+		}
+
+		const journalEntry = summaries.length
+			? `${choice.text} → ${summaries.join(" | ")}`
+			: `${choice.text}`;
+		this.appendJournal(journalEntry);
+
+		if (!nextBranchId) {
+			this.state.systemError = "Choice does not specify a destination branch.";
+			this.render();
 			return;
 		}
 
-		this.state.history.push({
-			nodeId: node.id,
-			choiceId: choice.id,
-			target: nextNodeId,
-			timestamp: Date.now(),
-		});
-
-		this.transitionTo(nextNodeId);
-	}
-
-	/**
-	 * Moves to a node and applies entry effects.
-	 * @param {string} nodeId
-	 */
-	transitionTo(nodeId) {
-		if (!this.story.nodes[nodeId]) {
-			console.warn(`Node "${nodeId}" not found in story data.`);
+		if (!this.story.branches[nextBranchId]) {
+			this.state.systemError = `Missing branch "${nextBranchId}".`;
+			this.render();
 			return;
 		}
 
-		this.state.currentNodeId = nodeId;
-		this.applyEntryEffects(nodeId);
+		this.state.currentBranchId = nextBranchId;
 		this.render();
 	}
 
 	/**
-	 * @param {string} nodeId
+	 * Applies stat adjustments from the choice.
+	 * @param {{ stat: string, delta: number }[]} effects
 	 */
-	applyEntryEffects(nodeId) {
-		const node = this.story.nodes[nodeId];
-		if (!node) return;
-
-		this.applyAdjustments(node.entry.adjust);
-		this.applyInventoryEffects(node.entry.inventory);
-		node.entry.log.forEach((entry) => this.appendJournal(entry));
-	}
-
-	/**
-	 * @param {Record<string, number>} adjust
-	 */
-	applyAdjustments(adjust) {
-		if (!adjust) return;
-		for (const [key, delta] of Object.entries(adjust)) {
-			const current = this.state.stats[key] ?? 0;
-			const next = current + delta;
-			this.state.stats[key] = Number.isInteger(current) && Number.isInteger(delta) ? next : Number(next.toFixed(2));
+	applyStatEffects(effects) {
+		for (const effect of effects) {
+			const current = this.state.stats[effect.stat] || 0;
+			this.state.stats[effect.stat] = current + effect.delta;
 		}
 	}
 
 	/**
-	 * @param {{ add: string[], remove: string[] }} inventoryChanges
+	 * Applies inventory adjustments from the choice.
+	 * @param {{ item: string, delta: number }[]} effects
 	 */
-	applyInventoryEffects(inventoryChanges) {
-		if (!inventoryChanges) return;
-		const { add = [], remove = [] } = inventoryChanges;
-
-		for (const item of add) {
-			if (!this.state.inventory.includes(item)) {
-				this.state.inventory.push(item);
+	applyInventoryEffects(effects) {
+		for (const effect of effects) {
+			const current = this.state.inventory[effect.item] || 0;
+			const updated = current + effect.delta;
+			if (updated <= 0) {
+				delete this.state.inventory[effect.item];
+			} else {
+				this.state.inventory[effect.item] = updated;
 			}
 		}
+	}
 
-		for (const item of remove) {
-			this.state.inventory = this.state.inventory.filter((entry) => entry !== item);
+	/**
+	 * Executes a randomisation test based on the player's stats.
+	 * @param {RollDirective} directive
+	 * @returns {RollResult}
+	 */
+	runRoll(directive) {
+		const statValue = directive.stat ? this.state.stats[directive.stat] || 0 : 0;
+		const rolls = [];
+		let diceTotal = 0;
+
+		for (let i = 0; i < directive.dice.count; i += 1) {
+			const roll = randomInt(1, directive.dice.sides);
+			rolls.push(roll);
+			diceTotal += roll;
 		}
-	}
 
-	/**
-	 * @param {string} message
-	 */
-	appendJournal(message) {
-		if (!message) return;
-		this.state.journal.push(message);
-	}
-
-	/**
-	 * @returns {StoryNode|null}
-	 */
-	getCurrentNode() {
-		if (!this.story) return null;
-		return this.story.nodes[this.state.currentNodeId] ?? null;
-	}
-
-	/**
-	 * @param {StoryChoice} choice
-	 */
-	evaluateRequirements(choice) {
-		const failures = [];
-		for (const requirement of choice.requires) {
-			switch (requirement.type) {
-				case "stat": {
-					const value = this.state.stats[requirement.key] ?? 0;
-					const target = Number(requirement.value);
-					if (!compare(value, target, requirement.comparator)) {
-						failures.push(requirement.reason || `Needs ${requirement.key} ${requirement.comparator} ${target}`);
-					}
-					break;
-				}
-				case "item": {
-					if (!this.state.inventory.includes(requirement.value)) {
-						failures.push(requirement.reason || `Requires ${requirement.value}`);
-					}
-					break;
-				}
-				case "flag": {
-					const hasFlag = this.state.flags.has(String(requirement.value));
-					const expected = requirement.comparator === "==" ? true : false;
-					if (hasFlag !== expected) {
-						failures.push(requirement.reason || `Requires flag ${requirement.value}`);
-					}
-					break;
-				}
-				default:
-					break;
-			}
-		}
+		const total = statValue + diceTotal;
+		const success = total >= directive.target;
 
 		return {
-			allowed: failures.length === 0,
-			failures,
-		};
-	}
-
-	/**
-	 * Executes a stat or chance test.
-	 * @param {ChoiceTest} test
-	 */
-	runTest(test) {
-		const statValue = test.stat ? this.state.stats[test.stat] ?? 0 : 0;
-		const rollDetails = [];
-		let rollTotal = 0;
-		const dice = test.dice && test.dice.count > 0 ? test.dice : DEFAULT_DICE;
-
-		for (let i = 0; i < dice.count; i += 1) {
-			const roll = randomInt(1, dice.sides);
-			rollDetails.push(roll);
-			rollTotal += roll;
-		}
-
-		const total = statValue + rollTotal + (test.modifier || 0);
-		const success = compare(total, test.threshold, test.comparator);
-		return {
-			success,
+			directive,
 			statValue,
-			rollDetails,
-			rollTotal,
+			rolls,
+			diceTotal,
 			total,
-			test,
+			success,
 		};
 	}
 
-	/** Renders UI */
-	render() {
-		const node = this.getCurrentNode();
-		if (!node) return;
+	/**
+	 * Adds a line to the journal, keeping the most recent entries.
+	 * @param {string} text
+	 */
+	appendJournal(text) {
+		if (!text) return;
+		this.state.journal.push(text);
+		if (this.state.journal.length > MAX_JOURNAL_ENTRIES) {
+			this.state.journal.splice(0, this.state.journal.length - MAX_JOURNAL_ENTRIES);
+		}
+	}
 
-		this.renderStory(node);
+	/** Refreshes the UI elements. */
+	render() {
+		const branch = this.getCurrentBranch();
+		if (!branch) {
+			this.renderEmptyState();
+			return;
+		}
+
+		this.renderTitle(branch);
+		this.renderStory(branch);
+		this.renderChoices(branch);
 		this.renderStats();
 		this.renderInventory();
 		this.renderJournal();
-		this.renderChoices(node);
-		this.renderSystemMessage();
+		this.renderSystemMessages();
+	}
+
+	renderEmptyState() {
+		if (this.elements.nodeTitle) {
+			this.elements.nodeTitle.textContent = "Story unavailable";
+		}
+		if (this.elements.storyText) {
+			this.elements.storyText.textContent = this.state.systemError
+				? this.state.systemError
+				: "Unable to locate the next branch.";
+		}
+		if (this.elements.choices) {
+			this.elements.choices.innerHTML = "";
+		}
+		this.renderStats();
+		this.renderInventory();
+		this.renderJournal();
+		this.renderSystemMessages();
 	}
 
 	/**
-	 * @param {StoryNode} node
+	 * @param {StoryBranch} branch
 	 */
-	renderStory(node) {
+	renderTitle(branch) {
 		if (this.elements.nodeTitle) {
-			this.elements.nodeTitle.textContent = node.title || node.id;
+			this.elements.nodeTitle.textContent = branch.title;
 		}
-		if (this.elements.storyText) {
-			this.elements.storyText.textContent = node.text;
+	}
+
+	/**
+	 * @param {StoryBranch} branch
+	 */
+	renderStory(branch) {
+		const container = this.elements.storyText;
+		if (!container) return;
+		container.innerHTML = "";
+
+		const paragraphs = chunkParagraphs(branch.description);
+		if (!paragraphs.length) {
+			container.textContent = branch.description;
+			return;
+		}
+
+		for (const text of paragraphs) {
+			const p = document.createElement("p");
+			p.textContent = text;
+			container.appendChild(p);
+		}
+	}
+
+	/**
+	 * @param {StoryBranch} branch
+	 */
+	renderChoices(branch) {
+		const container = this.elements.choices;
+		if (!container) return;
+		container.innerHTML = "";
+
+		if (!branch.choices.length) {
+			const message = document.createElement("p");
+			message.className = "muted";
+			message.textContent = "This path has no further choices.";
+			container.appendChild(message);
+			return;
+		}
+
+		for (const choice of branch.choices) {
+			const button = document.createElement("button");
+			button.type = "button";
+			button.className = "choice-button";
+			button.dataset.choiceId = choice.id;
+			button.textContent = choice.text;
+			button.addEventListener("click", () => this.handleChoice(choice.id));
+			container.appendChild(button);
 		}
 	}
 
 	renderStats() {
-		if (!this.elements.stats) return;
-		const list = this.elements.stats;
-		list.innerHTML = "";
-		for (const [key, value] of Object.entries(this.state.stats)) {
+		const container = this.elements.stats;
+		if (!container) return;
+		container.innerHTML = "";
+
+		const entries = Object.entries(this.state.stats).filter(([, value]) => value !== 0);
+		if (!entries.length) {
+			const placeholder = document.createElement("div");
+			placeholder.className = "muted";
+			placeholder.textContent = "No stats yet.";
+			container.appendChild(placeholder);
+			return;
+		}
+
+		entries.sort((a, b) => a[0].localeCompare(b[0]));
+
+		for (const [stat, value] of entries) {
 			const dt = document.createElement("dt");
-			dt.textContent = formatLabel(key);
+			dt.textContent = formatLabel(stat);
+			container.appendChild(dt);
+
 			const dd = document.createElement("dd");
-			dd.textContent = `${value}`;
-			list.append(dt, dd);
+			dd.textContent = String(value);
+			container.appendChild(dd);
 		}
 	}
 
 	renderInventory() {
-		if (!this.elements.inventory) return;
 		const list = this.elements.inventory;
+		if (!list) return;
 		list.innerHTML = "";
-		if (!this.state.inventory.length) {
+
+		const entries = Object.entries(this.state.inventory).filter(([, count]) => count > 0);
+		if (!entries.length) {
 			const placeholder = document.createElement("li");
-			placeholder.textContent = "Empty";
+			placeholder.textContent = "Inventory empty.";
 			placeholder.className = "muted";
 			list.appendChild(placeholder);
 			return;
 		}
-		for (const item of this.state.inventory) {
+
+		entries.sort((a, b) => a[0].localeCompare(b[0]));
+
+		for (const [item, count] of entries) {
 			const li = document.createElement("li");
-			li.textContent = item;
+			li.textContent = count === 1 ? item : `${item} ×${count}`;
 			list.appendChild(li);
 		}
 	}
 
 	renderJournal() {
-		if (!this.elements.journal) return;
 		const list = this.elements.journal;
+		if (!list) return;
 		list.innerHTML = "";
+
 		if (!this.state.journal.length) {
 			const placeholder = document.createElement("li");
-			placeholder.textContent = "No entries yet.";
 			placeholder.className = "muted";
+			placeholder.textContent = "No actions recorded yet.";
 			list.appendChild(placeholder);
 			return;
 		}
-		for (const entry of this.state.journal.slice(-8)) {
+
+		for (const entry of this.state.journal.slice().reverse()) {
 			const li = document.createElement("li");
 			li.textContent = entry;
 			list.appendChild(li);
 		}
 	}
 
-	/** @param {StoryNode} node */
-	renderChoices(node) {
-		const container = this.elements.choices;
-		if (!container) return;
-		container.innerHTML = "";
-
-		const choices = node.choices || [];
-		if (!choices.length) {
-			const message = document.createElement("p");
-			message.className = "muted";
-			message.textContent = node.ending
-				? `This path concludes with a ${node.ending} ending.`
-				: "No further choices are available.";
-			container.appendChild(message);
-			return;
-		}
-
-		for (const choice of choices) {
-			if (choice.hidden) continue;
-			const { allowed, failures } = this.evaluateRequirements(choice);
-			const button = document.createElement("button");
-			button.type = "button";
-			button.className = "choice-button";
-			button.dataset.choiceId = choice.id;
-			button.textContent = choice.text;
-			button.disabled = !allowed;
-			if (!allowed && failures.length) {
-				button.title = failures.join("; ");
-			}
-			button.addEventListener("click", () => this.handleChoice(choice.id));
-			container.appendChild(button);
-		}
-	}
-
-	renderSystemMessage() {
+	renderSystemMessages() {
 		const container = this.elements.systemMessages;
 		if (!container) return;
 		container.innerHTML = "";
-		const { lastTestResult } = this.state;
-		if (!lastTestResult) return;
+
+		if (this.state.systemError) {
+			const p = document.createElement("p");
+			p.className = "roll-result failure";
+			p.textContent = this.state.systemError;
+			container.appendChild(p);
+			return;
+		}
+
+		const rollResult = this.state.lastRoll;
+		if (!rollResult) return;
 
 		const p = document.createElement("p");
-		p.className = `roll-result ${lastTestResult.success ? "success" : "failure"}`;
-		p.textContent = buildRollSummary(lastTestResult);
+		p.className = `roll-result ${rollResult.success ? "success" : "failure"}`;
+		p.textContent = buildRollSummary(rollResult);
 		container.appendChild(p);
 	}
 }
 
-function buildRollSummary(result) {
-	const parts = [];
-	if (result.test.stat) {
-		parts.push(`${formatLabel(result.test.stat)} ${result.statValue}`);
+/**
+ * Breaks a raw description into clean paragraphs.
+ * @param {string} text
+ * @returns {string[]}
+ */
+function chunkParagraphs(text) {
+	const lines = text.split(/\n/);
+	const paragraphs = [];
+	let buffer = [];
+
+	const flush = () => {
+		if (!buffer.length) return;
+		paragraphs.push(buffer.join(" ").trim());
+		buffer = [];
+	};
+
+	for (const line of lines) {
+		const trimmed = line.trim();
+		if (!trimmed) {
+			flush();
+		} else {
+			buffer.push(trimmed);
+		}
 	}
-	if (result.rollDetails.length) {
-		parts.push(
-			`${result.rollDetails.length}d${result.test.dice?.sides || DEFAULT_DICE.sides} → ${result.rollDetails.join(
-				", "
-			)}`
-		);
-	}
-	if (result.test.modifier) {
-		parts.push(`Modifier ${formatSigned(result.test.modifier)}`);
-	}
-	parts.push(
-		`Total ${result.total} ${result.test.comparator} ${result.test.threshold} → ${result.success ? "Success" : "Failure"
-		}`
-	);
-	return parts.join(" | ");
+	flush();
+
+	return paragraphs.filter(Boolean);
 }
 
+/**
+ * @param {number} min
+ * @param {number} max
+ */
 function randomInt(min, max) {
 	return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-function compare(lhs, rhs, comparator) {
-	switch (comparator) {
-		case ">=":
-			return lhs >= rhs;
-		case ">":
-			return lhs > rhs;
-		case "<=":
-			return lhs <= rhs;
-		case "<":
-			return lhs < rhs;
-		case "==":
-			return lhs === rhs;
-		case "!=":
-			return lhs !== rhs;
-		default:
-			return false;
-	}
-}
-
+/**
+ * @param {string} value
+ */
 function formatLabel(value) {
 	return value
 		.split(/[_\s-]+/)
+		.filter(Boolean)
 		.map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
 		.join(" ");
 }
 
+/**
+ * @param {number} value
+ */
 function formatSigned(value) {
 	return value >= 0 ? `+${value}` : `${value}`;
 }
 
+/**
+ * Builds a human-readable summary of the most recent roll.
+ * @param {RollResult} result
+ */
+function buildRollSummary(result) {
+	const parts = [];
+	if (result.directive.stat) {
+		parts.push(`${formatLabel(result.directive.stat)} ${formatSigned(result.statValue)}`);
+	}
+	if (result.rolls.length) {
+		const diceLabel =
+			result.directive.dice.count === 1
+				? `d${result.directive.dice.sides}`
+				: `${result.directive.dice.count}d${result.directive.dice.sides}`;
+		parts.push(`${diceLabel} → ${result.rolls.join(", ")}`);
+	}
+	parts.push(`Total ${result.total} / Target ${result.directive.target}`);
+	parts.push(result.success ? "Success" : "Failure");
+	return parts.join(" | ");
+}
+
+/**
+ * @typedef {Object} StoryBranch
+ * @property {string} id
+ * @property {string} title
+ * @property {string} description
+ * @property {StoryChoice[]} choices
+ */
+
+/**
+ * @typedef {Object} StoryChoice
+ * @property {string} id
+ * @property {string} text
+ * @property {string|null} next
+ * @property {{ stat: string, delta: number }[]} stats
+ * @property {{ item: string, delta: number }[]} inventory
+ * @property {RollDirective|null} roll
+ */
+
+/**
+ * @typedef {Object} RollDirective
+ * @property {string|null} stat
+ * @property {{ count: number, sides: number }} dice
+ * @property {number} target
+ * @property {string} ok
+ * @property {string} fail
+ */
+
+/**
+ * @typedef {Object} RollResult
+ * @property {RollDirective} directive
+ * @property {number} statValue
+ * @property {number[]} rolls
+ * @property {number} diceTotal
+ * @property {number} total
+ * @property {boolean} success
+ */

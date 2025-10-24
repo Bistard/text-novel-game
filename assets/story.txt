@@ -1,144 +1,52 @@
-::meta
-title: Placeholder Narrative
-start: start
-description:
-This is a minimal, mechanics-focused placeholder story for testing the engine. Replace node ids, text, and choices with your content.
-/description
-stats:
-- skill: 3
-- luck: 3
-- health: 5
-/stats
-inventory:
-/inventory
+Title: Dawn Beside The Pier
+Branch: 1
+Description: The first light of morning coats the lake in gold. Your gear is packed, the pier creaks beneath your boots, and the day feels wide open.
+Choice: display=Cast a line; next=2; item=Fish+; stat=angling+1
+Choice: display=Check your supplies; next=3
+Choice: display=Head toward the village; next=4
 
-::start
-title: Start
-text:
-Placeholder opening text. This block represents the first page of your story.
-Keep it brief. Swap this with your actual introduction later.
-/text
-choices:
-- Proceed to Option A -> branch_a | log=Chose Option A.
-- Proceed to Option B -> branch_b | log=Chose Option B.
-/choices
+Title: Tug On The Line
+Branch: 2
+Description: The float dips hard. Whatever is on the other end fights with surprising strength.
+Choice: display=Haul it in; roll=strength, dice=6, target=8, ok=5, fail=6; stat=strength+1
+Choice: display=Let it slip away; next=3; stat=patience+1
 
-::branch_a
-title: Branch A
-entry:
-adjust=skill:+1
-log=Entry effect: +1 skill.
-/entry
-text:
-Placeholder text for Branch A. Demonstrates an entry effect above.
-/text
-choices:
-- Attempt a simple SKILL test -> test_node | log=Moving to a test.
-- Skip test and take a short path -> short_path
-/choices
+Title: Kit Check
+Branch: 3
+Description: You kneel by your pack. Ropes, hooks, a faded compass—each piece matters if the weather turns.
+Choice: display=Pack the compass; next=4; item=Compass+
+Choice: display=Travel light; next=4
 
-::test_node
-title: Test Node
-text:
-Placeholder for a stat+dice test. The choice below uses SKILL + d6.
-/text
-choices:
-- Perform SKILL check | test=skill+d6>=7?test_success:test_fail | log=Performed SKILL test.
-/choices
+Title: Cobblestone Market
+Branch: 4
+Description: Stalls line the square, villagers already haggling over the morning catch. Your arrival draws a few curious looks.
+Choice: display=Sell the fresh fish; next=5; item=Fish-; stat=coins+3
+Choice: display=Keep your haul for later; next=5
 
-::test_success
-title: Test Success
-text:
-You passed the placeholder test. Continue to a final choice.
-/text
-choices:
-- Continue -> final_choice | log=Moving to final choice.
-/choices
+Title: Market Windfall
+Branch: 5
+Description: Coins jingle in your pocket and rumors of distant storms reach your ears. A decision forms: weather the coming squall or return home.
+Choice: display=Head back before the storm; next=7
+Choice: display=Chase the rumor into the wilds; next=8; stat=resolve+1
 
-::test_fail
-title: Test Failure
-entry:
-adjust=health:-1
-log=Entry effect: -1 health.
-/entry
-text:
-You failed the placeholder test. Demonstrates an on-enter penalty.
-/text
-choices:
-- Try an alternate route -> recover | log=Taking alternate route.
-/choices
+Title: Snapped Line
+Branch: 6
+Description: The line whips free, leaving only ripples behind. The morning feels colder without the catch.
+Choice: display=Repair the gear and try again; next=1; stat=craft+1
+Choice: display=Call it a lesson learned; next=3
 
-::recover
-title: Recover
-text:
-Minimal placeholder text for a recovery route.
-/text
-choices:
-- Proceed to final choice -> final_choice
-/choices
+Title: Hearthside Evening
+Branch: 7
+Description: A warm meal, a repaired net, and a quiet night of planning. Tomorrow will bring its own choices.
 
-::branch_b
-title: Branch B
-text:
-Placeholder text for Branch B. Gain a generic item to demonstrate inventory.
-/text
-choices:
-- Take the key -> gate | item=add:Key | log=Picked up a key.
-- Ignore and move on -> short_path | log=Ignored the key.
-/choices
+Title: Stormbound Road
+Branch: 8
+Description: The path darkens under gathering clouds. With the compass in hand, you steel yourself for what waits ahead.
+Choice: display=Press on into the storm; roll=resolve, dice=2d6, target=11, ok=9, fail=7; stat=resolve+1
+Choice: display=Turn back while there's time; next=7
 
-::gate
-title: Gate
-text:
-Placeholder for a simple requirement check.
-/text
-choices:
-- Open with key -> final_choice | requires=item:Key | log=Opened gate with key.
-- Attempt to force it | test=skill+d6>=8?final_choice:short_path | log=Attempted to force the gate.
-/choices
+Title: Eye Of The Gale
+Branch: 9
+Description: Lightning claws across the horizon, but you find shelter atop a ridge that overlooks the valley. Determination anchors you.
+Choice: display=Return with tales of the storm; next=7; stat=renown+1
 
-::short_path
-title: Short Path
-text:
-Placeholder node that goes directly to a neutral ending.
-/text
-choices:
-- End neutrally -> ending_neutral
-/choices
-
-::final_choice
-title: Final Choice
-text:
-Placeholder for the final branching node.
-/text
-choices:
-- Conclude with a positive outcome -> ending_good | log=Chose positive ending.
-- Conclude with a negative outcome -> ending_bad | log=Chose negative ending.
-/choices
-
-::ending_good
-title: Ending (Good)
-ending: good
-text:
-Placeholder good ending text. Replace with your narrative.
-/text
-choices:
-/choices
-
-::ending_bad
-title: Ending (Bad)
-ending: bad
-text:
-Placeholder bad ending text. Replace with your narrative.
-/text
-choices:
-/choices
-
-::ending_neutral
-title: Ending (Neutral)
-ending: neutral
-text:
-Placeholder neutral ending text. Replace with your narrative.
-/text
-choices:
-/choices

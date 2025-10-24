@@ -1,700 +1,489 @@
-/**
- * Story parser for custom Twine-like plaintext format.
- * Supported directives:
- *
- * ::nodeId                     Start of a new node (meta section uses id "meta")
- * title: The Awakening         Single line property
- * tags: tag-one, tag-two
- * ending: good|bad|neutral
- * image: assets/path.png       Optional background illustration
- *
- * text:                        Multiline block (terminated by /text)
- * Paragraph 1
- * Paragraph 2
- * /text
- *
- * entry:                       Multiline block of automatic effects on enter (terminated by /entry)
- * adjust=resolve:+1,insight:+2
- * log=Note added to the journal.
- * item=add:Cipher Key
- * /entry
- *
- * choices:                     Repeated list of choices (terminated by /choices)
- * - Choice text -> nextNode | adjust=resolve:-1 | requires=resolve>=3
- * - Another choice -> successNode | test=insight+d6>=7?successNode:failureNode | log=Journal entry
- * /choices
- */
-
-const SECTION_PREFIX = "::";
 const COMMENT_PREFIX = "#";
 
 /**
- * Parses the entire story from raw plaintext.
+ * Parses the custom branch-based story format into structured data.
+ * Each branch must start with a Title line, followed by its Branch number,
+ * description, and one or more Choice lines.
+ *
  * @param {string} raw
- * @returns {{ meta: StoryMeta, nodes: Record<string, StoryNode> }}
+ * @returns {{ start: string, branches: Record<string, StoryBranch> }}
  */
 export function parseStory(raw) {
-	const sections = collectSections(raw);
-	if (!sections.length) {
-		throw new Error("Story file is empty or lacks sections.");
+	if (typeof raw !== "string") {
+		throw new TypeError("Story parser expected a string payload.");
 	}
 
-	const metaSection = sections.find((section) => section.id.toLowerCase() === "meta");
-	if (!metaSection) {
-		throw new Error("Story file must include a ::meta section.");
-	}
-
-	const meta = parseMeta(metaSection);
-	if (!meta.start) {
-		throw new Error("Meta section must specify a start node (e.g., start: prologue).");
-	}
-
-	const nodes = {};
-	for (const section of sections) {
-		if (section.id.toLowerCase() === "meta") continue;
-		nodes[section.id] = parseNode(section);
-	}
-
-	if (!nodes[meta.start]) {
-		throw new Error(`Start node "${meta.start}" declared in meta section was not found.`);
-	}
-
-	return { meta, nodes };
-}
-
-/**
- * @param {string} raw
- * @returns {Array<{ id: string, lines: string[] }>}
- */
-function collectSections(raw) {
 	const lines = raw.split(/\r?\n/);
-	const sections = [];
-	let current = null;
-
-	lines.forEach((line) => {
-		const trimmed = line.trim();
-		if (!trimmed && !current) {
-			return;
-		}
-
-		if (trimmed.startsWith(SECTION_PREFIX)) {
-			const id = trimmed.slice(SECTION_PREFIX.length).trim();
-			if (!id) {
-				throw new Error("Section header is missing an identifier.");
-			}
-			current = { id, lines: [] };
-			sections.push(current);
-		} else if (current) {
-			current.lines.push(line);
-		}
-	});
-
-	return sections;
-}
-
-/**
- * @typedef {Object} StoryMeta
- * @property {string} title
- * @property {string} description
- * @property {string} start
- * @property {Record<string, number>} stats
- * @property {string[]} inventory
- * @property {string[]} tags
- * @property {Record<string, any>} extras
- */
-
-/**
- * @param {{ id: string, lines: string[] }} section
- * @returns {StoryMeta}
- */
-function parseMeta(section) {
-	const meta = {
-		title: "",
-		description: "",
-		start: "",
-		stats: {},
-		inventory: [],
-		tags: [],
-		extras: {},
+	const context = {
+		current: null,
+		descriptionActive: false,
+		branches: [],
 	};
 
-	let cursor = 0;
-	while (cursor < section.lines.length) {
-		const rawLine = section.lines[cursor];
-		cursor += 1;
-		if (!rawLine) continue;
-		const line = rawLine.trim();
-		if (!line || line.startsWith(COMMENT_PREFIX)) continue;
+	for (let index = 0; index <= lines.length; index += 1) {
+		const rawLine = index < lines.length ? lines[index] : null;
 
-		if (line.startsWith("description:")) {
-			const block = collectBlock(section.lines, cursor, "/description");
-			meta.description = block.lines.join("\n").trim();
-			cursor = block.nextIndex;
+		if (rawLine === null) {
+			finalizeBranch(context);
+			break;
+		}
+
+		const trimmed = rawLine.trim();
+
+		// Preserve blank lines inside the description block.
+		if (!trimmed) {
+			if (context.current && context.descriptionActive) {
+				context.current.descriptionLines.push("");
+			}
 			continue;
 		}
 
-		if (line.startsWith("stats:")) {
-			const block = collectBlock(section.lines, cursor, "/stats");
-			meta.stats = parseKeyValueList(block.lines, "stat");
-			cursor = block.nextIndex;
+		if (trimmed.startsWith(COMMENT_PREFIX)) {
 			continue;
 		}
 
-		if (line.startsWith("inventory:")) {
-			const block = collectBlock(section.lines, cursor, "/inventory");
-			meta.inventory = parseList(block.lines);
-			cursor = block.nextIndex;
+		const lower = trimmed.toLowerCase();
+
+		if (lower.startsWith("title:")) {
+			finalizeBranch(context);
+			context.current = createBranchContext(extractValue(rawLine, "Title", index));
+			context.descriptionActive = false;
 			continue;
 		}
 
-		if (line.startsWith("tags:")) {
-			meta.tags = splitList(line.slice("tags:".length));
+		if (!context.current) {
+			throw new Error(
+				`Unexpected content before the first branch on line ${index + 1}. Start branches with "Title:".`
+			);
+		}
+
+		if (lower.startsWith("branch:")) {
+			context.current.id = normalizeBranchId(extractValue(rawLine, "Branch", index));
+			context.descriptionActive = false;
 			continue;
 		}
 
-		const kv = splitKeyValue(line);
-		if (!kv) continue;
+		if (lower.startsWith("description:")) {
+			const firstLine = extractValue(rawLine, "Description", index);
+			context.current.descriptionLines = [firstLine];
+			context.descriptionActive = true;
+			continue;
+		}
 
-		const [key, value] = kv;
-		switch (key) {
-			case "title":
-				meta.title = value;
-				break;
-			case "start":
-				meta.start = value;
-				break;
-			default:
-				meta.extras[key] = value;
-				break;
+		if (lower.startsWith("choice:")) {
+			const payload = rawLine.slice(rawLine.indexOf(":") + 1).trim();
+			if (!payload) {
+				throw new Error(`Choice definition on line ${index + 1} is missing content.`);
+			}
+			context.current.choices.push(parseChoice(context.current.id, payload, index + 1));
+			context.descriptionActive = false;
+			continue;
+		}
+
+		if (context.descriptionActive) {
+			context.current.descriptionLines.push(rawLine.trim());
+			continue;
+		}
+
+		throw new Error(`Unrecognised directive on line ${index + 1}: "${rawLine}".`);
+	}
+
+	if (!context.branches.length) {
+		throw new Error("No branches were discovered in the story file.");
+	}
+
+	const branchMap = {};
+	let startId = null;
+
+	for (const branchContext of context.branches) {
+		if (branchMap[branchContext.id]) {
+			throw new Error(`Duplicate branch id "${branchContext.id}" encountered.`);
+		}
+
+		const description = branchContext.descriptionLines.join("\n").trim();
+		if (!description) {
+			throw new Error(`Branch "${branchContext.id}" is missing a description.`);
+		}
+
+		const branch = {
+			id: branchContext.id,
+			title: branchContext.title,
+			description,
+			choices: branchContext.choices.map((choice, idx) => ({
+				id: `${branchContext.id}:${idx + 1}`,
+				text: choice.text,
+				next: choice.next,
+				stats: choice.stats,
+				inventory: choice.inventory,
+				roll: choice.roll,
+			})),
+		};
+
+		branchMap[branch.id] = branch;
+		if (!startId) {
+			startId = branch.id;
 		}
 	}
 
-	return meta;
+	return { start: startId, branches: branchMap };
 }
 
 /**
- * @typedef {Object} StoryNode
- * @property {string} id
- * @property {string} title
- * @property {string} text
- * @property {StoryChoice[]} choices
- * @property {string[]} tags
- * @property {string|null} ending
- * @property {NodeEntryEffect} entry
- * @property {string|null} image
+ * @param {string} title
+ * @returns {BranchParseContext}
  */
-
-/**
- * @typedef {Object} NodeEntryEffect
- * @property {Record<string, number>} adjust
- * @property {{ add: string[], remove: string[] }} inventory
- * @property {string[]} log
- */
-
-/**
- * @typedef {Object} StoryChoice
- * @property {string} id
- * @property {string} text
- * @property {string|null} target
- * @property {Record<string, number>} adjust
- * @property {{ add: string[], remove: string[] }} inventory
- * @property {string|null} log
- * @property {ChoiceRequirement[]} requires
- * @property {ChoiceTest|null} test
- * @property {boolean} hidden
- * @property {string[]} tags
- */
-
-/**
- * @typedef {Object} ChoiceRequirement
- * @property {"stat"|"item"|"flag"} type
- * @property {string} key
- * @property {">="|"<="|"=="|"!="|">"|"<"} comparator
- * @property {number|string} value
- * @property {string} [reason]
- */
-
-/**
- * @typedef {Object} ChoiceTest
- * @property {string|null} stat
- * @property {number} modifier
- * @property {{ count: number, sides: number }} dice
- * @property {number} threshold
- * @property {">="|">"} comparator
- * @property {string} success
- * @property {string} failure
- * @property {string|null} label
- */
-
-/**
- * @param {{ id: string, lines: string[] }} section
- * @returns {StoryNode}
- */
-function parseNode(section) {
-	const node = {
-		id: section.id,
-		title: "",
-		text: "",
+function createBranchContext(title) {
+	return {
+		id: null,
+		title,
+		descriptionLines: [],
 		choices: [],
-		tags: [],
-		ending: null,
-		entry: {
-			adjust: {},
-			inventory: { add: [], remove: [] },
-			log: [],
-		},
-		image: null,
 	};
-
-	let cursor = 0;
-	let choiceIndex = 0;
-
-	while (cursor < section.lines.length) {
-		const rawLine = section.lines[cursor];
-		cursor += 1;
-		if (!rawLine) continue;
-		const line = rawLine.trim();
-		if (!line || line.startsWith(COMMENT_PREFIX)) continue;
-
-		if (line.startsWith("text:")) {
-			const block = collectBlock(section.lines, cursor, "/text");
-			node.text = block.lines.join("\n").trim();
-			cursor = block.nextIndex;
-			continue;
-		}
-
-		if (line.startsWith("entry:")) {
-			const block = collectBlock(section.lines, cursor, "/entry");
-			parseEntryBlock(block.lines, node.entry);
-			cursor = block.nextIndex;
-			continue;
-		}
-
-		if (line.startsWith("choices:")) {
-			const block = collectBlock(section.lines, cursor, "/choices");
-			for (const choiceLine of block.lines) {
-				const trimmed = choiceLine.trim();
-				if (!trimmed || trimmed.startsWith(COMMENT_PREFIX)) continue;
-				if (!trimmed.startsWith("-")) {
-					throw new Error(`Choice lines must start with "-". Issue in node "${section.id}".`);
-				}
-				const parsed = parseChoice(trimmed.slice(1).trim(), section.id, choiceIndex);
-				node.choices.push(parsed);
-				choiceIndex += 1;
-			}
-			cursor = block.nextIndex;
-			continue;
-		}
-
-		if (line.startsWith("tags:")) {
-			node.tags = splitList(line.slice("tags:".length));
-			continue;
-		}
-
-		if (line.startsWith("ending:")) {
-			node.ending = line.slice("ending:".length).trim() || null;
-			continue;
-		}
-
-		const kv = splitKeyValue(line);
-		if (!kv) continue;
-		const [key, value] = kv;
-		switch (key) {
-			case "title":
-				node.title = value;
-				break;
-			case "image":
-				node.image = value;
-				break;
-			default:
-				// Preserve any unknown key for debugging.
-				if (!node.extras) node.extras = {};
-				node.extras[key] = value;
-				break;
-		}
-	}
-
-	return node;
 }
 
 /**
- * @param {string[]} lines
- * @param {{ add: string[], remove: string[] }} inventory
+ * @param {ParseContext} context
  */
-function applyInventoryDirectives(lines, inventory) {
-	for (const entry of lines) {
-		const trimmed = entry.trim();
-		if (!trimmed) continue;
-		const [directive, value] = trimmed.split(":").map((token) => token.trim());
-		if (!directive || !value) continue;
-		if (directive === "add") {
-			inventory.add.push(value);
-		} else if (directive === "remove") {
-			inventory.remove.push(value);
-		}
+function finalizeBranch(context) {
+	if (!context.current) return;
+
+	if (!context.current.id) {
+		throw new Error(`Branch "${context.current.title}" is missing its Branch number.`);
 	}
-}
 
-/**
- * @param {string[]} lines
- * @param {NodeEntryEffect} target
- */
-function parseEntryBlock(lines, target) {
-	for (const raw of lines) {
-		const line = raw.trim();
-		if (!line || line.startsWith(COMMENT_PREFIX)) continue;
-
-		if (line.startsWith("adjust=")) {
-			const adjust = parseAdjustments(line.slice("adjust=".length));
-			mergeAdjustments(target.adjust, adjust);
-			continue;
-		}
-
-		if (line.startsWith("item=")) {
-			const inventoryLines = line
-				.slice("item=".length)
-				.split(",")
-				.map((token) => token.trim());
-			applyInventoryDirectives(inventoryLines, target.inventory);
-			continue;
-		}
-
-		if (line.startsWith("log=")) {
-			const entry = line.slice("log=".length).trim();
-			if (entry) target.log.push(entry);
-			continue;
-		}
-	}
+	context.branches.push(context.current);
+	context.current = null;
+	context.descriptionActive = false;
 }
 
 /**
  * @param {string} raw
- * @param {string} nodeId
- * @param {number} index
- * @returns {StoryChoice}
+ * @param {string} label
+ * @param {number} lineIndex
  */
-function parseChoice(raw, nodeId, index) {
-	const segments = raw.split("|").map((segment) => segment.trim()).filter(Boolean);
-	if (!segments.length) {
-		throw new Error(`Empty choice definition in node "${nodeId}".`);
+function extractValue(raw, label, lineIndex) {
+	const delimiter = raw.indexOf(":");
+	if (delimiter === -1) {
+		throw new Error(`${label} definition on line ${lineIndex + 1} is missing ":".`);
 	}
+	const value = raw.slice(delimiter + 1).trim();
+	if (!value) {
+		throw new Error(`${label} definition on line ${lineIndex + 1} is missing its value.`);
+	}
+	return value;
+}
 
-	const choiceDescriptor = segments.shift();
-	const { text, target } = parseChoiceDescriptor(choiceDescriptor, nodeId);
+/**
+ * @param {string} input
+ */
+function normalizeBranchId(input) {
+	const value = parseBracketValue(input);
+	if (!value) {
+		throw new Error("Branch number cannot be empty.");
+	}
+	return value;
+}
+
+/**
+ * @param {string} branchId
+ * @param {string} payload
+ * @param {number} lineNumber 1-indexed
+ * @returns {StoryChoiceDraft}
+ */
+function parseChoice(branchId, payload, lineNumber) {
+	const segments = payload
+		.split(";")
+		.map((token) => token.trim())
+		.filter(Boolean);
+
+	if (!segments.length) {
+		throw new Error(`Choice on line ${lineNumber} has no directives.`);
+	}
 
 	const choice = {
-		id: `${nodeId}:${index}`,
-		text,
-		target,
-		adjust: {},
-		inventory: { add: [], remove: [] },
-		log: null,
-		requires: [],
-		test: null,
-		hidden: false,
-		tags: [],
+		text: "",
+		next: null,
+		stats: [],
+		inventory: [],
+		roll: null,
 	};
 
 	for (const segment of segments) {
-		if (!segment) continue;
-		if (segment.startsWith("adjust=")) {
-			const adjust = parseAdjustments(segment.slice("adjust=".length));
-			mergeAdjustments(choice.adjust, adjust);
-			continue;
+		const delimiter = segment.indexOf("=");
+		if (delimiter === -1) {
+			throw new Error(`Malformed directive "${segment}" on line ${lineNumber}.`);
 		}
 
-		if (segment.startsWith("item=")) {
-			const entries = segment
-				.slice("item=".length)
-				.split(",")
-				.map((token) => token.trim());
-			applyInventoryDirectives(entries, choice.inventory);
-			continue;
+		const left = segment.slice(0, delimiter).trim();
+		const rightRaw = segment.slice(delimiter + 1).trim();
+		if (!left || rightRaw == null) {
+			throw new Error(`Malformed directive "${segment}" on line ${lineNumber}.`);
 		}
 
-		if (segment.startsWith("log=")) {
-			choice.log = segment.slice("log=".length).trim();
-			continue;
-		}
+		const key = left.toLowerCase();
+		const value = parseBracketValue(rightRaw);
 
-		if (segment.startsWith("requires=")) {
-			const requires = parseRequirements(segment.slice("requires=".length));
-			choice.requires.push(...requires);
-			continue;
+		switch (key) {
+			case "display":
+				if (choice.text) {
+					throw new Error(`Choice on line ${lineNumber} defines "display" more than once.`);
+				}
+				choice.text = value;
+				break;
+			case "next":
+				if (choice.next) {
+					throw new Error(`Choice on line ${lineNumber} defines "next" more than once.`);
+				}
+				choice.next = value;
+				break;
+			case "item":
+				choice.inventory.push(parseItemEffect(value, lineNumber));
+				break;
+			case "stat":
+				choice.stats.push(parseStatEffect(value, lineNumber));
+				break;
+			case "roll":
+				if (choice.roll) {
+					throw new Error(`Choice on line ${lineNumber} includes multiple roll directives.`);
+				}
+				choice.roll = parseRollEffect(value, lineNumber);
+				break;
+			default:
+				throw new Error(`Unsupported directive "${segment}" on line ${lineNumber}.`);
 		}
+	}
 
-		if (segment.startsWith("hidden")) {
-			choice.hidden = true;
-			continue;
-		}
+	if (!choice.text) {
+		throw new Error(`Choice on line ${lineNumber} is missing its display text.`);
+	}
 
-		if (segment.startsWith("test=")) {
-			choice.test = parseTest(segment.slice("test=".length));
-			continue;
-		}
-
-		if (segment.startsWith("chance=")) {
-			choice.test = parseTest(segment.slice("chance=".length), true);
-			continue;
-		}
-
-		if (segment.startsWith("tags=")) {
-			choice.tags.push(...splitList(segment.slice("tags=".length)));
-			continue;
-		}
+	if (!choice.next && !choice.roll) {
+		throw new Error(
+			`Choice "${choice.text}" in branch "${branchId}" needs either a next branch or a roll outcome.`
+		);
 	}
 
 	return choice;
 }
 
 /**
- * @param {string} descriptor
- * @param {string} nodeId
+ * Converts bracket-wrapped values into plain strings (e.g., "[north]" -> "north").
+ * @param {string} raw
  */
-function parseChoiceDescriptor(descriptor, nodeId) {
-	const parts = descriptor.split("->");
-	if (parts.length < 2) {
-		return { text: descriptor.trim(), target: null };
+function parseBracketValue(raw) {
+	const trimmed = raw.trim();
+	if (!trimmed) return "";
+	if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+		return trimmed.slice(1, -1).trim();
 	}
-
-	const [rawText, rawTarget] = parts;
-	const text = rawText.trim();
-	const target = rawTarget ? rawTarget.trim() : null;
-
-	if (!text) {
-		throw new Error(`Choice text missing in node "${nodeId}".`);
-	}
-
-	return { text, target };
+	return trimmed;
 }
 
 /**
  * @param {string} raw
- * @returns {ChoiceRequirement[]}
+ * @param {number} lineNumber
+ * @returns {{ item: string, delta: number }}
  */
-function parseRequirements(raw) {
-	const parts = raw.split("&").map((token) => token.trim()).filter(Boolean);
-	const requirements = [];
-
-	for (const part of parts) {
-		if (!part) continue;
-		if (part.startsWith("item:") || part.startsWith("item=")) {
-			const value = part.slice(5).trim();
-			if (!value) continue;
-			requirements.push({
-				type: "item",
-				key: value,
-				comparator: "==",
-				value,
-			});
-			continue;
-		}
-
-		const comparatorMatch = part.match(/(>=|<=|==|!=|>|<)/);
-		if (!comparatorMatch) continue;
-		const comparator = comparatorMatch[0];
-		const [lhs, rhsRaw] = part.split(comparator).map((token) => token.trim());
-		if (!lhs) continue;
-		const rhs = isNaN(Number(rhsRaw)) ? rhsRaw : Number(rhsRaw);
-
-		requirements.push({
-			type: "stat",
-			key: lhs,
-			comparator,
-			value: rhs,
-		});
+function parseItemEffect(raw, lineNumber) {
+	const match = raw.match(/^(.+?)([+-])(\d+)?$/);
+	if (!match) {
+		throw new Error(`Item effect "${raw}" on line ${lineNumber} must end with + or - (optionally with a count).`);
 	}
-
-	return requirements;
+	const item = match[1].trim();
+	if (!item) {
+		throw new Error(`Item effect on line ${lineNumber} is missing the item name.`);
+	}
+	const sign = match[2] === "+" ? 1 : -1;
+	const quantity = match[3] ? Number(match[3]) : 1;
+	if (Number.isNaN(quantity) || quantity <= 0) {
+		throw new Error(`Item effect "${raw}" on line ${lineNumber} must use a positive quantity.`);
+	}
+	return { item, delta: sign * quantity };
 }
 
 /**
  * @param {string} raw
- * @param {boolean} [forceRandom=false]
- * @returns {ChoiceTest|null}
+ * @param {number} lineNumber
+ * @returns {{ stat: string, delta: number }}
  */
-function parseTest(raw, forceRandom = false) {
-	if (!raw) return null;
-	const [conditionPart, outcomePart] = raw.split("?");
-	if (!outcomePart) {
-		throw new Error(`Test definition "${raw}" is missing success/failure nodes.`);
+function parseStatEffect(raw, lineNumber) {
+	const match = raw.match(/^(.+?)([+-])([\d.]+)$/);
+	if (!match) {
+		throw new Error(
+			`Stat effect "${raw}" on line ${lineNumber} must follow the pattern statName+/-Number (e.g., strength+1).`
+		);
+	}
+	const stat = match[1].trim();
+	if (!stat) {
+		throw new Error(`Stat effect on line ${lineNumber} is missing the stat name.`);
 	}
 
-	const [successPart, failurePart] = outcomePart.split(":").map((token) => token.trim());
-	if (!successPart || !failurePart) {
-		throw new Error(`Test definition "${raw}" must include both success and failure nodes.`);
+	const sign = match[2] === "+" ? 1 : -1;
+	const amount = Number(match[3]);
+	if (Number.isNaN(amount)) {
+		throw new Error(`Stat effect "${raw}" on line ${lineNumber} uses an invalid amount.`);
 	}
 
-	const condition = conditionPart.trim();
-	const comparatorMatch = condition.match(/(>=|>)/);
-	if (!comparatorMatch) {
-		throw new Error(`Test condition "${condition}" missing comparator (>= or >).`);
-	}
-	const comparator = comparatorMatch[0];
-	const [leftExpr, thresholdRaw] = condition.split(comparator).map((token) => token.trim());
-
-	const threshold = Number(thresholdRaw);
-	if (Number.isNaN(threshold)) {
-		throw new Error(`Test condition "${condition}" must compare against a number.`);
-	}
-
-	const { stat, modifier, dice } = parseExpression(leftExpr, forceRandom);
-
-	return {
-		stat,
-		modifier,
-		dice,
-		threshold,
-		comparator,
-		success: successPart,
-		failure: failurePart,
-		label: null,
-	};
-}
-
-/**
- * @param {string} expr
- * @param {boolean} forceRandom
- */
-function parseExpression(expr, forceRandom) {
-	const tokens = expr.split(/\s*\+\s*/).map((token) => token.trim()).filter(Boolean);
-	let stat = null;
-	let modifier = 0;
-	let dice = { count: 0, sides: 0 };
-	let sawDice = false;
-
-	for (const token of tokens) {
-		if (/^d\d+$/i.test(token)) {
-			const sides = Number(token.slice(1));
-			dice = { count: 1, sides };
-			sawDice = true;
-			continue;
-		}
-
-		const numeric = Number(token);
-		if (!Number.isNaN(numeric)) {
-			modifier += numeric;
-			continue;
-		}
-
-		stat = token;
-	}
-
-	if (forceRandom && !sawDice) {
-		dice = { count: 1, sides: 6 };
-	}
-
-	return { stat, modifier, dice };
+	return { stat, delta: sign * amount };
 }
 
 /**
  * @param {string} raw
- * @returns {Record<string, number>}
+ * @param {number} lineNumber
+ * @returns {RollDirective}
  */
-function parseAdjustments(raw) {
-	const result = {};
-	const parts = raw.split(",").map((token) => token.trim());
-
-	for (const part of parts) {
-		if (!part) continue;
-		const [stat, deltaRaw] = part.split(":").map((token) => token.trim());
-		if (!stat || deltaRaw == null) continue;
-		const delta = Number(deltaRaw);
-		if (Number.isNaN(delta)) continue;
-		result[stat] = (result[stat] || 0) + delta;
-	}
-
-	return result;
-}
-
-/**
- * @param {Record<string, number>} target
- * @param {Record<string, number>} source
- */
-function mergeAdjustments(target, source) {
-	for (const [key, value] of Object.entries(source)) {
-		target[key] = (target[key] || 0) + value;
-	}
-}
-
-/**
- * @param {string[]} lines
- * @param {string} terminator
- * @returns {{ lines: string[], nextIndex: number }}
- */
-function collectBlock(lines, startIndex, terminator) {
-	const collected = [];
-	let index = startIndex;
-
-	while (index < lines.length) {
-		const raw = lines[index];
-		index += 1;
-		if (raw.trim() === terminator) {
-			break;
-		}
-		collected.push(raw);
-	}
-
-	return { lines: collected, nextIndex: index };
-}
-
-/**
- * @param {string} line
- * @returns {[string, string]|null}
- */
-function splitKeyValue(line) {
-	const delimiterIndex = line.indexOf(":");
-	if (delimiterIndex === -1) return null;
-	const key = line.slice(0, delimiterIndex).trim().toLowerCase();
-	const value = line.slice(delimiterIndex + 1).trim();
-	if (!key) return null;
-	return [key, value];
-}
-
-/**
- * @param {string} value
- * @returns {string[]}
- */
-function splitList(value) {
-	return value
+function parseRollEffect(raw, lineNumber) {
+	const tokens = raw
 		.split(",")
 		.map((token) => token.trim())
 		.filter(Boolean);
-}
 
-/**
- * @param {string[]} lines
- * @param {string} kind
- * @returns {Record<string, number>}
- */
-function parseKeyValueList(lines, kind) {
-	const result = {};
-	for (const raw of lines) {
-		const line = raw.trim();
-		if (!line || line.startsWith(COMMENT_PREFIX)) continue;
-		const normalized = line.startsWith("-") ? line.slice(1).trim() : line;
-		const [key, value] = normalized.split(":").map((token) => token.trim());
-		if (!key || value == null) continue;
-		const numeric = Number(value);
-		if (Number.isNaN(numeric)) {
-			throw new Error(`Unable to parse ${kind} value "${line}".`);
+	if (!tokens.length) {
+		throw new Error(`Roll effect on line ${lineNumber} is empty.`);
+	}
+
+	const directive = {
+		stat: null,
+		dice: { count: 1, sides: 6 },
+		target: null,
+		ok: null,
+		fail: null,
+	};
+
+	for (const token of tokens) {
+		if (!token.includes("=")) {
+			const label = parseBracketValue(token);
+			if (!label || label.toLowerCase() === "none") {
+				directive.stat = null;
+			} else if (directive.stat && directive.stat !== label) {
+				throw new Error(
+					`Roll on line ${lineNumber} defines conflicting stat labels ("${directive.stat}" vs "${label}").`
+				);
+			} else {
+				directive.stat = label;
+			}
+			continue;
 		}
-		result[key] = numeric;
+
+		const eqIndex = token.indexOf("=");
+		if (eqIndex === -1) {
+			throw new Error(`Malformed roll token "${token}" on line ${lineNumber}.`);
+		}
+
+		const keyRaw = token.slice(0, eqIndex).trim();
+		const valueRaw = token.slice(eqIndex + 1).trim();
+		if (!keyRaw || valueRaw == null) {
+			throw new Error(`Malformed roll token "${token}" on line ${lineNumber}.`);
+		}
+
+		const key = keyRaw.toLowerCase();
+		const value = parseBracketValue(valueRaw);
+
+		switch (key) {
+			case "roll":
+			case "stat":
+				directive.stat = value && value.toLowerCase() !== "none" ? value : null;
+				break;
+			case "dice":
+				directive.dice = parseDice(value, lineNumber);
+				break;
+			case "target": {
+				const target = Number(value);
+				if (Number.isNaN(target)) {
+					throw new Error(`Roll target "${value}" on line ${lineNumber} must be a number.`);
+				}
+				directive.target = target;
+				break;
+			}
+			case "ok":
+				directive.ok = value;
+				break;
+			case "fail":
+				directive.fail = value;
+				break;
+			default:
+				throw new Error(`Unknown roll token "${token}" on line ${lineNumber}.`);
+		}
 	}
-	return result;
+
+	if (directive.target == null) {
+		throw new Error(`Roll on line ${lineNumber} is missing its target value.`);
+	}
+	if (!directive.ok || !directive.fail) {
+		throw new Error(`Roll on line ${lineNumber} requires both ok and fail branches.`);
+	}
+
+	return directive;
 }
 
 /**
- * @param {string[]} lines
+ * @param {string} raw
+ * @param {number} lineNumber
  */
-function parseList(lines) {
-	const result = [];
-	for (const raw of lines) {
-		const line = raw.trim();
-		if (!line || line.startsWith(COMMENT_PREFIX)) continue;
-		const normalized = line.startsWith("-") ? line.slice(1).trim() : line;
-		if (normalized) result.push(normalized);
+function parseDice(raw, lineNumber) {
+	const match = raw.toLowerCase().match(/^(?:(\d+)\s*d)?\s*(\d+)$/);
+	if (!match) {
+		throw new Error(
+			`Dice definition "${raw}" on line ${lineNumber} must be like "6" or "2d6" (count optional).`
+		);
 	}
-	return result;
+
+	const count = match[1] ? Number(match[1]) : 1;
+	const sides = Number(match[2]);
+	if (Number.isNaN(count) || Number.isNaN(sides) || count <= 0 || sides <= 0) {
+		throw new Error(`Dice definition "${raw}" on line ${lineNumber} must contain positive integers.`);
+	}
+
+	return { count, sides };
 }
 
+/**
+ * @typedef {Object} ParseContext
+ * @property {BranchParseContext|null} current
+ * @property {boolean} descriptionActive
+ * @property {BranchParseContext[]} branches
+ */
+
+/**
+ * @typedef {Object} BranchParseContext
+ * @property {string|null} id
+ * @property {string} title
+ * @property {string[]} descriptionLines
+ * @property {StoryChoiceDraft[]} choices
+ */
+
+/**
+ * @typedef {Object} StoryBranch
+ * @property {string} id
+ * @property {string} title
+ * @property {string} description
+ * @property {StoryChoice[]} choices
+ */
+
+/**
+ * @typedef {Object} StoryChoiceDraft
+ * @property {string} text
+ * @property {string|null} next
+ * @property {{ stat: string, delta: number }[]} stats
+ * @property {{ item: string, delta: number }[]} inventory
+ * @property {RollDirective|null} roll
+ */
+
+/**
+ * @typedef {Object} StoryChoice
+ * @property {string} id
+ * @property {string} text
+ * @property {string|null} next
+ * @property {{ stat: string, delta: number }[]} stats
+ * @property {{ item: string, delta: number }[]} inventory
+ * @property {RollDirective|null} roll
+ */
+
+/**
+ * @typedef {Object} RollDirective
+ * @property {string|null} stat
+ * @property {{ count: number, sides: number }} dice
+ * @property {number} target
+ * @property {string} ok
+ * @property {string} fail
+ */
