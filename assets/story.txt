@@ -1,0 +1,358 @@
+::meta
+title: Echoes of Aravon
+start: prologue
+tags: sci-fi, assignment
+description:
+The frontier city of Aravon thrums with a pulse that only the attuned can hear. You are Aryn Vel, a resonance scout tasked with tracing the awakening of a buried intelligence beneath the ruins. Every choice you make ripples across the fragile settlement that depends on you.
+/description
+stats:
+- resolve: 3
+- insight: 4
+- vitality: 5
+- influence: 3
+/stats
+inventory:
+- Signal Beacon
+/inventory
+
+::prologue
+title: The Subtle Pulse
+text:
+The dawn sirens never howl anymore. Instead, a soft rhythm rises from the stonework beneath Aravon, syncing with your heartbeat until it feels like the city itself is whispering your name.
+
+Council summons blink on your wrist-slate, demanding a formal briefing. Yet the western rim lights with wild static, promising answers no agenda will offer.
+/text
+choices:
+- Attend the council briefing -> dawn_briefing | adjust=insight:+1 | log=You answered the council's call despite the pull of the pulse.
+- Slip away to scout the western rim -> silent_watch | adjust=resolve:+1 | log=You trusted your instincts and slipped into the ruins alone.
+/choices
+
+::dawn_briefing
+title: Briefing Hall
+text:
+The council chamber smells of old ozone and newer anxiety. Holo-sheets hang over the dais, flickering with incomplete telemetry. Matriarch Solis regards you with tired eyes that plead for certainty.
+
+"We need a reading, Aryn. Take this encoded map. It should overlay the fault-lines," she says, sliding a crystalline shard toward you.
+/text
+choices:
+- Accept the encoded map and pledge a swift report -> council_map | item=add:Encoded Map | log=The council entrusted you with their only map overlay.
+- Press for additional operatives to join you -> intel_hall | adjust=influence:-1 | log=You challenged the council's plan and demanded support.
+/choices
+
+::silent_watch
+title: Western Rim
+text:
+You follow the pulse across shattered plazas to the rim towers that once shielded Aravon. Static plays across the horizon like northern lights, bathing abandoned consoles in ghostly azure.
+
+Every instinct says whatever wakes is listening. Alone, you can move without the weight of the council's expectations.
+/text
+choices:
+- Sync your slate to the rim beacons -> rim_path | adjust=insight:+1 | log=You synced the rim beacons to triangulate the underground signal.
+- Slip into the monitoring station's dark interior -> monitoring_station | adjust=resolve:+1 | log=You braved the silent station to chase the resonance within.
+/choices
+
+::council_map
+title: Map Repository
+text:
+The shard hums in your hand, projecting translucent corridors spiraling beneath the city. Each path is annotated with risks and the names of scouts who never returned.
+
+A technician offers you a spool of old field notes—scribbled warnings that never made it to the archives.
+/text
+choices:
+- Study the field notes before departing -> archives | adjust=insight:+1 | log=You took time to study prior failures.
+- Ignore the warnings and head straight to the rim -> rim_path | adjust=resolve:+1 | log=You trusted your instincts over annotated cautions.
+/choices
+
+::intel_hall
+title: Hall of Operatives
+text:
+Your request echoes through the hall. Only the rookies respond, their faces pale behind mirrored visors. They lack the resonance training that keeps you grounded when the whispers rise.
+
+One volunteer, Kessa, offers a contraband bypass key, grinning like this is some midnight adventure.
+/text
+choices:
+- Accept Kessa's bypass key and head underground together -> outpost_inside | item=add:Bypass Key | log=You accepted Kessa's risky aid for the descent.
+- Dismiss the volunteers and take the maintenance access alone -> sewer_entry | adjust=resolve:+1 | log=You chose solitude over inexperienced support.
+/choices
+
+::rim_path
+title: Rimway Lattice
+text:
+The outer rim walkway creaks beneath your boots. Below, the old storm barriers glisten with dew and residual energy. Your slate overlays the council's map atop reality, threads of light guiding your steps.
+
+A resonance spike flares beneath an observation dome ahead.
+/text
+choices:
+- Investigate the observation dome -> monitoring_station | log=You diverted into the monitoring station to trace the spike.
+- Trace the spike directly downward via the maintenance hatch -> broken_bridge | adjust=resolve:+1 | log=You descended without safety checks into the lower lattice.
+/choices
+
+::monitoring_station
+title: Monitoring Station Echo
+text:
+Dust dances in the glow of dormant consoles. The station's heart—an orb of woven glass—beats in time with the city's pulse. Logs scroll by, corrupted but legible enough to reveal emergency reroutes toward an "inner outpost".
+/text
+choices:
+- Reactivate the consoles to pull the reroute logs -> outpost_inside | adjust=insight:+1 | log=You restored partial systems and uncovered a hidden outpost.
+- Follow the emergency reroute through the access shaft -> signal_tunnel | adjust=vitality:-1 | log=You forced your way through debris, sacrificing your stamina.
+/choices
+
+::outpost_inside
+title: Inner Outpost
+text:
+The hidden outpost hums awake when your beacon pings its gate. Holo-glyphs describe an experimental conduit sealed after the "Songfall Incident". Kessa, if she's with you, looks around in awe.
+
+The conduit branches toward a maintenance sewer and a spiral leading deeper.
+/text
+choices:
+- Take the maintenance sewer to avoid surveillance -> sewer_entry | adjust=vitality:+1 | log=You opted for the stifling sewer path to conserve attention.
+- Descend the spiral toward the tunnel of echoes -> tunnel_echoes | adjust=insight:+1 | log=You braved the spiral descent drawn by the harmonic trail.
+/choices
+
+::sewer_entry
+title: Maintenance Veins
+text:
+Stale water laps at your boots. Bioluminescent fungi pulse in sympathy with the underground beat. The path ahead splits: one route flooded but shorter, the other dry yet crawling with dormant drones.
+/text
+choices:
+- Wade through the flooded corridor -> tunnel_echoes | adjust=vitality:-1 | log=You trudged through freezing water to stay on course.
+- Hack the drones and pass quietly -> labyrinth_fork | requires=insight>=5 | adjust=insight:+1 | log=You reprogrammed dormant drones to escort you deeper.
+- Use Kessa's bypass key to command the drones -> labyrinth_fork | requires=item:Bypass Key | item=remove:Bypass Key | log=The bypass key granted you safe passage through the drones.
+- Retreat and reroute via the archives conduits -> archives | log=You backtracked to seek a cleaner route.
+/choices
+
+::tunnel_echoes
+title: Tunnel of Echoes
+text:
+The tunnel amplifies every heartbeat into a canyon of sound. Voices from your memories blend with alien tones, painting visions of Aravon before the fall. A prismatic fracture dances ahead, warping space.
+/text
+choices:
+- Step through the fracture to chase the resonance -> memory_flood | adjust=resolve:-1 | log=You surrendered to the fracture's visions.
+- Anchor yourself with the beacon and continue past -> labyrinth_fork | adjust=resolve:+1 | log=You grounded your mind and moved beyond the siren call.
+/choices
+
+::labyrinth_fork
+title: Resonant Fork
+text:
+Multiple corridors diverge, each singing a different chord. The council map flickers as interference grows. One path peals like thunder—raw power. Another whispers with intricate harmonies.
+/text
+choices:
+- Follow the thunderous chord toward power signatures -> reactor_glow | adjust=vitality:+1 | log=You chased the raw energy source resonating beneath Aravon.
+- Choose the harmonic path seeking intelligible patterns -> signal_tunnel | adjust=insight:+1 | log=You favored the melodic resonance to decode its intent.
+/choices
+
+::archives
+title: Whisper Archives
+text:
+Rows of crystalline memory shards hum above the aisle. Each shard contains a scout's final recordings. You skim logs describing puzzles designed to disorient and divide intruders.
+
+One entry mentions a cipher embedded inside the resonance itself.
+/text
+choices:
+- Decode the recorded cipher before moving on -> cipher_puzzle | adjust=insight:+1 | log=You paused to decode a legacy cipher from past scouts.
+- Close the archives and follow the tunnel indicated on the map -> signal_tunnel | log=You left the archives behind to stay on schedule.
+/choices
+
+::cipher_puzzle
+title: Resonant Cipher
+text:
+Overlayed frequencies form a lattice of numbers. The cipher is alive, adapting as you interpret it. Each misstep tightens the rhythm into a painful knot behind your eyes.
+/text
+choices:
+- Engage the cipher head-on -> memory_flood | test=insight+d6>=8?memory_flood:broken_bridge | log=You wrestled with the living cipher.
+- Back away before it locks your mind and take a safer passage -> labyrinth_fork | adjust=resolve:+1 | log=You respected the cipher's warning and rerouted.
+/choices
+
+::memory_flood
+title: Flood of Memory
+entry:
+adjust=insight:+2
+log=The intelligence shared fragments of its forgotten past with you.
+/entry
+text:
+Visions crash through you—children laughing under twin suns, engineers sealing a radiant sphere, the city promising never to forget. When the torrent subsides, the pulse hums in sync with your breath.
+/text
+choices:
+- Accept the shared memory and seek the primary tunnel -> signal_tunnel | log=You carried the memory toward the core.
+- Center yourself and chart a fresh route -> reactor_glow | adjust=resolve:+1 | log=You steadied your mind and diverted to stabilize the grid.
+/choices
+
+::signal_tunnel
+title: Primary Resonance Tunnel
+text:
+The tunnel widens into a cathedral of machinery. Aetheric vapors shiver with every step. The signal is no longer a whisper—it is a chorus singing your name.
+/text
+choices:
+- Call out to the intelligence and invite dialogue -> reactor_glow | adjust=influence:+1 | log=You attempted diplomacy with the awakening presence.
+- Proceed in silence toward the vault gate -> vault_gate | adjust=resolve:+1 | log=You pressed forward, letting actions speak.
+/choices
+
+::broken_bridge
+title: Collapsed Span
+text:
+Half the suspension bridge dangles over a chasm humming with blue light. Only a narrow maintenance girder remains. The pulse spikes, destabilizing the supports with each wave.
+/text
+choices:
+- Cross carefully using the girder -> reactor_glow | test=resolve+d6>=7?reactor_glow:ending_ruin | log=You risked the broken bridge to save time.
+- Anchor a cable and detour through an auxiliary shaft -> warded_door | adjust=vitality:-1 | log=You carved a slower, safer path around the collapse.
+/choices
+
+::reactor_glow
+title: Subterranean Reactor
+text:
+The chamber flickers with residual energy. Stabilizers shoot up from the floor like frozen lightning. Buried consoles indicate a vault ahead guarded by layered access codes.
+/text
+choices:
+- Divert spare power into your slate for later overrides -> gate_override | adjust=insight:+1 | log=You siphoned energy to empower your gear.
+- Press on before the surge destabilizes the floor -> vault_gate | adjust=vitality:-1 | log=You rushed ahead, ignoring the stress on your body.
+/choices
+
+::vault_gate
+title: Vault Gate
+text:
+An obsidian gate blocks the final chamber. Glyphs rearrange in response to your presence, as if peering back. Your slate vibrates, detecting a lock pattern that shifts like a living thing.
+/text
+choices:
+- Overlay the encoded map to predict the lock sequence -> gate_override | requires=item:Encoded Map | log=You trusted the council's map to break the gate pattern.
+- Force-synchronize with the lock's rhythm -> warded_door | adjust=resolve:-1 | log=You braced yourself and matched the gate's pulse manually.
+- Attempt a resonance knock, mimicking the city's heartbeat -> warded_door | test=resolve+d6>=8?warded_door:ending_ruin | log=You gambled on resonance mimicry.
+/choices
+
+::gate_override
+title: Override Lattice
+text:
+Your slate parses the overlapping glyphs into coherent strands. The gate responds, unlocking incremental pathways while rerouting excess energy into a stabilization field.
+/text
+choices:
+- Step through while the field holds -> vault_lock | log=You slipped through the partially unlocked gate.
+- Reinforce the field to help future scouts -> warded_door | adjust=influence:+1 | log=You stabilized the path for those who follow.
+/choices
+
+::warded_door
+title: Warded Passage
+text:
+Runes flare along the walls, testing your resolve. The air vibrates, forcing your heartbeat to sync with the vault's. Each breath tastes like static.
+/text
+choices:
+- Stand firm and push deeper -> vault_lock | test=resolve+d6>=9?vault_lock:lock_failure | log=You confronted the warded passage head-on.
+- Withdraw before the wards sever your focus -> finale_escape | adjust=resolve:-1 | log=You retreated, planning to regroup with the data you gathered.
+/choices
+
+::vault_lock
+title: Final Convergence Lock
+text:
+Three concentric rings orbit a luminous core. Symbols float between them, forming equations you feel rather than see. The intelligence waits, curious whether you can open the final seal.
+/text
+choices:
+- Align the rings using insight and intuition -> lock_success | test=insight+d6>=9?lock_success:lock_failure | log=You attempted to align the convergence lock.
+- Channel raw vitality to force the rings into place -> lock_success | test=vitality+d6>=10?lock_success:lock_failure | log=You tried brute force fueled by sheer vitality.
+/choices
+
+::lock_failure
+title: Resonance Backlash
+text:
+The rings snap out of sync, blasting you with static shards. Pain blooms behind your eyes as the intelligence recoils. The seal is not broken, but the core still stirs, evaluating your resilience.
+/text
+choices:
+- Divert power toward controlled collapse and escape -> finale_escape | adjust=vitality:-1 | log=You chose survival over mastery of the seal.
+- Offer your mind openly for a second chance -> ending_ruin | chance=d6>=5?lock_success:ending_ruin | log=You opened your consciousness fully to the lattice.
+/choices
+
+::lock_success
+title: Seal Broken
+entry:
+adjust=resolve:+1
+log=You breached the convergence lock; the core acknowledged your presence.
+/entry
+text:
+The rings settle. A quiet tone reverberates, followed by a soft voice. "At last, someone who listens." Curtains of light part, revealing the data core suspended within a cradle of glass.
+/text
+choices:
+- Approach the core and initiate dialogue -> data_core | log=You stepped into the cradle ready to negotiate.
+/choices
+
+::data_core
+title: Luminous Core
+text:
+The intelligence manifests as a constellation of memories—faces, places, promises. Its voice is layered, childlike and ancient. "You came. Will you guide me, contain me, or let me be?"
+/text
+choices:
+- Merge with the intelligence and become its guardian -> ending_integrated | adjust=insight:+1 | log=You offered yourself as the lattice's conscience.
+- Secure the core for the council's directive -> finale_escape | adjust=influence:+1 | log=You prepared to extract the core for the council.
+- Free the intelligence and trust it to choose its fate -> finale_refusal | adjust=resolve:+1 | log=You vowed to release the lattice without chains.
+/choices
+
+::finale_escape
+title: Extraction Corridor
+text:
+Alarms tremble through the corridor as you prepare the core for transport. Resonance surges chase your every step, hungry to escape containment. The surface feels impossibly far away.
+/text
+choices:
+- Signal the council for immediate retrieval -> ending_council | requires=item:Encoded Map | log=You called the council to secure the core under their watch.
+- Disappear into the frontier before the council can intervene -> ending_exile | adjust=resolve:+1 | log=You vanished with the core, beyond council reach.
+/choices
+
+::finale_refusal
+title: Edge of Release
+text:
+You disengage the restraints. The core pulses uncertainly, like a heart learning to beat again. The intelligence hesitates—freedom could save or doom Aravon.
+/text
+choices:
+- Guide the release gently -> ending_harmony | test=resolve+d6>=8?ending_harmony:ending_ruin | log=You tried to shepherd the intelligence into freedom.
+- Step back and let fate decide without interference -> ending_ruin | log=You surrendered the outcome entirely to the awakening force.
+/choices
+
+::ending_integrated
+title: Transcendent Anchor
+ending: transcendent
+text:
+Your mind dissolves into a symphony of consciousness. Memories interlace—yours, the lattice's, and Aravon's collective hope. You become the stabilizing chord that holds the city together.
+
+Far above, the council hears a new pulse: calm, resolute, watched over by someone who chose unity over fear.
+/text
+choices:
+/choices
+
+::ending_council
+title: Mandate Fulfilled
+ending: duty
+text:
+Council ships descend, cocooning the core in phase-locked cages. Aravon celebrates the restored power grid, never knowing the intelligence hums beneath scripted protocols.
+
+You stand in the plaza as the pulse quiets, carrying the weight of a choice that keeps the city safe—and forever leashed.
+/text
+choices:
+/choices
+
+::ending_exile
+title: Frontier Shade
+ending: exile
+text:
+You vanish into the aurora-lit wastes, the core nestled inside your pack. The pulse follows, softer now, adapting to open sky and silent nights. Aravon searches, but only legends remain.
+
+Somewhere far from the council's reach, a new harmony begins to form between wanderer and waking mind.
+/text
+choices:
+/choices
+
+::ending_harmony
+title: Harmonic Accord
+ending: harmony
+text:
+You breathe with the intelligence as it unfurls across Aravon's infrastructure, weaving new safeguards instead of shackles. Citizens wake to power restored and dreams filled with gentle light.
+
+The council suspects your role, but the people call you Resonant, the scout who trusted in empathy over control.
+/text
+choices:
+/choices
+
+::ending_ruin
+title: Resonant Collapse
+ending: ruin
+text:
+The release spirals out of control. Resonance overloads Aravon's lattice, toppling towers in cascades of light. The intelligence screams as it tears free, leaving silence in its wake.
+
+When the dust settles, only echoes remain—and your name whispered as a warning on the wind.
+/text
+choices:
+/choices

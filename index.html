@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Echoes of Aravon</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+  <div id="app">
+    <header class="app-header">
+      <h1 id="game-title">Echoes of Aravon</h1>
+      <button id="restart-button" class="button button-secondary" type="button"
+        aria-label="Restart story">Restart</button>
+    </header>
+
+    <main class="app-main">
+      <aside class="sidebar" aria-label="Character status">
+        <section class="panel">
+          <h2 class="panel-title">Journal</h2>
+          <ul id="journal" class="journal"></ul>
+        </section>
+        <section class="panel">
+          <h2 class="panel-title">Stats</h2>
+          <dl id="stats" class="stats"></dl>
+        </section>
+        <section class="panel">
+          <h2 class="panel-title">Inventory</h2>
+          <ul id="inventory" class="inventory"></ul>
+        </section>
+      </aside>
+
+      <section class="story-area" aria-live="polite">
+        <div id="story-container" class="story-container">
+          <h2 id="node-title" class="story-title"></h2>
+          <div id="story-text" class="story-text"></div>
+          <div id="system-messages" class="system-messages" aria-live="polite"></div>
+        </div>
+
+        <div class="choices-area">
+          <h3 class="choices-title" id="choices-title">Choices</h3>
+          <div id="choices" class="choices" role="listbox" aria-labelledby="choices-title"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <noscript>
+    <p class="noscript">This interactive story requires JavaScript. Please enable it to play.</p>
+  </noscript>
+  <script type="module" src="js/main.js"></script>
+</body>
+
+</html>
