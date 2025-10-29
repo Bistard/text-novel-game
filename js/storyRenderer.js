@@ -14,12 +14,18 @@ export class StoryRenderer {
 	 * @param {HTMLElement} [elements.stats]
 	 * @param {HTMLElement} [elements.journal]
 	 * @param {HTMLElement} [elements.inventory]
-	 * @param {HTMLElement} [elements.systemMessages]
-	 * @param {HTMLElement} [elements.titleElement]
-	 */
-	constructor(elements) {
-		this.elements = elements;
+ * @param {HTMLElement} [elements.systemMessages]
+ * @param {HTMLElement} [elements.titleElement]
+ * @param {HTMLElement} [elements.skipButton]
+ */
+constructor(elements) {
+	this.elements = elements;
+	this.currentAnimation = null;
+	this.handleSkipButtonClick = this.handleSkipButtonClick.bind(this);
+	if (this.elements.skipButton) {
+		this.elements.skipButton.addEventListener("click", this.handleSkipButtonClick);
 	}
+}
 
 	/**
 	 * @param {StoryBranch|null} branch
@@ -27,18 +33,56 @@ export class StoryRenderer {
 	 * @param {(choiceId: string) => void} onChoiceSelected
 	 */
 	render(branch, state, onChoiceSelected) {
+		this.cancelCurrentAnimation();
+
 		if (!branch) {
 			this.renderEmptyState(state);
 			return;
 		}
 
 		this.renderTitle(branch);
-		this.renderStory(branch);
-		this.renderChoices(branch, onChoiceSelected);
+		this.clearChoices();
 		this.renderStats(state);
 		this.renderInventory(state);
 		this.renderJournal(state);
 		this.renderSystemMessages(state);
+
+		this.renderStory(branch, () => {
+			this.renderChoices(branch, onChoiceSelected);
+		});
+	}
+
+	clearChoices() {
+		const container = this.elements.choices;
+		if (container) {
+			container.innerHTML = "";
+		}
+	}
+
+	cancelCurrentAnimation() {
+		if (this.currentAnimation && typeof this.currentAnimation.cancel === "function") {
+			this.currentAnimation.cancel();
+		}
+		this.setSkipButtonVisibility(false);
+		this.currentAnimation = null;
+	}
+
+	handleSkipButtonClick() {
+		if (this.currentAnimation && typeof this.currentAnimation.skip === "function") {
+			this.currentAnimation.skip();
+		}
+	}
+
+	setSkipButtonVisibility(isVisible) {
+		const button = this.elements.skipButton;
+		if (!button) return;
+		if (isVisible) {
+			button.hidden = false;
+			button.disabled = false;
+		} else {
+			button.hidden = true;
+			button.disabled = true;
+		}
 	}
 
 	/**
@@ -56,23 +100,273 @@ export class StoryRenderer {
 
 	/**
 	 * @param {StoryBranch} branch
+	 * @param {() => void} onComplete
 	 */
-	renderStory(branch) {
+	renderStory(branch, onComplete) {
 		const container = this.elements.storyText;
-		if (!container) return;
-		container.innerHTML = "";
-
-		const paragraphs = chunkParagraphs(branch.description);
-		if (!paragraphs.length) {
-			container.textContent = branch.description;
+		if (!container) {
+			this.setSkipButtonVisibility(false);
+			if (typeof onComplete === "function") {
+				onComplete();
+			}
 			return;
 		}
 
-		for (const text of paragraphs) {
-			const p = document.createElement("p");
-			p.textContent = text;
-			container.appendChild(p);
+		const paragraphs = chunkParagraphs(branch.description);
+		const totalCharacters = paragraphs.reduce((sum, text) => sum + text.length, 0);
+		const reduceMotion = this.prefersReducedMotion();
+
+		container.innerHTML = "";
+		container.scrollTop = 0;
+
+		if (!paragraphs.length || totalCharacters === 0) {
+			container.textContent = branch.description;
+			this.setSkipButtonVisibility(false);
+			if (typeof onComplete === "function") {
+				onComplete();
+			}
+			return;
 		}
+
+		if (reduceMotion) {
+			for (const text of paragraphs) {
+				const p = document.createElement("p");
+				p.className = "story-paragraph paragraph-enter paragraph-enter-active";
+				p.textContent = text;
+				container.appendChild(p);
+			}
+			this.setSkipButtonVisibility(false);
+			if (typeof onComplete === "function") {
+				onComplete();
+			}
+			return;
+		}
+
+		const controller = this.createAnimationController(container, paragraphs, onComplete);
+		this.currentAnimation = controller;
+		this.setSkipButtonVisibility(true);
+		controller.start();
+	}
+
+	/**
+	 * @param {HTMLElement} container
+	 * @param {string[]} paragraphs
+	 * @param {() => void} [onComplete]
+	 */
+	createAnimationController(container, paragraphs, onComplete) {
+		const hasRAF = typeof globalThis.requestAnimationFrame === "function";
+		const scheduleFrame = hasRAF
+			? (callback) => globalThis.requestAnimationFrame(callback)
+			: (callback) => globalThis.setTimeout(callback, 16);
+		const cancelFrame = hasRAF
+			? (id) => globalThis.cancelAnimationFrame(id)
+			: (id) => globalThis.clearTimeout(id);
+
+		const controller = {
+			cancelled: false,
+			skipRequested: false,
+			timeouts: new Set(),
+			rafIds: new Set(),
+			pendingResolvers: new Set(),
+			cancel: () => {
+				if (controller.cancelled) return;
+				controller.cancelled = true;
+				controller.clearTimers();
+				controller.flushAnimationFrames();
+				controller.flushPendingResolvers();
+			},
+			skip: () => {
+				if (controller.cancelled || controller.skipRequested) return;
+				controller.skipRequested = true;
+				controller.flushPendingResolvers();
+				controller.clearTimers();
+				controller.flushAnimationFrames();
+				controller.revealAll();
+			},
+			clearTimers: () => {
+				for (const id of controller.timeouts) {
+					globalThis.clearTimeout(id);
+				}
+				controller.timeouts.clear();
+			},
+			flushAnimationFrames: () => {
+				for (const id of controller.rafIds) {
+					cancelFrame(id);
+				}
+				controller.rafIds.clear();
+			},
+			revealAll: () => {
+				for (const node of container.children) {
+					if (node instanceof HTMLElement && node.dataset && typeof node.dataset.fullText === "string") {
+						node.textContent = node.dataset.fullText;
+						node.classList.add("paragraph-enter-active");
+					}
+				}
+			},
+			flushPendingResolvers: () => {
+				if (!controller.pendingResolvers.size) return;
+				const resolvers = Array.from(controller.pendingResolvers);
+				controller.pendingResolvers.clear();
+				for (const finish of resolvers) {
+					finish();
+				}
+			},
+			delay: (duration) =>
+				new Promise((resolve) => {
+					if (duration <= 0 || controller.cancelled || controller.skipRequested) {
+						resolve();
+						return;
+					}
+					const timerId = globalThis.setTimeout(() => {
+						controller.timeouts.delete(timerId);
+						resolve();
+					}, duration);
+					controller.timeouts.add(timerId);
+				}),
+			typeParagraph: (element, fullText) =>
+				new Promise((resolve) => {
+					if (!fullText || !fullText.length) {
+						element.textContent = fullText;
+						resolve();
+						return;
+					}
+
+					let position = 0;
+					let done = false;
+					const finish = () => {
+						if (done) return;
+						done = true;
+						controller.pendingResolvers.delete(finish);
+						element.textContent = fullText;
+						resolve();
+					};
+					controller.pendingResolvers.add(finish);
+
+					const step = () => {
+						if (controller.cancelled) {
+							finish();
+							return;
+						}
+						if (controller.skipRequested) {
+							finish();
+							return;
+						}
+
+						position += 1;
+						element.textContent = fullText.slice(0, position);
+
+						if (position >= fullText.length) {
+							finish();
+							return;
+						}
+
+						const delay = this.getCharacterDelay(fullText.charAt(position - 1));
+						const timerId = globalThis.setTimeout(() => {
+							controller.timeouts.delete(timerId);
+							step();
+						}, delay);
+						controller.timeouts.add(timerId);
+					};
+
+					step();
+				}),
+			start: async () => {
+				try {
+					for (let index = 0; index < paragraphs.length; index += 1) {
+						if (controller.cancelled) {
+							return;
+						}
+						const text = paragraphs[index];
+						const paragraph = document.createElement("p");
+						paragraph.className = "story-paragraph paragraph-enter";
+						paragraph.dataset.fullText = text;
+						container.appendChild(paragraph);
+
+						if (controller.skipRequested) {
+							paragraph.textContent = text;
+							paragraph.classList.add("paragraph-enter-active");
+						} else {
+							const rafId = scheduleFrame(() => {
+								controller.rafIds.delete(rafId);
+								paragraph.classList.add("paragraph-enter-active");
+							});
+							controller.rafIds.add(rafId);
+
+							await controller.typeParagraph(paragraph, text);
+							if (controller.cancelled) {
+								return;
+							}
+							if (!controller.skipRequested && index < paragraphs.length - 1) {
+								await controller.delay(this.getParagraphPause(text));
+							}
+						}
+					}
+				} finally {
+					if (this.currentAnimation === controller) {
+						this.currentAnimation = null;
+					}
+					controller.clearTimers();
+					controller.flushAnimationFrames();
+					this.setSkipButtonVisibility(false);
+					if (!controller.cancelled && typeof onComplete === "function") {
+						onComplete();
+					}
+				}
+			},
+		};
+
+		return controller;
+	}
+
+	prefersReducedMotion() {
+		const media = typeof globalThis.matchMedia === "function" ? globalThis.matchMedia("(prefers-reduced-motion: reduce)") : null;
+		return Boolean(media && media.matches);
+	}
+
+	getCharacterDelay(char) {
+		const base = 28;
+		const slowChars = new Map([
+			[",", 110],
+			[".", 180],
+			["!", 180],
+			["?", 180],
+			[";", 140],
+			[":", 140],
+			["—", 160],
+			["…", 220],
+			["，", 120],
+			["。", 200],
+			["！", 200],
+			["？", 200],
+			["；", 150],
+			["：", 150],
+		]);
+
+		if (!char) {
+			return base;
+		}
+		if (/\s/.test(char)) {
+			return 18;
+		}
+		return slowChars.get(char) || base;
+	}
+
+	getParagraphPause(text) {
+		if (!text) {
+			return 0;
+		}
+		const trimmed = text.trim();
+		if (!trimmed) {
+			return 0;
+		}
+		const lastChar = trimmed.charAt(trimmed.length - 1);
+		if ("?!。！？".includes(lastChar)) {
+			return 260;
+		}
+		if (",;，；、".includes(lastChar)) {
+			return 180;
+		}
+		return 140;
 	}
 
 	/**
@@ -213,6 +507,7 @@ export class StoryRenderer {
 	 * @param {import("./storyState.js").StoryState} state
 	 */
 	renderEmptyState(state) {
+		this.setSkipButtonVisibility(false);
 		if (this.elements.nodeTitle) {
 			this.elements.nodeTitle.textContent = "Story unavailable";
 		}

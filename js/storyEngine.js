@@ -15,6 +15,7 @@ export class StoryEngine {
 	 * @param {HTMLElement} options.inventory
 	 * @param {HTMLElement} options.systemMessages
 	 * @param {HTMLElement} options.titleElement
+	 * @param {HTMLElement} [options.skipButton]
 	 */
 	constructor(options) {
 		this.renderer = new StoryRenderer(options);

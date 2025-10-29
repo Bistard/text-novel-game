@@ -154,6 +154,7 @@ body::before {
 	display: flex;
 	flex-direction: column;
 	gap: 12px;
+	position: relative;
 }
 
 .story-title {
@@ -166,6 +167,64 @@ body::before {
 	font-size: clamp(1rem, 1.4vw, 1.1rem);
 	color: var(--fg-muted);
 	white-space: pre-wrap;
+}
+
+.story-paragraph {
+	margin: 0 0 12px;
+}
+
+.story-paragraph:last-child {
+	margin-bottom: 0;
+}
+
+.paragraph-enter {
+	opacity: 0;
+	transform: translateY(6px);
+}
+
+.paragraph-enter-active {
+	opacity: 1;
+	transform: translateY(0);
+	transition: opacity 260ms ease, transform 260ms ease;
+}
+
+.skip-button {
+	position: absolute;
+	top: 16px;
+	right: 16px;
+	border: 1px solid rgba(73, 210, 255, 0.3);
+	border-radius: 999px;
+	padding: 6px 14px;
+	background: rgba(18, 24, 46, 0.85);
+	color: var(--fg-muted);
+	font-size: 0.85rem;
+	cursor: pointer;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	transition: background var(--transition), color var(--transition), border-color var(--transition);
+}
+
+.skip-button:hover,
+.skip-button:focus-visible {
+	background: rgba(73, 210, 255, 0.18);
+	color: var(--fg);
+	border-color: rgba(99, 245, 192, 0.6);
+	outline: none;
+}
+
+.skip-button[hidden] {
+	display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.paragraph-enter {
+		opacity: 1;
+		transform: none;
+	}
+
+	.paragraph-enter-active {
+		transition: none;
+	}
 }
 
 .system-messages {

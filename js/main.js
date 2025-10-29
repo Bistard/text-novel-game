@@ -11,6 +11,7 @@ const elements = {
 	inventory: document.getElementById("inventory"),
 	restart: document.getElementById("restart-button"),
 	systemMessages: document.getElementById("system-messages"),
+	skipButton: document.getElementById("skip-button"),
 };
 
 // game engine instance
@@ -23,6 +24,7 @@ const engine = new StoryEngine({
 	inventory: elements.inventory,
 	systemMessages: elements.systemMessages,
 	titleElement: elements.title,
+	skipButton: elements.skipButton,
 });
 
 async function boot() {
@@ -53,4 +55,3 @@ if (elements.restart) {
 }
 
 boot();
-
