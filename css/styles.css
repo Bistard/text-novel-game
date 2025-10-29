@@ -110,6 +110,8 @@ body::before {
 	display: grid;
 	gap: 6px;
 	font-size: 0.92rem;
+	max-height: 200px;
+	overflow-y: auto;
 }
 
 .muted {
