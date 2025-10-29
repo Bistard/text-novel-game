@@ -1,5 +1,6 @@
 import { StoryEngine } from "./storyEngine.js";
 
+// Cache references to key DOM elements
 const elements = {
 	title: document.getElementById("game-title"),
 	nodeTitle: document.getElementById("node-title"),
@@ -12,6 +13,7 @@ const elements = {
 	systemMessages: document.getElementById("system-messages"),
 };
 
+// game engine instance
 const engine = new StoryEngine({
 	nodeTitle: elements.nodeTitle,
 	storyText: elements.storyText,
