@@ -3,6 +3,7 @@ import { StoryRenderer } from "./storyRenderer.js";
 import { StoryState } from "./storyState.js";
 import { runRoll } from "./rollSystem.js";
 import { formatSigned } from "./storyUtilities.js";
+import { loadStatConfig } from "./statConfig.js";
 
 export class StoryEngine {
 	/**
@@ -26,15 +27,25 @@ export class StoryEngine {
 
 	/**
 	 * Loads the story text file and initialises the engine.
-	 * @param {string} url
+	 * @param {string} storyUrl
+	 * @param {string} [statsConfigUrl]
 	 */
-	async load(url) {
-		const response = await fetch(url);
-		if (!response.ok) {
-			throw new Error(`Failed to load story file (${response.status}).`);
-		}
-		const text = await response.text();
-		this.story = parseStory(text);
+	async load(storyUrl, statsConfigUrl = "assets/stats.config") {
+		const storyPromise = fetch(storyUrl).then((response) => {
+			if (!response.ok) {
+				throw new Error(`Failed to load story file (${response.status}).`);
+			}
+			return response.text();
+		});
+		const statsPromise =
+			statsConfigUrl != null && statsConfigUrl !== ""
+				? loadStatConfig(statsConfigUrl)
+				: Promise.resolve({});
+
+		const [storyText, statDefaults] = await Promise.all([storyPromise, statsPromise]);
+
+		this.story = parseStory(storyText);
+		this.state.configureStats(statDefaults);
 		this.resetState();
 		this.render();
 	}
@@ -94,14 +105,25 @@ export class StoryEngine {
 			let rollOutcomeLabel = null;
 			let nextBranchId = choice.next || null;
 
-			const statEffectsToApply = [];
-			const inventoryEffectsToApply = [];
+			const unknownStatNames = new Set();
+			const resolveStatEffects = (effects) => {
+				const partition = this.state.partitionStatEffects(effects || []);
+				for (const name of partition.unknown) {
+					if (name) {
+						unknownStatNames.add(name);
+					}
+				}
+				return partition.allowed;
+			};
+
+			let statEffectsToApply = [];
+			let inventoryEffectsToApply = [];
 
 			if (choice.roll) {
 				const rollResult = runRoll(choice.roll, (stat) => this.state.getStatValue(stat));
 				if (rollResult.success) {
-					statEffectsToApply.push(...choice.stats);
-					inventoryEffectsToApply.push(...choice.inventory);
+					statEffectsToApply = resolveStatEffects(choice.stats);
+					inventoryEffectsToApply = Array.isArray(choice.inventory) ? choice.inventory.slice() : [];
 					rollOutcomeLabel = "Roll: Success";
 				} else {
 					rollOutcomeLabel = "Roll: Failure";
@@ -116,8 +138,8 @@ export class StoryEngine {
 				this.state.clearLastRoll();
 				nextBranchId = rollResult.success ? choice.roll.ok : choice.roll.fail;
 			} else {
-				statEffectsToApply.push(...choice.stats);
-				inventoryEffectsToApply.push(...choice.inventory);
+				statEffectsToApply = resolveStatEffects(choice.stats);
+				inventoryEffectsToApply = Array.isArray(choice.inventory) ? choice.inventory.slice() : [];
 			}
 
 			if (rollOutcomeLabel) {
@@ -125,8 +147,8 @@ export class StoryEngine {
 			}
 
 			if (statEffectsToApply.length) {
-				this.state.applyStatEffects(statEffectsToApply);
-				const labels = statEffectsToApply.map((effect) => `${effect.stat} ${formatSigned(effect.delta)}`);
+				const appliedStats = this.state.applyStatEffects(statEffectsToApply);
+				const labels = appliedStats.map((effect) => `${effect.stat} ${formatSigned(effect.delta)}`);
 				summaries.push(`Stats: ${labels.join(", ")}`);
 			}
 
@@ -140,6 +162,13 @@ export class StoryEngine {
 				? `${choice.text} → ${summaries.join(" | ")}`
 				: `${choice.text}`;
 			this.state.appendJournal(journalEntry);
+
+			if (!this.state.systemError && unknownStatNames.size) {
+				const names = Array.from(unknownStatNames).sort((a, b) => a.localeCompare(b));
+				console.warn("Unknown stat(s) encountered:", names);
+				const suffix = names.length > 1 ? "s" : "";
+				this.state.setSystemError(`Unknown stat${suffix} encountered: ${names.join(", ")}. Update the stat config.`);
+			}
 
 			if (!nextBranchId) {
 				this.state.setSystemError("Choice does not specify a destination branch.");

@@ -428,11 +428,11 @@ constructor(elements) {
 		if (!container) return;
 		container.innerHTML = "";
 
-		const entries = Object.entries(state.stats).filter(([, value]) => value !== 0);
+		const entries = Object.entries(state.stats);
 		if (!entries.length) {
 			const placeholder = document.createElement("div");
 			placeholder.className = "muted";
-			placeholder.textContent = "No stats yet.";
+			placeholder.textContent = "No stats configured.";
 			container.appendChild(placeholder);
 			return;
 		}
