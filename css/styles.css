@@ -357,3 +357,243 @@ body::before {
 		grid-template-columns: 1fr;
 	}
 }
+
+/* Dice roll overlay */
+.roll-overlay {
+	position: fixed;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 24px;
+	background: rgba(8, 12, 26, 0.78);
+	backdrop-filter: blur(9px);
+	z-index: 2000;
+}
+
+.roll-overlay[hidden] {
+	display: none;
+}
+
+.roll-overlay-dialog {
+	background: rgba(14, 20, 40, 0.95);
+	border: 1px solid rgba(73, 210, 255, 0.22);
+	border-radius: 24px;
+	padding: 36px 42px;
+	box-shadow: 0 40px 82px rgba(4, 8, 20, 0.55);
+	display: grid;
+	gap: 18px;
+	justify-items: center;
+	max-width: min(460px, 100%);
+	text-align: center;
+}
+
+.roll-overlay-die {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.die {
+	--size: 92px;
+	--pad: 18px;
+	width: var(--size);
+	height: var(--size);
+	border-radius: 16px;
+	background: #f6f6fb;
+	box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.18), 0 16px 28px rgba(0, 0, 0, 0.35);
+	position: relative;
+	transform: translateZ(0);
+}
+
+.pip {
+	position: absolute;
+	width: 12px;
+	height: 12px;
+	border-radius: 50%;
+	background: #12131a;
+	opacity: 0;
+}
+
+.pip.p1 {
+	left: var(--pad);
+	top: var(--pad);
+}
+
+.pip.p2 {
+	left: calc(50% - 6px);
+	top: var(--pad);
+}
+
+.pip.p3 {
+	right: var(--pad);
+	top: var(--pad);
+}
+
+.pip.p4 {
+	left: calc(50% - 6px);
+	top: calc(50% - 6px);
+}
+
+.pip.p5 {
+	left: var(--pad);
+	bottom: var(--pad);
+}
+
+.pip.p6 {
+	left: calc(50% - 6px);
+	bottom: var(--pad);
+}
+
+.pip.p7 {
+	right: var(--pad);
+	bottom: var(--pad);
+}
+
+.die.face-1 .p4 {
+	opacity: 1;
+}
+
+.die.face-2 .p1,
+.die.face-2 .p7 {
+	opacity: 1;
+}
+
+.die.face-3 .p1,
+.die.face-3 .p4,
+.die.face-3 .p7 {
+	opacity: 1;
+}
+
+.die.face-4 .p1,
+.die.face-4 .p3,
+.die.face-4 .p5,
+.die.face-4 .p7 {
+	opacity: 1;
+}
+
+.die.face-5 .p1,
+.die.face-5 .p3,
+.die.face-5 .p4,
+.die.face-5 .p5,
+.die.face-5 .p7 {
+	opacity: 1;
+}
+
+.die.face-6 .p1,
+.die.face-6 .p2,
+.die.face-6 .p3,
+.die.face-6 .p5,
+.die.face-6 .p6,
+.die.face-6 .p7 {
+	opacity: 1;
+}
+
+.die.shake {
+	animation: dice-shake 720ms cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+}
+
+@keyframes dice-shake {
+	0%,
+	100% {
+		transform: translate(0, 0) rotate(0deg);
+	}
+
+	20% {
+		transform: translate(-4px, 3px) rotate(-10deg);
+	}
+
+	40% {
+		transform: translate(4px, -3px) rotate(8deg);
+	}
+
+	60% {
+		transform: translate(-3px, 4px) rotate(-6deg);
+	}
+
+	80% {
+		transform: translate(3px, -4px) rotate(5deg);
+	}
+}
+
+.roll-overlay-status {
+	margin: 0;
+	font-size: 1.6rem;
+	font-weight: 600;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+
+.roll-overlay-status.success {
+	color: var(--accent-strong);
+}
+
+.roll-overlay-status.failure {
+	color: var(--danger);
+}
+
+.roll-overlay-detail {
+	display: grid;
+	gap: 8px;
+	width: 100%;
+	font-size: 0.95rem;
+}
+
+.roll-detail-row {
+	display: flex;
+	justify-content: space-between;
+	align-items: baseline;
+	gap: 16px;
+	color: var(--fg-muted);
+}
+
+.roll-detail-label {
+	font-size: 0.75rem;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+}
+
+.roll-detail-value {
+	font-weight: 600;
+	color: var(--fg);
+}
+
+.roll-overlay-detail.success .roll-detail-value {
+	color: var(--accent-strong);
+}
+
+.roll-overlay-detail.failure .roll-detail-value {
+	color: var(--danger);
+}
+
+.roll-overlay-continue {
+	min-width: 160px;
+	padding: 12px 32px;
+	font-size: 1.05rem;
+	font-weight: 600;
+	background: linear-gradient(120deg, var(--accent), var(--accent-strong));
+	color: #050812;
+	border: none;
+	box-shadow: 0 18px 36px rgba(73, 210, 255, 0.32);
+	transition: transform var(--transition), box-shadow var(--transition), opacity var(--transition);
+}
+
+.roll-overlay-continue:hover,
+.roll-overlay-continue:focus-visible {
+	transform: translateY(-2px);
+	box-shadow: 0 22px 44px rgba(99, 245, 192, 0.35);
+	outline: none;
+}
+
+.roll-overlay-continue:disabled {
+	opacity: 0.6;
+	transform: none;
+	box-shadow: none;
+	pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.die.shake {
+		animation: none;
+	}
+}

@@ -21,6 +21,7 @@ export class StoryEngine {
 		this.renderer = new StoryRenderer(options);
 		this.state = new StoryState();
 		this.story = null;
+		this.choiceInProgress = false;
 	}
 
 	/**
@@ -56,63 +57,107 @@ export class StoryEngine {
 	restart() {
 		this.resetState();
 		this.render();
+		if (typeof this.renderer.syncSkipButtonState === "function") {
+			if (typeof globalThis.queueMicrotask === "function") {
+				globalThis.queueMicrotask(() => this.renderer.syncSkipButtonState());
+			} else {
+				globalThis.setTimeout(() => this.renderer.syncSkipButtonState(), 0);
+			}
+		}
 	}
 
 	/**
 	 * Handles the player picking a choice button.
 	 * @param {string} choiceId
 	 */
-	handleChoice(choiceId) {
+	async handleChoice(choiceId) {
 		const branch = this.getCurrentBranch();
 		if (!branch) return;
 
+		if (this.choiceInProgress) {
+			return;
+		}
+
+		this.choiceInProgress = true;
+
 		const choice = branch.choices.find((entry) => entry.id === choiceId);
-		if (!choice) return;
-
-		this.state.clearSystemError();
-		this.state.clearLastRoll();
-
-		const summaries = [];
-
-		if (choice.stats.length) {
-			this.state.applyStatEffects(choice.stats);
-			const labels = choice.stats.map((effect) => `${effect.stat} ${formatSigned(effect.delta)}`);
-			summaries.push(`Stats: ${labels.join(", ")}`);
-		}
-
-		if (choice.inventory.length) {
-			this.state.applyInventoryEffects(choice.inventory);
-			const labels = choice.inventory.map((effect) => `${effect.item} ${formatSigned(effect.delta)}`);
-			summaries.push(`Inventory: ${labels.join(", ")}`);
-		}
-
-		let nextBranchId = choice.next || null;
-
-		if (choice.roll) {
-			const rollResult = runRoll(choice.roll, (stat) => this.state.getStatValue(stat));
-			this.state.setLastRoll(rollResult);
-			nextBranchId = rollResult.success ? choice.roll.ok : choice.roll.fail;
-		}
-
-		const journalEntry = summaries.length
-			? `${choice.text} → ${summaries.join(" | ")}`
-			: `${choice.text}`;
-		this.state.appendJournal(journalEntry);
-
-		if (!nextBranchId) {
-			this.state.setSystemError("Choice does not specify a destination branch.");
-			this.render();
+		if (!choice) {
+			this.choiceInProgress = false;
 			return;
 		}
 
-		if (!this.story.branches[nextBranchId]) {
-			this.state.setSystemError(`Missing branch "${nextBranchId}".`);
-			this.render();
-			return;
-		}
+		try {
+			this.state.clearSystemError();
+			this.state.clearLastRoll();
 
-		this.state.setCurrentBranch(nextBranchId);
-		this.render();
+			const summaries = [];
+			let rollOutcomeLabel = null;
+			let nextBranchId = choice.next || null;
+
+			const statEffectsToApply = [];
+			const inventoryEffectsToApply = [];
+
+			if (choice.roll) {
+				const rollResult = runRoll(choice.roll, (stat) => this.state.getStatValue(stat));
+				if (rollResult.success) {
+					statEffectsToApply.push(...choice.stats);
+					inventoryEffectsToApply.push(...choice.inventory);
+					rollOutcomeLabel = "Roll: Success";
+				} else {
+					rollOutcomeLabel = "Roll: Failure";
+				}
+				try {
+					await this.renderer.showRollResult(rollResult, {
+						statEffects: statEffectsToApply,
+					});
+				} catch (error) {
+					console.error("Dice animation failed:", error);
+				}
+				this.state.clearLastRoll();
+				nextBranchId = rollResult.success ? choice.roll.ok : choice.roll.fail;
+			} else {
+				statEffectsToApply.push(...choice.stats);
+				inventoryEffectsToApply.push(...choice.inventory);
+			}
+
+			if (rollOutcomeLabel) {
+				summaries.push(rollOutcomeLabel);
+			}
+
+			if (statEffectsToApply.length) {
+				this.state.applyStatEffects(statEffectsToApply);
+				const labels = statEffectsToApply.map((effect) => `${effect.stat} ${formatSigned(effect.delta)}`);
+				summaries.push(`Stats: ${labels.join(", ")}`);
+			}
+
+			if (inventoryEffectsToApply.length) {
+				this.state.applyInventoryEffects(inventoryEffectsToApply);
+				const labels = inventoryEffectsToApply.map((effect) => `${effect.item} ${formatSigned(effect.delta)}`);
+				summaries.push(`Inventory: ${labels.join(", ")}`);
+			}
+
+			const journalEntry = summaries.length
+				? `${choice.text} → ${summaries.join(" | ")}`
+				: `${choice.text}`;
+			this.state.appendJournal(journalEntry);
+
+			if (!nextBranchId) {
+				this.state.setSystemError("Choice does not specify a destination branch.");
+				this.render();
+				return;
+			}
+
+			if (!this.story.branches[nextBranchId]) {
+				this.state.setSystemError(`Missing branch "${nextBranchId}".`);
+				this.render();
+				return;
+			}
+
+			this.state.setCurrentBranch(nextBranchId);
+			this.render();
+		} finally {
+			this.choiceInProgress = false;
+		}
 	}
 
 	/** Refreshes the UI elements. */

@@ -1,3 +1,4 @@
+import { DiceOverlay } from "./diceOverlay.js";
 import { chunkParagraphs, formatLabel, buildRollSummary } from "./storyUtilities.js";
 
 const DOCUMENT_SUFFIX = "Narrative Demo";
@@ -21,6 +22,7 @@ export class StoryRenderer {
 constructor(elements) {
 	this.elements = elements;
 	this.currentAnimation = null;
+	this.diceOverlay = new DiceOverlay({ prefersReducedMotion: this.prefersReducedMotion.bind(this) });
 	this.handleSkipButtonClick = this.handleSkipButtonClick.bind(this);
 	if (this.elements.skipButton) {
 		this.elements.skipButton.addEventListener("click", this.handleSkipButtonClick);
@@ -50,6 +52,8 @@ constructor(elements) {
 		this.renderStory(branch, () => {
 			this.renderChoices(branch, onChoiceSelected);
 		});
+
+		this.syncSkipButtonState();
 	}
 
 	clearChoices() {
@@ -83,6 +87,11 @@ constructor(elements) {
 			button.hidden = true;
 			button.disabled = true;
 		}
+	}
+
+	/** Ensures the skip button reflects whether an animation is active. */
+	syncSkipButtonState() {
+		this.setSkipButtonVisibility(Boolean(this.currentAnimation));
 	}
 
 	/**
@@ -316,6 +325,18 @@ constructor(elements) {
 		};
 
 		return controller;
+	}
+
+	/**
+	 * Displays the dice roll overlay, plays the animation, and waits for user confirmation.
+	 * @param {import("./storyUtilities.js").RollResult} result
+	 * @param {{ duration?: number, statEffects?: { stat: string, delta: number }[] }} [options]
+	 */
+	async showRollResult(result, options = {}) {
+		this.cancelCurrentAnimation();
+		this.setSkipButtonVisibility(false);
+		if (!result || !this.diceOverlay) return;
+		await this.diceOverlay.show(result, options);
 	}
 
 	prefersReducedMotion() {
