@@ -126,8 +126,10 @@ export class StoryEngine {
 				return evaluation.evaluated;
 			};
 
-			let evaluatedStatEffects = [];
-			let inventoryEffectsToApply = [];
+                        let evaluatedStatEffects = [];
+                        let inventoryEffectsToApply = [];
+                        let appliedStats = [];
+                        let appliedInventoryEffects = [];
 
                         if (choice.roll) {
                                 const rollResult = runRoll(choice.roll, (stat) => this.state.getStatValue(stat));
@@ -158,21 +160,27 @@ export class StoryEngine {
 			}
 
 			if (evaluatedStatEffects.length) {
-				const appliedStats = this.state.applyEvaluatedStatEffects(evaluatedStatEffects);
-				const labels = appliedStats.map((effect) => `${effect.stat} ${formatSigned(effect.delta)}`);
-				summaries.push(`Stats: ${labels.join(", ")}`);
-			}
+                                appliedStats = this.state.applyEvaluatedStatEffects(evaluatedStatEffects);
+                                if (appliedStats.length) {
+                                        const labels = appliedStats.map((effect) => `${effect.stat} ${formatSigned(effect.delta)}`);
+                                        summaries.push(`Stats: ${labels.join(", ")}`);
+                                }
+                        }
 
-			if (inventoryEffectsToApply.length) {
-				this.state.applyInventoryEffects(inventoryEffectsToApply);
-				const labels = inventoryEffectsToApply.map((effect) => `${effect.item} ${formatSigned(effect.delta)}`);
-				summaries.push(`Inventory: ${labels.join(", ")}`);
-			}
+                        if (inventoryEffectsToApply.length) {
+                                appliedInventoryEffects = this.state.applyInventoryEffects(inventoryEffectsToApply);
+                                if (appliedInventoryEffects.length) {
+                                        const labels = appliedInventoryEffects.map((effect) => `${effect.item} ${formatSigned(effect.delta)}`);
+                                        summaries.push(`Inventory: ${labels.join(", ")}`);
+                                }
+                        }
 
-			const journalEntry = summaries.length
-				? `${choice.text} → ${summaries.join(" | ")}`
-				: `${choice.text}`;
-			this.state.appendJournal(journalEntry);
+                        if (appliedStats.length || appliedInventoryEffects.length) {
+                                const journalEntry = summaries.length
+                                        ? `${choice.text} → ${summaries.join(" | ")}`
+                                        : `${choice.text}`;
+                                this.state.appendJournal(journalEntry);
+                        }
 
 			if (!this.state.systemError) {
 				if (unknownStatNames.size) {

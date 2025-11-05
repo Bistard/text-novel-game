@@ -172,46 +172,73 @@ export class StoryState {
 	 * @param {{ stat: string, delta: number }[]} effects
 	 * @returns {{ stat: string, delta: number }[]}
 	 */
-	applyEvaluatedStatEffects(effects) {
-		if (!Array.isArray(effects) || !effects.length) {
-			return [];
-		}
+        applyEvaluatedStatEffects(effects) {
+                if (!Array.isArray(effects) || !effects.length) {
+                        return [];
+                }
 
-		const applied = [];
-		for (const effect of effects) {
-			if (!effect || typeof effect.stat !== "string") {
-				continue;
-			}
-			const key = effect.stat.trim().toLowerCase();
-			if (!key || !Object.prototype.hasOwnProperty.call(this.statDefaults, key)) {
-				continue;
-			}
+                const applied = [];
+                for (const effect of effects) {
+                        if (!effect || typeof effect.stat !== "string") {
+                                continue;
+                        }
+                        const key = effect.stat.trim().toLowerCase();
+                        if (!key || !Object.prototype.hasOwnProperty.call(this.statDefaults, key)) {
+                                continue;
+                        }
 
-			const delta = Number(effect.delta);
-			const numericDelta = Number.isFinite(delta) ? delta : 0;
-			const base = Number(this.stats[key] ?? this.statDefaults[key] ?? 0);
-			const safeBase = Number.isFinite(base) ? base : 0;
-			this.stats[key] = safeBase + numericDelta;
-			applied.push({ stat: key, delta: numericDelta });
-		}
+                        const delta = Number(effect.delta);
+                        if (!Number.isFinite(delta) || delta === 0) {
+                                continue;
+                        }
 
-		return applied;
-	}
+                        const base = Number(this.stats[key] ?? this.statDefaults[key] ?? 0);
+                        const safeBase = Number.isFinite(base) ? base : 0;
+                        this.stats[key] = safeBase + delta;
+                        applied.push({ stat: key, delta });
+                }
 
-	/**
-	 * @param {{ item: string, delta: number }[]} effects
-	 */
-	applyInventoryEffects(effects) {
-		for (const effect of effects) {
-			const current = this.inventory[effect.item] || 0;
-			const updated = current + effect.delta;
-			if (updated <= 0) {
-				delete this.inventory[effect.item];
-			} else {
-				this.inventory[effect.item] = updated;
-			}
-		}
-	}
+                return applied;
+        }
+
+        /**
+         * @param {{ item: string, delta: number }[]} effects
+         * @returns {{ item: string, delta: number }[]}
+         */
+        applyInventoryEffects(effects) {
+                if (!Array.isArray(effects) || !effects.length) {
+                        return [];
+                }
+
+                const applied = [];
+                for (const effect of effects) {
+                        if (!effect || typeof effect.item !== "string") {
+                                continue;
+                        }
+
+                        const item = effect.item.trim();
+                        if (!item) {
+                                continue;
+                        }
+
+                        const delta = Number(effect.delta);
+                        if (!Number.isFinite(delta) || delta === 0) {
+                                continue;
+                        }
+
+                        const current = this.inventory[item] || 0;
+                        const updated = current + delta;
+                        if (updated <= 0) {
+                                delete this.inventory[item];
+                        } else {
+                                this.inventory[item] = updated;
+                        }
+
+                        applied.push({ item, delta });
+                }
+
+                return applied;
+        }
 
 	/**
 	 * @param {string} text
