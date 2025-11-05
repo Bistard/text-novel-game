@@ -76,6 +76,17 @@ export async function processChoiceSelection({ choice, state, renderer, runRollI
 	if (appliedStats.length || appliedInventoryEffects.length) {
 		const journalEntry = summaries.length ? `${choice.text} → ${summaries.join(" | ")}` : `${choice.text}`;
 		state.appendJournal(journalEntry);
+		if (renderer && typeof renderer.showChangeSummary === "function") {
+			try {
+				await renderer.showChangeSummary({
+					stats: appliedStats,
+					inventory: appliedInventoryEffects,
+					sourceLabel: choice.text,
+				});
+			} catch (error) {
+				console.error("Change overlay failed:", error);
+			}
+		}
 	}
 
 	if (!state.systemError) {

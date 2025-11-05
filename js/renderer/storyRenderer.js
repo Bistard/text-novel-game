@@ -1,4 +1,5 @@
 import { DiceOverlay } from "./overlay/diceOverlay.js";
+import { ChangeOverlay } from "./overlay/changeOverlay.js";
 import { chunkParagraphs } from "../storyUtilities.js";
 import { TextAnimator } from "./textAnimator.js";
 import { renderChoices } from "./components/renderChoices.js";
@@ -31,6 +32,7 @@ export class StoryRenderer {
 			prefersReducedMotion: () => this.prefersReducedMotion(),
 		});
 		this.diceOverlay = new DiceOverlay({ prefersReducedMotion: this.prefersReducedMotion.bind(this) });
+		this.changeOverlay = new ChangeOverlay({ prefersReducedMotion: this.prefersReducedMotion.bind(this) });
 		this.handleSkipButtonClick = this.handleSkipButtonClick.bind(this);
 		if (this.elements.skipButton) {
 			this.elements.skipButton.addEventListener("click", this.handleSkipButtonClick);
@@ -150,6 +152,17 @@ export class StoryRenderer {
 		this.setSkipButtonVisibility(false);
 		if (!result || !this.diceOverlay) return;
 		await this.diceOverlay.show(result, options);
+	}
+
+	/**
+	 * Displays the overlay summarising stat or inventory updates.
+	 * @param {{ stats?: { stat: string, delta: number }[], inventory?: { item: string, delta: number }[], sourceLabel?: string|null }} [changes]
+	 */
+	async showChangeSummary(changes = {}) {
+		this.cancelCurrentAnimation();
+		this.setSkipButtonVisibility(false);
+		if (!this.changeOverlay) return;
+		await this.changeOverlay.show(changes);
 	}
 
 	prefersReducedMotion() {

@@ -671,8 +671,174 @@ body::before {
 	pointer-events: none;
 }
 
+.change-overlay .roll-overlay-dialog {
+	display: grid;
+	gap: 18px;
+	padding: clamp(28px, 5vw, 36px);
+}
+
+.change-overlay-header {
+	display: grid;
+	gap: 6px;
+	text-align: center;
+}
+
+.change-overlay-title {
+	margin: 0;
+	font-size: 1.45rem;
+	font-weight: 700;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--accent);
+}
+
+.change-overlay-subtitle {
+	margin: 0;
+	color: var(--fg-muted);
+	font-size: 0.95rem;
+	letter-spacing: 0.04em;
+}
+
+.change-overlay-list {
+	display: grid;
+	gap: 12px;
+	width: 100%;
+}
+
+.change-overlay-section {
+	margin: 6px 0 0;
+	color: var(--accent);
+	font-size: 0.75rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.12em;
+}
+
+.change-overlay-entry {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 18px;
+	padding: 14px 20px;
+	border-radius: calc(var(--radius) / 1.4);
+	background: linear-gradient(135deg, rgba(18, 26, 44, 0.9), rgba(18, 22, 40, 0.65));
+	border: 1px solid rgba(73, 210, 255, 0.25);
+	box-shadow: 0 16px 38px rgba(5, 12, 28, 0.38);
+	position: relative;
+	overflow: hidden;
+	opacity: 1;
+	transform: none;
+}
+
+.change-overlay-entry::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background: radial-gradient(ellipse at top, rgba(99, 245, 192, 0.18), transparent 60%);
+	opacity: 0;
+	transform: translateY(-20%);
+	transition: opacity var(--transition), transform var(--transition);
+	pointer-events: none;
+}
+
+.change-overlay-entry.gain::before {
+	background: radial-gradient(ellipse at top, rgba(73, 210, 255, 0.25), transparent 65%);
+}
+
+.change-overlay-entry.loss::before {
+	background: radial-gradient(ellipse at top, rgba(255, 107, 107, 0.28), transparent 65%);
+}
+
+.change-overlay-label {
+	font-size: 1rem;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+}
+
+.change-overlay-delta {
+	font-size: 1.05rem;
+	font-weight: 700;
+	color: var(--fg);
+	text-shadow: 0 0 12px rgba(73, 210, 255, 0.2);
+}
+
+.change-overlay-entry.gain .change-overlay-delta {
+	color: var(--accent-strong);
+	text-shadow: 0 0 18px rgba(99, 245, 192, 0.45);
+}
+
+.change-overlay-entry.loss .change-overlay-delta {
+	color: var(--danger);
+	text-shadow: 0 0 18px rgba(255, 107, 107, 0.45);
+}
+
+.change-overlay-entry.animate {
+	opacity: 0;
+	transform: translateY(16px) scale(0.96);
+	animation: change-overlay-rise 440ms cubic-bezier(0.24, 0.9, 0.32, 1.1) forwards;
+	animation-delay: var(--change-overlay-delay, 0ms);
+}
+
+.change-overlay-entry.animate::before {
+	opacity: 1;
+	transform: translateY(0);
+}
+
+.change-overlay-entry.animate .change-overlay-delta {
+	animation: change-overlay-pulse 520ms cubic-bezier(0.25, 0.85, 0.38, 1.15) forwards;
+	animation-delay: calc(var(--change-overlay-delay, 0ms) + 80ms);
+}
+
+.change-overlay-continue {
+	margin-top: 6px;
+}
+
+@keyframes change-overlay-rise {
+	0% {
+		opacity: 0;
+		transform: translateY(24px) scale(0.95);
+	}
+
+	60% {
+		opacity: 1;
+		transform: translateY(-4px) scale(1.015);
+	}
+
+	100% {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+}
+
+@keyframes change-overlay-pulse {
+	0% {
+		transform: scale(0.85);
+		opacity: 0.4;
+	}
+
+	55% {
+		transform: scale(1.15);
+		opacity: 1;
+	}
+
+	100% {
+		transform: scale(1);
+		opacity: 1;
+	}
+}
+
 @media (prefers-reduced-motion: reduce) {
 	.die.shake {
+		animation: none;
+	}
+
+	.change-overlay-entry.animate {
+		animation: none;
+		opacity: 1;
+		transform: none;
+	}
+
+	.change-overlay-entry.animate .change-overlay-delta {
 		animation: none;
 	}
 }
