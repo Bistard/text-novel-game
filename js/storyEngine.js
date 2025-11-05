@@ -111,23 +111,28 @@ export class StoryEngine {
 			let nextBranchId = choice.next || null;
 
 			const unknownStatNames = new Set();
-			const resolveStatEffects = (effects) => {
+			const statEvaluationIssues = [];
+			const evaluateStatEffects = (effects, context = {}) => {
 				const partition = this.state.partitionStatEffects(effects || []);
 				for (const name of partition.unknown) {
 					if (name) {
 						unknownStatNames.add(name);
 					}
 				}
-				return partition.allowed;
+				const evaluation = this.state.evaluateStatEffects(partition.allowed, context);
+				if (evaluation.issues.length) {
+					statEvaluationIssues.push(...evaluation.issues);
+				}
+				return evaluation.evaluated;
 			};
 
-			let statEffectsToApply = [];
+			let evaluatedStatEffects = [];
 			let inventoryEffectsToApply = [];
 
 			if (choice.roll) {
 				const rollResult = runRoll(choice.roll, (stat) => this.state.getStatValue(stat));
 				if (rollResult.success) {
-					statEffectsToApply = resolveStatEffects(choice.stats);
+					evaluatedStatEffects = evaluateStatEffects(choice.stats, { rollResult });
 					inventoryEffectsToApply = Array.isArray(choice.inventory) ? choice.inventory.slice() : [];
 					rollOutcomeLabel = "Roll: Success";
 				} else {
@@ -135,7 +140,7 @@ export class StoryEngine {
 				}
 				try {
 					await this.renderer.showRollResult(rollResult, {
-						statEffects: statEffectsToApply,
+						statEffects: evaluatedStatEffects,
 					});
 				} catch (error) {
 					console.error("Dice animation failed:", error);
@@ -143,7 +148,7 @@ export class StoryEngine {
 				this.state.clearLastRoll();
 				nextBranchId = rollResult.success ? choice.roll.ok : choice.roll.fail;
 			} else {
-				statEffectsToApply = resolveStatEffects(choice.stats);
+				evaluatedStatEffects = evaluateStatEffects(choice.stats);
 				inventoryEffectsToApply = Array.isArray(choice.inventory) ? choice.inventory.slice() : [];
 			}
 
@@ -151,8 +156,8 @@ export class StoryEngine {
 				summaries.push(rollOutcomeLabel);
 			}
 
-			if (statEffectsToApply.length) {
-				const appliedStats = this.state.applyStatEffects(statEffectsToApply);
+			if (evaluatedStatEffects.length) {
+				const appliedStats = this.state.applyEvaluatedStatEffects(evaluatedStatEffects);
 				const labels = appliedStats.map((effect) => `${effect.stat} ${formatSigned(effect.delta)}`);
 				summaries.push(`Stats: ${labels.join(", ")}`);
 			}
@@ -168,11 +173,19 @@ export class StoryEngine {
 				: `${choice.text}`;
 			this.state.appendJournal(journalEntry);
 
-			if (!this.state.systemError && unknownStatNames.size) {
-				const names = Array.from(unknownStatNames).sort((a, b) => a.localeCompare(b));
-				console.warn("Unknown stat(s) encountered:", names);
-				const suffix = names.length > 1 ? "s" : "";
-				this.state.setSystemError(`Unknown stat${suffix} encountered: ${names.join(", ")}. Update the stat config.`);
+			if (!this.state.systemError) {
+				if (unknownStatNames.size) {
+					const names = Array.from(unknownStatNames).sort((a, b) => a.localeCompare(b));
+					console.warn("Unknown stat(s) encountered:", names);
+					const suffix = names.length > 1 ? "s" : "";
+					this.state.setSystemError(
+						`Unknown stat${suffix} encountered: ${names.join(", ")}. Update the stat config.`
+					);
+				} else if (statEvaluationIssues.length) {
+					const message = statEvaluationIssues.join(" | ");
+					console.warn("Dynamic stat resolution issues:", message);
+					this.state.setSystemError(message);
+				}
 			}
 
 			if (!nextBranchId) {
@@ -277,7 +290,7 @@ export class StoryEngine {
  * @property {string} id
  * @property {string} text
  * @property {string|null} next
- * @property {{ stat: string, delta: number }[]} stats
+ * @property {{ stat: string, delta: number, dynamic?: { type: "roll-total"|"roll-dice"|"roll-stat", scale: number } }[]} stats
  * @property {{ item: string, delta: number }[]} inventory
  * @property {import("./storyUtilities.js").RollDirective|null} roll
  */

@@ -1,0 +1,53 @@
+Title: Dawn Beside The Pier
+Branch: 1
+Description: The first light of morning coats the lake in gold. Your gear is packed, the pier creaks beneath your boots, and the day feels wide open.
+Choice: display=Cast a line; next=2; item=Fish+; stat=angling+1
+Choice: display=Check your supplies; next=3
+Choice: display=Head toward the village; next=4
+Choice: display=Haul it in; roll=strength, dice=6, target=, ok=5, fail=6; stat=strength+1
+
+Title: Tug On The Line
+Branch: 2
+Description: The float dips hard. Whatever is on the other end fights with surprising strength.
+Choice: display=Haul it in; roll=strength, dice=6, target=8, ok=5, fail=6; stat=strength+1
+Choice: display=Let it slip away; next=3; stat=patience+1
+
+Title: Kit Check
+Branch: 3
+Description: You kneel by your pack. Ropes, hooks, a faded compass—each piece matters if the weather turns.
+Choice: display=Pack the compass; next=4; item=Compass+
+Choice: display=Travel light; next=4
+
+Title: Cobblestone Market
+Branch: 4
+Description: Stalls line the square, villagers already haggling over the morning catch. Your arrival draws a few curious looks.
+Choice: display=Sell the fresh fish; next=5; item=Fish-; stat=coins+3
+Choice: display=Keep your haul for later; next=5
+
+Title: Market Windfall
+Branch: 5
+Description: Coins jingle in your pocket and rumors of distant storms reach your ears. A decision forms: weather the coming squall or return home.
+Choice: display=Head back before the storm; next=7
+Choice: display=Chase the rumor into the wilds; next=8; stat=resolve+1
+
+Title: Snapped Line
+Branch: 6
+Description: The line whips free, leaving only ripples behind. The morning feels colder without the catch.
+Choice: display=Repair the gear and try again; next=1; stat=craft+1
+Choice: display=Call it a lesson learned; next=3
+
+Title: Hearthside Evening
+Branch: 7
+Description: A warm meal, a repaired net, and a quiet night of planning. Tomorrow will bring its own choices.
+
+Title: Stormbound Road
+Branch: 8
+Description: The path darkens under gathering clouds. With the compass in hand, you steel yourself for what waits ahead.
+Choice: display=Press on into the storm; roll=resolve, dice=2d6, target=11, ok=9, fail=7; stat=resolve+1
+Choice: display=Turn back while there's time; next=7
+
+Title: Eye Of The Gale
+Branch: 9
+Description: Lightning claws across the horizon, but you find shelter atop a ridge that overlooks the valley. Determination anchors you.
+Choice: display=Return with tales of the storm; next=7; stat=renown+1
+

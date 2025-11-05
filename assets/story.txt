@@ -1,52 +1,68 @@
-Title: Dawn Beside The Pier
-Branch: 1
-Description: The first light of morning coats the lake in gold. Your gear is packed, the pier creaks beneath your boots, and the day feels wide open.
-Choice: display=Cast a line; next=2; item=Fish+; stat=angling+1
-Choice: display=Check your supplies; next=3
-Choice: display=Head toward the village; next=4
+Title: Home_Planet_01
+Branch: A1
+Description: You wake up, a light cool breeze flowing through your hair, grass flowing in the wind, the quiet of night. Your nap in the field was refreshing. You gaze at the stars, wondering "What is out there? Will I ever see beyond this starry expanse?" You say that as you see a stream of celestial aquatic creatures swim across the night sky. You make out that they are a myriad of various common fish, cephalopods, even sharks just from a glance. Your interest peaks yet your sadness valleys. The thought of such beautiful creatures slowly dying out crosses your mind like a flash flood.
+Choice: display=[Next]; next=A2
 
-Title: Tug On The Line
-Branch: 2
-Description: The float dips hard. Whatever is on the other end fights with surprising strength.
-Choice: display=Haul it in; roll=strength, dice=6, target=8, ok=5, fail=6; stat=strength+1
-Choice: display=Let it slip away; next=3; stat=patience+1
+Title: Home_Planet_02
+Branch: A2
+Description: All over the news there is data from scientists saying that there is a gradual decline in the fish supply. You make the decision that it will be you, you will be the one to end this upcoming crisis. You gaze to the sky once more in determination and just as you make the decision, a flash comes across your mind. “Help…. me…..” A draconic eye opens, strained and tired. “A vision?” Your own mouth utters without prior thought “Who was that and where did it come from?” You say as you look to the centre of the galaxy in the starry night above as if some strange force pulls you there. Confused, you still go with your goal to end this crisis but with the lingering thought that the vision is connected.
+Choice: display=[Next]; next=A3
 
-Title: Kit Check
-Branch: 3
-Description: You kneel by your pack. Ropes, hooks, a faded compass—each piece matters if the weather turns.
-Choice: display=Pack the compass; next=4; item=Compass+
-Choice: display=Travel light; next=4
+Title: Home_Planet_03
+Branch: A3
+Description: Years pass, you are now a young and able adult employed at the biggest fishing company on the planet. You are excited as you are finally given the opportunity to use the company’s vessels for a special mission. This mission in question is meant as a test from your boss. He gives you a selection of vessels.
+Choice: display=[A Swift Agile Ship]; next=A4; item=Light Fishing Boat+
+Choice: display=[A Powerful Sturdy Ship]; next=A4; item=Medium Carcass Trawler+
 
-Title: Cobblestone Market
-Branch: 4
-Description: Stalls line the square, villagers already haggling over the morning catch. Your arrival draws a few curious looks.
-Choice: display=Sell the fresh fish; next=5; item=Fish-; stat=coins+3
-Choice: display=Keep your haul for later; next=5
+Title: Home_Planet_04
+Branch: A4
+Description: You take your vessel to the local space in your solar system and go searching for the target of your mission, the beast of your solar system, the titanic arapaima. The species grow to be as big as adult blue whales in their later years.
+Choice: display=[Next]; next=A5
 
-Title: Market Windfall
-Branch: 5
-Description: Coins jingle in your pocket and rumors of distant storms reach your ears. A decision forms: weather the coming squall or return home.
-Choice: display=Head back before the storm; next=7
-Choice: display=Chase the rumor into the wilds; next=8; stat=resolve+1
+Title: Home_Planet_05
+Branch: A5
+Description: You search and search through between planets and asteroid belts. Nothing. You say that you have to cut your losses and head home. However, a massive shadow blocks out the sun slowly but powerfully moving across the black expanse of space. That's it. It is the king of its species, the largest in history, an alpha titan arapaima. Frantically you search for your gear to catch it.
+Choice: display=[Next]; next=A6
 
-Title: Snapped Line
-Branch: 6
-Description: The line whips free, leaving only ripples behind. The morning feels colder without the catch.
-Choice: display=Repair the gear and try again; next=1; stat=craft+1
-Choice: display=Call it a lesson learned; next=3
+Title: Home_Planet_06
+Branch: A6
+Description: You check your equipment for the upcoming hunt. What will you take with you?
+Choice: display=[A Harpoon Gun]; next=A7; item=Harpoon Gun+
+Choice: display=[A Massive Net]; next=A7; item=Massive Net+
 
-Title: Hearthside Evening
-Branch: 7
-Description: A warm meal, a repaired net, and a quiet night of planning. Tomorrow will bring its own choices.
+Title: Home_Planet_07
+Branch: A7
+Description: You continue to prepare for your encounter, gathering the rest of your tools.
+Choice: display=[A Large Bait]; next=A8; item=Large Bait+
+Choice: display=[A Flood Light]; next=A8; item=Flood Light+
 
-Title: Stormbound Road
-Branch: 8
-Description: The path darkens under gathering clouds. With the compass in hand, you steel yourself for what waits ahead.
-Choice: display=Press on into the storm; roll=resolve, dice=2d6, target=11, ok=9, fail=7; stat=resolve+1
-Choice: display=Turn back while there's time; next=7
+Title: Home_Planet_08
+Branch: A8
+Description: You struggle and struggle, wrestling with such a titanic foe. You want to give up. Suddenly a familiar flash crosses your mind, just like the one from your childhood.
+Choice: display=[Next]; next=A9
 
-Title: Eye Of The Gale
-Branch: 9
-Description: Lightning claws across the horizon, but you find shelter atop a ridge that overlooks the valley. Determination anchors you.
-Choice: display=Return with tales of the storm; next=7; stat=renown+1
+Title: Home_Planet_09
+Branch: A9
+Description: The nostalgic sensation empowers you, a second wind during this struggle. Roll 2d6 to determine your luck. Remember this number.
+Choice: display=[Roll 2d6 to determine your luck]; roll=luck, dice=2d6, target=10, ok=A11, fail=A10; stat=luck+roll
 
+Title: Home_Planet_10
+Branch: A10
+Description: You manage to get a good grip on the beast. It fights relentlessly and trashes about. It breaks free. However, not unscathed. You retrieve your gear and there is a massive scale. You detach it and bring it back to the company proving that you are at least good enough to damage the biggest fish in the planet’s history.
+Choice: display=[Next]; next=A12
+
+Title: Home_Planet_11
+Branch: A11
+Description: You overpower the massive beast and manage to subdue it. Life drains from its eyes as it thrashes its last. You return triumphant hauling the carcass of such a titanic foe. You have completed the mission with flying colours. The company can rest easy for now with such a supply of food to distribute.
+Choice: display=[Next]; next=A12
+
+Title: Home_Planet_12
+Branch: A12
+Description: “Excellent job. You are my greatest employee. You’ve proven your skills, so I have another mission for you and this time, it’s an even bigger one.” Your boss then proceeds to tell you more.
+Choice: display=[Next]; next=A13
+
+Title: Home_Planet_13
+Branch: A13
+Description: “Here’s the graph tracking the fish population over the past decades. The higher-ups predict that with this downward trend, the planet will be in the greatest food shortage in its entire history!” He asks you to go to other planets in the galaxy to see if they have such a problem and to see how they are dealing with it in hopes to bring back a solution and most importantly, to find the root cause of this decline in population of the celestial aquatic life.
+Choice: display=[Warp travel to Mossara]; next=B1
+Choice: display=[Warp travel to Glaciera]; next=C1

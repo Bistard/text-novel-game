@@ -307,10 +307,10 @@ function parseItemEffect(raw, lineNumber) {
  * @returns {{ stat: string, delta: number }}
  */
 function parseStatEffect(raw, lineNumber) {
-	const match = raw.match(/^(.+?)([+-])([\d.]+)$/);
+	const match = raw.match(/^(.+?)([+-])(.+)$/);
 	if (!match) {
 		throw new Error(
-			`Stat effect "${raw}" on line ${lineNumber} must follow the pattern statName+/-Number (e.g., strength+1).`
+			`Stat effect "${raw}" on line ${lineNumber} must follow the pattern statName+/-value (e.g., strength+1).`
 		);
 	}
 	const stat = match[1].trim();
@@ -319,12 +319,56 @@ function parseStatEffect(raw, lineNumber) {
 	}
 
 	const sign = match[2] === "+" ? 1 : -1;
-	const amount = Number(match[3]);
-	if (Number.isNaN(amount)) {
+	const amountToken = match[3].trim();
+	if (!amountToken) {
 		throw new Error(`Stat effect "${raw}" on line ${lineNumber} uses an invalid amount.`);
 	}
 
-	return { stat, delta: sign * amount };
+	const cleanedToken = amountToken.replace(/^\((.*)\)$/, "$1").trim();
+	const numericAmount = Number(cleanedToken);
+	if (!Number.isNaN(numericAmount)) {
+		return { stat, delta: sign * numericAmount };
+	}
+
+	const dynamicType = mapDynamicStatToken(cleanedToken.toLowerCase());
+	if (!dynamicType) {
+		throw new Error(
+			`Stat effect "${raw}" on line ${lineNumber} uses an unsupported dynamic value "${cleanedToken}".`
+		);
+	}
+
+	return {
+		stat,
+		delta: 0,
+		dynamic: {
+			type: dynamicType,
+			scale: sign,
+			token: cleanedToken,
+		},
+	};
+}
+
+function mapDynamicStatToken(token) {
+	const normalized = token.replace(/[\s_-]+/g, "");
+	switch (normalized) {
+		case "roll":
+		case "result":
+		case "total":
+		case "rolltotal":
+		case "x":
+		case "value":
+			return "roll-total";
+		case "rolldice":
+		case "dice":
+		case "dicetotal":
+			return "roll-dice";
+		case "rollstat":
+		case "stat":
+		case "modifier":
+			return "roll-stat";
+		default:
+			return null;
+	}
 }
 
 /**
@@ -461,10 +505,17 @@ function parseDice(raw, lineNumber) {
  */
 
 /**
+ * @typedef {Object} StatEffectDraft
+ * @property {string} stat
+ * @property {number} delta
+ * @property {{ type: "roll-total"|"roll-dice"|"roll-stat", scale: number, token?: string }|null|undefined} [dynamic]
+ */
+
+/**
  * @typedef {Object} StoryChoiceDraft
  * @property {string} text
  * @property {string|null} next
- * @property {{ stat: string, delta: number }[]} stats
+ * @property {StatEffectDraft[]} stats
  * @property {{ item: string, delta: number }[]} inventory
  * @property {RollDirective|null} roll
  */
@@ -474,7 +525,7 @@ function parseDice(raw, lineNumber) {
  * @property {string} id
  * @property {string} text
  * @property {string|null} next
- * @property {{ stat: string, delta: number }[]} stats
+ * @property {StatEffectDraft[]} stats
  * @property {{ item: string, delta: number }[]} inventory
  * @property {RollDirective|null} roll
  */

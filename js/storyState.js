@@ -60,8 +60,8 @@ export class StoryState {
 
 	/**
 	 * Splits stat effects into recognised and unknown collections.
-	 * @param {{ stat: string, delta: number }[]} effects
-	 * @returns {{ allowed: { stat: string, delta: number }[], unknown: string[] }}
+	 * @param {{ stat: string, delta: number, dynamic?: { type: string, scale: number } }[]} effects
+	 * @returns {{ allowed: { stat: string, delta: number, dynamic?: { type: string, scale: number }, label?: string }[], unknown: string[] }}
 	 */
 	partitionStatEffects(effects) {
 		const allowed = [];
@@ -81,10 +81,22 @@ export class StoryState {
 			}
 			const key = originalName.toLowerCase();
 			const delta = Number(effect.delta);
+			const dynamic =
+				effect && effect.dynamic && typeof effect.dynamic === "object"
+					? {
+							type: effect.dynamic.type,
+							scale: Number.isFinite(Number(effect.dynamic.scale)) ? Number(effect.dynamic.scale) : 1,
+					  }
+					: null;
+
 			const normalizedEffect = {
 				stat: key,
 				delta: Number.isFinite(delta) ? delta : 0,
+				label: originalName,
 			};
+			if (dynamic && dynamic.type) {
+				normalizedEffect.dynamic = dynamic;
+			}
 			if (Object.prototype.hasOwnProperty.call(this.statDefaults, key)) {
 				allowed.push(normalizedEffect);
 			} else {
@@ -96,10 +108,71 @@ export class StoryState {
 	}
 
 	/**
+	 * Evaluates and applies stat effects.
+	 * @param {{ stat: string, delta: number, dynamic?: { type: string, scale: number }, label?: string }[]} effects
+	 * @param {{ rollResult?: import("./storyUtilities.js").RollResult|null }} [context]
+	 * @returns {{ applied: { stat: string, delta: number }[], issues: string[] }}
+	 */
+	applyStatEffects(effects, context = {}) {
+		const { evaluated, issues } = this.evaluateStatEffects(effects, context);
+		const applied = this.applyEvaluatedStatEffects(evaluated);
+		return { applied, issues };
+	}
+
+	/**
+	 * Computes the numeric deltas for the provided effects without mutating state.
+	 * @param {{ stat: string, delta: number, dynamic?: { type: string, scale: number }, label?: string }[]} effects
+	 * @param {{ rollResult?: import("./storyUtilities.js").RollResult|null }} [context]
+	 * @returns {{ evaluated: { stat: string, delta: number, label?: string }[], issues: string[] }}
+	 */
+	evaluateStatEffects(effects, context = {}) {
+		const evaluated = [];
+		const issues = [];
+		if (!Array.isArray(effects) || !effects.length) {
+			return { evaluated, issues };
+		}
+
+		for (const effect of effects) {
+			if (!effect || typeof effect.stat !== "string") {
+				continue;
+			}
+			const key = effect.stat.trim().toLowerCase();
+
+			if (!key || !Object.prototype.hasOwnProperty.call(this.statDefaults, key)) {
+				continue;
+			}
+
+			let delta = Number(effect.delta);
+			if (!Number.isFinite(delta)) {
+				delta = 0;
+			}
+
+			if (effect.dynamic && effect.dynamic.type) {
+				const resolved = this.resolveDynamicEffect(effect.dynamic, context);
+				if (!Number.isFinite(resolved)) {
+					const label = effect.label || effect.stat;
+					issues.push(`Unable to resolve dynamic value for stat "${label}".`);
+					continue;
+				}
+				delta = resolved;
+			}
+
+			if (!Number.isFinite(delta)) {
+				continue;
+			}
+
+			evaluated.push({ stat: key, delta, label: effect.label || effect.stat });
+		}
+
+		return { evaluated, issues };
+	}
+
+	/**
+	 * Applies already evaluated stat effects to the state.
 	 * @param {{ stat: string, delta: number }[]} effects
 	 * @returns {{ stat: string, delta: number }[]}
 	 */
-	applyStatEffects(effects) {
+	applyEvaluatedStatEffects(effects) {
 		if (!Array.isArray(effects) || !effects.length) {
 			return [];
 		}
@@ -110,7 +183,6 @@ export class StoryState {
 				continue;
 			}
 			const key = effect.stat.trim().toLowerCase();
-
 			if (!key || !Object.prototype.hasOwnProperty.call(this.statDefaults, key)) {
 				continue;
 			}
@@ -268,5 +340,34 @@ export class StoryState {
 			snapshot[stat] = Number.isFinite(value) ? value : 0;
 		}
 		return snapshot;
+	}
+
+	resolveDynamicEffect(dynamic, context = {}) {
+		const scale = Number.isFinite(Number(dynamic.scale)) ? Number(dynamic.scale) : 1;
+		const rollResult = context.rollResult || this.lastRoll;
+		if (!rollResult) {
+			return Number.NaN;
+		}
+
+		let base = Number.NaN;
+		switch (dynamic.type) {
+			case "roll-total":
+				base = Number(rollResult.total);
+				break;
+			case "roll-dice":
+				base = Number(rollResult.diceTotal);
+				break;
+			case "roll-stat":
+				base = Number(rollResult.statValue);
+				break;
+			default:
+				base = Number.NaN;
+		}
+
+		if (!Number.isFinite(base)) {
+			return Number.NaN;
+		}
+
+		return scale * base;
 	}
 }
