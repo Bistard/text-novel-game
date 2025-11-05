@@ -59,7 +59,7 @@ function setHomeMessage(message) {
 function resetHomeState() {
 	if (homeStart) {
 		homeStart.disabled = false;
-		homeStart.textContent = "Start Game";
+		homeStart.textContent = "New Game";
 	}
 	setHomeMessage("");
 }
@@ -102,7 +102,7 @@ async function startGame() {
 	} finally {
 		if (!gameVisible && homeStart) {
 			homeStart.disabled = false;
-			homeStart.textContent = originalLabel || "Start Game";
+			homeStart.textContent = originalLabel || "New Game";
 		}
 		loadingGame = false;
 	}
@@ -215,7 +215,7 @@ async function handleLoadGame() {
 	} finally {
 		if (!gameVisible && homeStart) {
 			homeStart.disabled = false;
-			homeStart.textContent = originalLabel || "Start Game";
+			homeStart.textContent = originalLabel || "New Game";
 		}
 		loadingGame = false;
 	}
