@@ -4,16 +4,32 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Echoes of Aravon</title>
+  <title>Untitled</title>
   <link rel="stylesheet" href="css/styles.css">
 </head>
 
 <body>
-  <div id="app">
+  <section id="home-screen" class="home-screen" aria-labelledby="home-title">
+    <div class="home-card">
+      <h1 id="home-title" class="home-title">Untitled</h1>
+      <p class="home-tagline">An interactive narrative of choices and chance.</p>
+      <p id="home-note" class="home-note" aria-live="polite"></p>
+      <div class="home-actions">
+        <button id="home-start" class="button button-secondary" type="button">Start Game</button>
+        <button id="home-load" class="button button-secondary" type="button">Load Game</button>
+      </div>
+    </div>
+  </section>
+
+  <div id="app" hidden>
     <header class="app-header">
-      <h1 id="game-title">Echoes of Aravon</h1>
-      <button id="restart-button" class="button button-secondary" type="button"
-        aria-label="Restart story">Restart</button>
+      <h1 id="game-title">Untitled</h1>
+      <div class="header-actions" role="group" aria-label="Game actions">
+        <button id="save-button" class="button button-secondary" type="button">Save Game</button>
+        <button id="restart-button" class="button button-secondary" type="button"
+          aria-label="Restart story">Restart</button>
+        <button id="home-button" class="button button-secondary" type="button">Return Home</button>
+      </div>
     </header>
 
     <main class="app-main">
