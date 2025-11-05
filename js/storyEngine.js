@@ -101,6 +101,14 @@ export class StoryEngine {
 			this.choiceInProgress = false;
 			return;
 		}
+		if (choice.visibilityCondition && !this.state.evaluateCondition(choice.visibilityCondition)) {
+			this.choiceInProgress = false;
+			return;
+		}
+		if (choice.validCondition && !this.state.evaluateCondition(choice.validCondition)) {
+			this.choiceInProgress = false;
+			return;
+		}
 
 		try {
 			this.state.clearSystemError();
@@ -302,4 +310,6 @@ export class StoryEngine {
  * @property {{ stat: string, delta: number, dynamic?: { type: "roll-total"|"roll-dice"|"roll-stat", scale: number } }[]} stats
  * @property {{ item: string, delta: number }[]} inventory
  * @property {import("./storyUtilities.js").RollDirective|null} roll
+ * @property {import("./storyParser.js").ConditionDefinition|null} visibilityCondition
+ * @property {import("./storyParser.js").ConditionDefinition|null} validCondition
  */

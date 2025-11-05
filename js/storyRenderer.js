@@ -50,7 +50,7 @@ constructor(elements) {
 		this.renderSystemMessages(state);
 
 		this.renderStory(branch, () => {
-			this.renderChoices(branch, onChoiceSelected);
+			this.renderChoices(branch, state, onChoiceSelected);
 		});
 
 		this.syncSkipButtonState();
@@ -394,7 +394,7 @@ constructor(elements) {
 	 * @param {StoryBranch} branch
 	 * @param {(choiceId: string) => void} onChoiceSelected
 	 */
-	renderChoices(branch, onChoiceSelected) {
+	renderChoices(branch, state, onChoiceSelected) {
 		const container = this.elements.choices;
 		if (!container) return;
 		container.innerHTML = "";
@@ -408,15 +408,38 @@ constructor(elements) {
 		}
 
 		const handler = typeof onChoiceSelected === "function" ? onChoiceSelected : () => {};
+		const gameState = state && typeof state.evaluateCondition === "function" ? state : null;
+		let visibleChoices = 0;
 
 		for (const choice of branch.choices) {
+			if (gameState && choice.visibilityCondition && !gameState.evaluateCondition(choice.visibilityCondition)) {
+				continue;
+			}
+
 			const button = document.createElement("button");
 			button.type = "button";
 			button.className = "choice-button";
 			button.dataset.choiceId = choice.id;
 			button.textContent = choice.text;
-			button.addEventListener("click", () => handler(choice.id));
+
+			const isEnabled =
+				!gameState || !choice.validCondition || gameState.evaluateCondition(choice.validCondition);
+			if (!isEnabled) {
+				button.disabled = true;
+				button.classList.add("choice-button-disabled");
+			} else {
+				button.addEventListener("click", () => handler(choice.id));
+			}
+
 			container.appendChild(button);
+			visibleChoices += 1;
+		}
+
+		if (!visibleChoices) {
+			const message = document.createElement("p");
+			message.className = "muted";
+			message.textContent = "No available choices.";
+			container.appendChild(message);
 		}
 	}
 
@@ -565,4 +588,6 @@ constructor(elements) {
  * @property {{ stat: string, delta: number }[]} stats
  * @property {{ item: string, delta: number }[]} inventory
  * @property {import("./storyUtilities.js").RollDirective|null} roll
+ * @property {import("./storyParser.js").ConditionDefinition|null} visibilityCondition
+ * @property {import("./storyParser.js").ConditionDefinition|null} validCondition
  */

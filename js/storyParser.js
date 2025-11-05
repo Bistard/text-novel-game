@@ -111,12 +111,14 @@ export function parseStory(raw) {
 			description,
 			choices: branchContext.choices.map((choice, idx) => ({
 				id: `${branchContext.id}:${idx + 1}`,
-				text: choice.text,
-				next: choice.next,
-				stats: choice.stats,
-				inventory: choice.inventory,
-				roll: choice.roll,
-			})),
+ 				text: choice.text,
+ 				next: choice.next,
+ 				stats: choice.stats,
+ 				inventory: choice.inventory,
+ 				roll: choice.roll,
+				visibilityCondition: choice.visibilityCondition,
+				validCondition: choice.validCondition,
+ 			})),
 		};
 
 		branchMap[branch.id] = branch;
@@ -200,13 +202,15 @@ function parseChoice(branchId, payload, lineNumber) {
 		throw new Error(`Choice on line ${lineNumber} has no directives.`);
 	}
 
-	const choice = {
-		text: "",
-		next: null,
-		stats: [],
-		inventory: [],
-		roll: null,
-	};
+ 	const choice = {
+ 		text: "",
+ 		next: null,
+ 		stats: [],
+ 		inventory: [],
+ 		roll: null,
+		visibilityCondition: null,
+		validCondition: null,
+ 	};
 
 	for (const segment of segments) {
 		const delimiter = segment.indexOf("=");
@@ -239,19 +243,31 @@ function parseChoice(branchId, payload, lineNumber) {
 			case "item":
 				choice.inventory.push(parseItemEffect(value, lineNumber));
 				break;
-			case "stat":
-				choice.stats.push(parseStatEffect(value, lineNumber));
-				break;
-			case "roll":
-				if (choice.roll) {
-					throw new Error(`Choice on line ${lineNumber} includes multiple roll directives.`);
+ 			case "stat":
+ 				choice.stats.push(parseStatEffect(value, lineNumber));
+ 				break;
+ 			case "roll":
+ 				if (choice.roll) {
+ 					throw new Error(`Choice on line ${lineNumber} includes multiple roll directives.`);
+ 				}
+ 				choice.roll = parseRollEffect(value, lineNumber);
+ 				break;
+			case "optional":
+				if (choice.visibilityCondition) {
+					throw new Error(`Choice on line ${lineNumber} defines "optional" more than once.`);
 				}
-				choice.roll = parseRollEffect(value, lineNumber);
+				choice.visibilityCondition = parseCondition(value, lineNumber, "optional");
 				break;
-			default:
-				throw new Error(`Unsupported directive "${segment}" on line ${lineNumber}.`);
-		}
-	}
+			case "valid":
+				if (choice.validCondition) {
+					throw new Error(`Choice on line ${lineNumber} defines "valid" more than once.`);
+				}
+				choice.validCondition = parseCondition(value, lineNumber, "valid");
+				break;
+ 			default:
+ 				throw new Error(`Unsupported directive "${segment}" on line ${lineNumber}.`);
+ 		}
+ 	}
 
 	if (!choice.text) {
 		throw new Error(`Choice on line ${lineNumber} is missing its display text.`);
@@ -264,6 +280,65 @@ function parseChoice(branchId, payload, lineNumber) {
 	}
 
 	return choice;
+}
+
+/**
+ * Parses condition directives used by choices.
+ * @param {string} raw
+ * @param {number} lineNumber
+ * @param {"optional"|"valid"} directive
+ * @returns {ConditionDefinition}
+ */
+function parseCondition(raw, lineNumber, directive) {
+	const value = typeof raw === "string" ? raw.trim() : "";
+	if (!value) {
+		throw new Error(`Choice on line ${lineNumber} is missing a value for "${directive}".`);
+	}
+
+	const match = value.match(/^([a-z][\w-]*)\s*\((.*)\)$/i);
+	if (!match) {
+		throw new Error(
+			`Condition "${value}" on line ${lineNumber} must follow the pattern name(arg1, arg2, ...).`
+		);
+	}
+
+	const keyword = match[1].toLowerCase();
+	const argumentSection = match[2] != null ? match[2].trim() : "";
+	const tokens = argumentSection
+		.split(",")
+		.map((token) => token.trim())
+		.filter(Boolean);
+	if (!tokens.length) {
+		throw new Error(`Condition "${value}" on line ${lineNumber} must include at least one argument.`);
+	}
+
+	switch (keyword) {
+		case "visited":
+		case "visitedall":
+		case "visited-all":
+		case "visited_all":
+			return { kind: "visited-all", values: tokens, raw: value };
+		case "visitedany":
+		case "visited-any":
+		case "visited_any":
+			return { kind: "visited-any", values: tokens, raw: value };
+		case "has":
+		case "hasall":
+		case "inventory":
+		case "inventoryall":
+		case "inventory-all":
+		case "inventory_all":
+			return { kind: "inventory-all", values: tokens, raw: value };
+		case "hasany":
+		case "has-any":
+		case "has_any":
+		case "inventoryany":
+		case "inventory-any":
+		case "inventory_any":
+			return { kind: "inventory-any", values: tokens, raw: value };
+		default:
+			throw new Error(`Unknown condition "${keyword}" on line ${lineNumber}.`);
+	}
 }
 
 /**
@@ -518,6 +593,8 @@ function parseDice(raw, lineNumber) {
  * @property {StatEffectDraft[]} stats
  * @property {{ item: string, delta: number }[]} inventory
  * @property {RollDirective|null} roll
+ * @property {ConditionDefinition|null} visibilityCondition
+ * @property {ConditionDefinition|null} validCondition
  */
 
 /**
@@ -528,6 +605,8 @@ function parseDice(raw, lineNumber) {
  * @property {StatEffectDraft[]} stats
  * @property {{ item: string, delta: number }[]} inventory
  * @property {RollDirective|null} roll
+ * @property {ConditionDefinition|null} visibilityCondition
+ * @property {ConditionDefinition|null} validCondition
  */
 
 /**
@@ -537,4 +616,11 @@ function parseDice(raw, lineNumber) {
  * @property {number} target
  * @property {string} ok
  * @property {string} fail
+ */
+
+/**
+ * @typedef {Object} ConditionDefinition
+ * @property {"visited-all"|"visited-any"|"inventory-all"|"inventory-any"} kind
+ * @property {string[]} values
+ * @property {string} raw
  */

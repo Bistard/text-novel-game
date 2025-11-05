@@ -171,7 +171,7 @@ function isAbortError(error) {
  * @property {number} version
  * @property {string} createdAt
  * @property {{ url: string, statsConfigUrl?: string|null, start?: string|null, currentBranchId?: string|null, currentBranchTitle?: string|null }} story
- * @property {{ currentBranchId?: string|null, stats: Record<string, number>, inventory: Record<string, number>, journal: string[] }} state
+ * @property {{ currentBranchId?: string|null, stats: Record<string, number>, inventory: Record<string, number>, journal: string[], visitedBranches?: string[] }} state
  */
 
 /**

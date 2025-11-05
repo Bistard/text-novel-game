@@ -18,12 +18,16 @@ export class StoryState {
 	 * @param {string|null} [startBranchId]
 	 */
 	reset(startBranchId = null) {
-		this.currentBranchId = startBranchId;
 		this.stats = this.cloneStatDefaults();
 		this.inventory = {};
 		this.journal = [];
 		this.lastRoll = null;
 		this.systemError = null;
+		this.visitedBranches = new Set();
+		this.currentBranchId = null;
+		if (startBranchId) {
+			this.setCurrentBranch(startBranchId);
+		}
 	}
 
 	/**
@@ -37,7 +41,108 @@ export class StoryState {
 	 * @param {string} branchId
 	 */
 	setCurrentBranch(branchId) {
-		this.currentBranchId = branchId;
+		if (typeof branchId === "string") {
+			const normalized = branchId.trim();
+			if (normalized) {
+				this.currentBranchId = normalized;
+				this.markBranchVisited(normalized);
+				return;
+			}
+		}
+		this.currentBranchId = null;
+	}
+
+	/**
+	 * Marks a branch as visited.
+	 * @param {string} branchId
+	 */
+	markBranchVisited(branchId) {
+		if (!this.visitedBranches || !(this.visitedBranches instanceof Set)) {
+			this.visitedBranches = new Set();
+		}
+		if (typeof branchId !== "string") {
+			return;
+		}
+		const id = branchId.trim();
+		if (!id) {
+			return;
+		}
+		this.visitedBranches.add(id);
+	}
+
+	/**
+	 * Checks whether a branch has been visited by the player.
+	 * @param {string} branchId
+	 */
+	hasVisitedBranch(branchId) {
+		if (!branchId || typeof branchId !== "string") {
+			return false;
+		}
+		if (!this.visitedBranches || !(this.visitedBranches instanceof Set)) {
+			return false;
+		}
+		return this.visitedBranches.has(branchId.trim());
+	}
+
+	/**
+	 * Returns an array snapshot of visited branches.
+	 * @returns {string[]}
+	 */
+	getVisitedBranches() {
+		if (!this.visitedBranches || !(this.visitedBranches instanceof Set)) {
+			return [];
+		}
+		return Array.from(this.visitedBranches);
+	}
+
+	/**
+	 * Checks whether the inventory currently contains an item.
+	 * @param {string} itemName
+	 * @returns {boolean}
+	 */
+	hasInventoryItem(itemName) {
+		if (typeof itemName !== "string") {
+			return false;
+		}
+		const key = itemName.trim();
+		if (!key) {
+			return false;
+		}
+		const value = this.inventory && Object.prototype.hasOwnProperty.call(this.inventory, key) ? this.inventory[key] : 0;
+		const numeric = Number(value);
+		return Number.isFinite(numeric) && numeric > 0;
+	}
+
+	/**
+	 * Evaluates a condition against the current state.
+	 * @param {import("./storyParser.js").ConditionDefinition|null|undefined} condition
+	 * @returns {boolean}
+	 */
+	evaluateCondition(condition) {
+		if (!condition) {
+			return true;
+		}
+
+		const values = Array.isArray(condition.values)
+			? condition.values.map((entry) => (typeof entry === "string" ? entry.trim() : "")).filter(Boolean)
+			: [];
+
+		if (!values.length) {
+			return false;
+		}
+
+		switch (condition.kind) {
+			case "visited-all":
+				return values.every((id) => this.hasVisitedBranch(id));
+			case "visited-any":
+				return values.some((id) => this.hasVisitedBranch(id));
+			case "inventory-all":
+				return values.every((item) => this.hasInventoryItem(item));
+			case "inventory-any":
+				return values.some((item) => this.hasInventoryItem(item));
+			default:
+				return false;
+		}
 	}
 
 	/**
@@ -295,7 +400,7 @@ export class StoryState {
 
 	/**
 	 * Creates a serialisable snapshot of the current game state.
-	 * @returns {{ currentBranchId: string|null, stats: Record<string, number>, inventory: Record<string, number>, journal: string[] }}
+	 * @returns {{ currentBranchId: string|null, stats: Record<string, number>, inventory: Record<string, number>, journal: string[], visitedBranches: string[] }}
 	 */
 	createSnapshot() {
 		return {
@@ -303,12 +408,13 @@ export class StoryState {
 			stats: { ...this.stats },
 			inventory: { ...this.inventory },
 			journal: this.journal.slice(),
+			visitedBranches: this.getVisitedBranches(),
 		};
 	}
 
 	/**
 	 * Restores state from a previously created snapshot.
-	 * @param {{ currentBranchId?: string|null, stats?: Record<string, number>, inventory?: Record<string, number>, journal?: string[] }} snapshot
+	 * @param {{ currentBranchId?: string|null, stats?: Record<string, number>, inventory?: Record<string, number>, journal?: string[], visitedBranches?: string[] }} snapshot
 	 */
 	restoreSnapshot(snapshot) {
 		if (!snapshot || typeof snapshot !== "object") {
@@ -351,11 +457,22 @@ export class StoryState {
 			this.journal = entries.slice();
 		}
 
+		const visited = new Set();
+		if (Array.isArray(snapshot.visitedBranches)) {
+			for (const entry of snapshot.visitedBranches) {
+				if (typeof entry !== "string") continue;
+				const id = entry.trim();
+				if (!id) continue;
+				visited.add(id);
+			}
+		}
+		this.visitedBranches = visited;
+
 		const branchId =
 			typeof snapshot.currentBranchId === "string" && snapshot.currentBranchId.trim()
 				? snapshot.currentBranchId.trim()
 				: null;
-		this.currentBranchId = branchId;
+		this.setCurrentBranch(branchId);
 
 		this.lastRoll = null;
 		this.systemError = null;
