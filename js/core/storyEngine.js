@@ -18,6 +18,7 @@ export class StoryEngine {
 	 * @param {HTMLElement} options.systemMessages
 	 * @param {HTMLElement} options.titleElement
 	 * @param {HTMLElement} [options.skipButton]
+	 * @param {HTMLElement} [options.skipToggle]
 	 */
 	constructor(options) {
 		this.renderer = new StoryRenderer(options);
@@ -74,11 +75,22 @@ export class StoryEngine {
 	restart() {
 		this.resetState();
 		this.render();
-		if (typeof this.renderer.syncSkipButtonState === "function") {
+		const shouldSync =
+			typeof this.renderer.syncSkipButtonState === "function" ||
+			typeof this.renderer.syncSkipToggleState === "function";
+		if (shouldSync) {
+			const syncControls = () => {
+				if (typeof this.renderer.syncSkipButtonState === "function") {
+					this.renderer.syncSkipButtonState();
+				}
+				if (typeof this.renderer.syncSkipToggleState === "function") {
+					this.renderer.syncSkipToggleState();
+				}
+			};
 			if (typeof globalThis.queueMicrotask === "function") {
-				globalThis.queueMicrotask(() => this.renderer.syncSkipButtonState());
+				globalThis.queueMicrotask(syncControls);
 			} else {
-				globalThis.setTimeout(() => this.renderer.syncSkipButtonState(), 0);
+				globalThis.setTimeout(syncControls, 0);
 			}
 		}
 	}

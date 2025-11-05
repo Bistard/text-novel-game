@@ -252,10 +252,17 @@ body::before {
 	transition: opacity 260ms ease, transform 260ms ease;
 }
 
-.skip-button {
+.story-controls {
 	position: absolute;
 	top: 16px;
 	right: 16px;
+	display: flex;
+	gap: 10px;
+	align-items: center;
+}
+
+.skip-button,
+.skip-toggle {
 	border: 1px solid rgba(73, 210, 255, 0.3);
 	border-radius: 999px;
 	padding: 6px 14px;
@@ -269,7 +276,9 @@ body::before {
 }
 
 .skip-button:hover,
-.skip-button:focus-visible {
+.skip-button:focus-visible,
+.skip-toggle:hover,
+.skip-toggle:focus-visible {
 	background: rgba(73, 210, 255, 0.18);
 	color: var(--fg);
 	border-color: rgba(99, 245, 192, 0.6);
@@ -278,6 +287,17 @@ body::before {
 
 .skip-button[hidden] {
 	display: none;
+}
+
+.skip-toggle {
+	text-transform: none;
+	letter-spacing: 0.02em;
+}
+
+.skip-toggle[aria-pressed="true"] {
+	background: rgba(73, 210, 255, 0.18);
+	color: var(--fg);
+	border-color: rgba(99, 245, 192, 0.6);
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -50,7 +50,11 @@
 
       <section class="story-area" aria-live="polite">
         <div id="story-container" class="story-container">
-          <button id="skip-button" class="skip-button" type="button" aria-label="Skip text animation" hidden>Skip</button>
+          <div class="story-controls" role="group" aria-label="Text playback options">
+            <button id="skip-button" class="skip-button" type="button" aria-label="Skip text animation" hidden>Skip</button>
+            <button id="skip-toggle" class="skip-toggle" type="button" aria-pressed="false"
+              aria-label="Toggle always skip text">Auto Skip: Off</button>
+          </div>
           <h2 id="node-title" class="story-title"></h2>
           <div id="story-text" class="story-text"></div>
           <div id="system-messages" class="system-messages" aria-live="polite"></div>

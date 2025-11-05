@@ -24,6 +24,7 @@ export class StoryRenderer {
 	 * @param {HTMLElement} [elements.systemMessages]
 	 * @param {HTMLElement} [elements.titleElement]
 	 * @param {HTMLElement} [elements.skipButton]
+	 * @param {HTMLElement} [elements.skipToggle]
 	 */
 	constructor(elements) {
 		this.elements = elements;
@@ -34,8 +35,14 @@ export class StoryRenderer {
 		this.diceOverlay = new DiceOverlay({ prefersReducedMotion: this.prefersReducedMotion.bind(this) });
 		this.changeOverlay = new ChangeOverlay({ prefersReducedMotion: this.prefersReducedMotion.bind(this) });
 		this.handleSkipButtonClick = this.handleSkipButtonClick.bind(this);
+		this.handleSkipToggleClick = this.handleSkipToggleClick.bind(this);
+		this.alwaysSkipText = false;
 		if (this.elements.skipButton) {
 			this.elements.skipButton.addEventListener("click", this.handleSkipButtonClick);
+		}
+		if (this.elements.skipToggle) {
+			this.elements.skipToggle.addEventListener("click", this.handleSkipToggleClick);
+			this.syncSkipToggleState();
 		}
 	}
 
@@ -87,10 +94,36 @@ export class StoryRenderer {
 		}
 	}
 
+	handleSkipToggleClick() {
+		this.setAlwaysSkipText(!this.alwaysSkipText);
+	}
+
+	setAlwaysSkipText(shouldAlwaysSkip) {
+		if (this.alwaysSkipText === shouldAlwaysSkip) {
+			return;
+		}
+		this.alwaysSkipText = shouldAlwaysSkip;
+		if (this.alwaysSkipText && this.currentAnimation && typeof this.currentAnimation.skip === "function") {
+			this.currentAnimation.skip();
+		}
+		this.syncSkipButtonState();
+		this.syncSkipToggleState();
+	}
+
+	syncSkipToggleState() {
+		const toggle = this.elements.skipToggle;
+		if (!toggle) return;
+		const pressed = this.alwaysSkipText;
+		toggle.setAttribute("aria-pressed", pressed ? "true" : "false");
+		toggle.textContent = pressed ? "Auto Skip: On" : "Auto Skip: Off";
+		toggle.setAttribute("aria-label", pressed ? "Disable always skip text" : "Enable always skip text");
+	}
+
 	setSkipButtonVisibility(isVisible) {
 		const button = this.elements.skipButton;
 		if (!button) return;
-		if (isVisible) {
+		const shouldShow = isVisible && !this.alwaysSkipText;
+		if (shouldShow) {
 			button.hidden = false;
 			button.disabled = false;
 		} else {
@@ -138,8 +171,11 @@ export class StoryRenderer {
 		}
 
 		this.currentAnimation = controller;
-		this.setSkipButtonVisibility(true);
+		this.syncSkipButtonState();
 		controller.start();
+		if (this.alwaysSkipText && typeof controller.skip === "function") {
+			controller.skip();
+		}
 	}
 
 	/**

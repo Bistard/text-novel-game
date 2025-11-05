@@ -15,6 +15,7 @@ const elements = {
 	home: document.getElementById("home-button"),
 	systemMessages: document.getElementById("system-messages"),
 	skipButton: document.getElementById("skip-button"),
+	skipToggle: document.getElementById("skip-toggle"),
 };
 
 const homeScreen = document.getElementById("home-screen");
@@ -34,6 +35,7 @@ const engine = new StoryEngine({
 	systemMessages: elements.systemMessages,
 	titleElement: elements.title,
 	skipButton: elements.skipButton,
+	skipToggle: elements.skipToggle,
 });
 
 let gameVisible = false;
