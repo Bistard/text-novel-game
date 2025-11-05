@@ -129,22 +129,23 @@ export class StoryEngine {
 			let evaluatedStatEffects = [];
 			let inventoryEffectsToApply = [];
 
-			if (choice.roll) {
-				const rollResult = runRoll(choice.roll, (stat) => this.state.getStatValue(stat));
-				if (rollResult.success) {
-					evaluatedStatEffects = evaluateStatEffects(choice.stats, { rollResult });
-					inventoryEffectsToApply = Array.isArray(choice.inventory) ? choice.inventory.slice() : [];
-					rollOutcomeLabel = "Roll: Success";
-				} else {
-					rollOutcomeLabel = "Roll: Failure";
-				}
-				try {
-					await this.renderer.showRollResult(rollResult, {
-						statEffects: evaluatedStatEffects,
-					});
-				} catch (error) {
-					console.error("Dice animation failed:", error);
-				}
+                        if (choice.roll) {
+                                const rollResult = runRoll(choice.roll, (stat) => this.state.getStatValue(stat));
+                                evaluatedStatEffects = evaluateStatEffects(choice.stats, { rollResult });
+                                if (rollResult.success) {
+                                        inventoryEffectsToApply = Array.isArray(choice.inventory) ? choice.inventory.slice() : [];
+                                        rollOutcomeLabel = "Roll: Success";
+                                } else {
+                                        inventoryEffectsToApply = [];
+                                        rollOutcomeLabel = "Roll: Failure";
+                                }
+                                try {
+                                        await this.renderer.showRollResult(rollResult, {
+                                                statEffects: evaluatedStatEffects,
+                                        });
+                                } catch (error) {
+                                        console.error("Dice animation failed:", error);
+                                }
 				this.state.clearLastRoll();
 				nextBranchId = rollResult.success ? choice.roll.ok : choice.roll.fail;
 			} else {
