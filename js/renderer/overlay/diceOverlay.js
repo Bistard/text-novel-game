@@ -1,4 +1,4 @@
-import { formatLabel, formatSigned } from "./storyUtilities.js";
+import { formatLabel, formatSigned } from "../../storyUtilities.js";
 
 /**
  * Handles presentation of dice roll overlays and animations.
@@ -14,7 +14,7 @@ export class DiceOverlay {
 
 	/**
 	 * Shows the dice roll overlay, animates the die, and waits for acknowledgement.
-	 * @param {import("./storyUtilities.js").RollResult} result
+	 * @param {import("../../storyUtilities.js").RollResult} result
 	 * @param {{ duration?: number, statEffects?: { stat: string, delta: number }[] }} [options]
 	 */
 	async show(result, options = {}) {
@@ -64,7 +64,7 @@ export class DiceOverlay {
 	/**
 	 * Animates the die to simulate rolling.
 	 * @param {HTMLElement} die
-	 * @param {import("./storyUtilities.js").RollResult} result
+	 * @param {import("../../storyUtilities.js").RollResult} result
 	 * @param {{ duration?: number }} [options]
 	 */
 	async animateDie(die, result, options = {}) {
@@ -98,7 +98,7 @@ export class DiceOverlay {
 
 	/**
 	 * Normalises the value to the nearest die face.
-	 * @param {import("./storyUtilities.js").RollResult} result
+	 * @param {import("../../storyUtilities.js").RollResult} result
 	 */
 	normalizeDieFace(result) {
 		const sides = result?.directive?.dice?.sides || 6;
@@ -178,7 +178,7 @@ export class DiceOverlay {
 	/**
 	 * Populates the overlay with detailed roll information.
 	 * @param {HTMLElement} container
-	 * @param {import("./storyUtilities.js").RollResult} result
+	 * @param {import("../../storyUtilities.js").RollResult} result
 	 * @param {boolean} isSuccess
 	 * @param {{ statEffects?: { stat: string, delta: number }[] }} [options]
 	 */
