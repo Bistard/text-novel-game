@@ -23,6 +23,8 @@ export class StoryEngine {
 		this.state = new StoryState();
 		this.story = null;
 		this.choiceInProgress = false;
+		this.storyUrl = null;
+		this.statsConfigUrl = null;
 	}
 
 	/**
@@ -31,6 +33,9 @@ export class StoryEngine {
 	 * @param {string} [statsConfigUrl]
 	 */
 	async load(storyUrl, statsConfigUrl = "assets/stats.config") {
+		this.storyUrl = storyUrl;
+		this.statsConfigUrl = statsConfigUrl != null ? statsConfigUrl : "assets/stats.config";
+
 		const storyPromise = fetch(storyUrl).then((response) => {
 			if (!response.ok) {
 				throw new Error(`Failed to load story file (${response.status}).`);
@@ -193,6 +198,69 @@ export class StoryEngine {
 	render() {
 		const branch = this.getCurrentBranch();
 		this.renderer.render(branch, this.state, (choiceId) => this.handleChoice(choiceId));
+	}
+
+	/**
+	 * Builds a payload suitable for saving to disk.
+	 * @returns {import("./saveSystem.js").SerializedSaveData}
+	 */
+	createSavePayload() {
+		if (!this.story) {
+			throw new Error("No story loaded to save.");
+		}
+
+		const branch = this.getCurrentBranch();
+		return {
+			version: 1,
+			createdAt: new Date().toISOString(),
+			story: {
+				url: this.storyUrl || "assets/story.txt",
+				statsConfigUrl: this.statsConfigUrl || "assets/stats.config",
+				start: this.story.start,
+				currentBranchId: this.state.getCurrentBranchId(),
+				currentBranchTitle: branch ? branch.title : null,
+			},
+			state: this.state.createSnapshot(),
+		};
+	}
+
+	/**
+	 * Restores the engine from previously saved data.
+	 * @param {import("./saveSystem.js").SerializedSaveData} saveData
+	 */
+	async loadFromSave(saveData) {
+		if (!saveData || typeof saveData !== "object") {
+			throw new Error("Invalid save data.");
+		}
+		if (saveData.version !== 1) {
+			throw new Error(`Unsupported save version "${saveData.version}".`);
+		}
+
+		const storyInfo = saveData.story || {};
+		const targetStoryUrl = storyInfo.url || this.storyUrl || "assets/story.txt";
+		const targetStatsConfigUrl =
+			storyInfo.statsConfigUrl != null ? storyInfo.statsConfigUrl : this.statsConfigUrl || "assets/stats.config";
+
+		if (!this.story || this.storyUrl !== targetStoryUrl || this.statsConfigUrl !== targetStatsConfigUrl) {
+			await this.load(targetStoryUrl, targetStatsConfigUrl);
+		}
+
+		if (!saveData.state) {
+			throw new Error("Save data missing required state information.");
+		}
+
+		this.state.restoreSnapshot(saveData.state);
+		const branchId = this.state.getCurrentBranchId();
+		if (!branchId || !this.story.branches[branchId]) {
+			const fallback = this.story.start;
+			const message = branchId
+				? `Saved branch "${branchId}" is unavailable. Reverting to the story start.`
+				: "Save data was missing the current location. Returning to the story start.";
+			this.state.setCurrentBranch(fallback);
+			this.state.setSystemError(message);
+		}
+
+		this.render();
 	}
 }
 

@@ -1,4 +1,5 @@
 import { StoryEngine } from "./storyEngine.js";
+import { saveGameToFile, loadGameFromFile } from "./saveSystem.js";
 
 // Cache references to key DOM elements
 const elements = {
@@ -135,8 +136,8 @@ if (homeStart) {
 
 if (homeLoad) {
 	homeLoad.addEventListener("click", () => {
-		setHomeMessage("Load Game is coming soon.");
-		console.info("Load Game feature is not implemented yet.");
+		if (loadingGame) return;
+		handleLoadGame();
 	});
 }
 
@@ -148,6 +149,74 @@ if (elements.home) {
 
 if (elements.save) {
 	elements.save.addEventListener("click", () => {
-		console.info("Save Game feature is not implemented yet.");
+		if (loadingGame) return;
+		handleSaveClick();
 	});
+}
+
+async function handleSaveClick() {
+	if (!hasLoadedStory) {
+		window.alert("A game needs to be running before it can be saved.");
+		return;
+	}
+
+	let payload;
+	try {
+		payload = engine.createSavePayload();
+	} catch (error) {
+		console.error(error);
+		window.alert("Unable to capture the current game state for saving.");
+		return;
+	}
+
+	const result = await saveGameToFile(payload);
+	if (result.status === "cancelled") {
+		return;
+	}
+	if (result.status === "error") {
+		console.error(result.error);
+		window.alert("Saving failed. Please check the console for details.");
+		return;
+	}
+
+	const name = result.fileName || "the chosen location";
+	window.alert(`Game saved to ${name}.`);
+}
+
+async function handleLoadGame() {
+	if (loadingGame) return;
+	loadingGame = true;
+	const originalLabel = homeStart ? homeStart.textContent : "";
+	if (homeStart) {
+		homeStart.disabled = true;
+		homeStart.textContent = "Loading...";
+	}
+	setHomeMessage("Select a save file to load.");
+
+	try {
+		const result = await loadGameFromFile();
+		if (result.status === "cancelled") {
+			setHomeMessage("Load cancelled.");
+			return;
+		}
+		if (result.status === "error") {
+			console.error(result.error);
+			setHomeMessage(result.message || "Failed to read the save file.");
+			return;
+		}
+
+		await engine.loadFromSave(result.data);
+		hasLoadedStory = true;
+		setHomeMessage("");
+		revealGame();
+	} catch (error) {
+		console.error(error);
+		setHomeMessage("Loading the save file failed.");
+	} finally {
+		if (!gameVisible && homeStart) {
+			homeStart.disabled = false;
+			homeStart.textContent = originalLabel || "Start Game";
+		}
+		loadingGame = false;
+	}
 }

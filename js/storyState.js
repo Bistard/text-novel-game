@@ -194,6 +194,74 @@ export class StoryState {
 		this.systemError = null;
 	}
 
+	/**
+	 * Creates a serialisable snapshot of the current game state.
+	 * @returns {{ currentBranchId: string|null, stats: Record<string, number>, inventory: Record<string, number>, journal: string[] }}
+	 */
+	createSnapshot() {
+		return {
+			currentBranchId: this.getCurrentBranchId(),
+			stats: { ...this.stats },
+			inventory: { ...this.inventory },
+			journal: this.journal.slice(),
+		};
+	}
+
+	/**
+	 * Restores state from a previously created snapshot.
+	 * @param {{ currentBranchId?: string|null, stats?: Record<string, number>, inventory?: Record<string, number>, journal?: string[] }} snapshot
+	 */
+	restoreSnapshot(snapshot) {
+		if (!snapshot || typeof snapshot !== "object") {
+			throw new Error("Invalid save snapshot payload.");
+		}
+
+		const stats = this.cloneStatDefaults();
+		if (snapshot.stats && typeof snapshot.stats === "object") {
+			for (const [name, value] of Object.entries(snapshot.stats)) {
+				if (typeof name !== "string") continue;
+				const key = name.trim().toLowerCase();
+				if (!key) continue;
+				if (!Object.prototype.hasOwnProperty.call(stats, key)) {
+					continue;
+				}
+				const numericValue = Number(value);
+				stats[key] = Number.isFinite(numericValue) ? numericValue : stats[key];
+			}
+		}
+		this.stats = stats;
+
+		const inventory = {};
+		if (snapshot.inventory && typeof snapshot.inventory === "object") {
+			for (const [item, rawValue] of Object.entries(snapshot.inventory)) {
+				if (typeof item !== "string") continue;
+				const name = item.trim();
+				if (!name) continue;
+				const value = Number(rawValue);
+				if (Number.isFinite(value) && value > 0) {
+					inventory[name] = value;
+				}
+			}
+		}
+		this.inventory = inventory;
+
+		const entries = Array.isArray(snapshot.journal) ? snapshot.journal.filter((entry) => typeof entry === "string" && entry.trim()) : [];
+		if (entries.length > this.maxJournalEntries) {
+			this.journal = entries.slice(entries.length - this.maxJournalEntries);
+		} else {
+			this.journal = entries.slice();
+		}
+
+		const branchId =
+			typeof snapshot.currentBranchId === "string" && snapshot.currentBranchId.trim()
+				? snapshot.currentBranchId.trim()
+				: null;
+		this.currentBranchId = branchId;
+
+		this.lastRoll = null;
+		this.systemError = null;
+	}
+
 	cloneStatDefaults() {
 		const snapshot = Object.create(null);
 		for (const [stat, value] of Object.entries(this.statDefaults)) {
