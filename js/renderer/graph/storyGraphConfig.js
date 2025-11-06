@@ -1,0 +1,11 @@
+export const SVG_NS = "http://www.w3.org/2000/svg";
+export const NODE_RADIUS = 28;
+export const HORIZONTAL_SPACING = 240;
+export const VERTICAL_SPACING = 120;
+export const HORIZONTAL_MARGIN = 90;
+export const VERTICAL_MARGIN = 90;
+export const MIN_SCALE = 0.5;
+export const MAX_SCALE = 2.5;
+export const EDGE_PARALLEL_OFFSET_STEP = 90;
+export const EDGE_PARALLEL_ELBOW_STEP = 12;
+export const VISIBLE_VIEWPORT_MIN_PADDING = 80;
