@@ -8,7 +8,9 @@ const HORIZONTAL_MARGIN = 90;
 const VERTICAL_MARGIN = 90;
 const MIN_SCALE = 0.5;
 const MAX_SCALE = 2.5;
-const EDGE_PARALLEL_OFFSET_STEP = 120;
+const EDGE_PARALLEL_OFFSET_STEP = 90;
+const EDGE_PARALLEL_ELBOW_STEP = 12;
+const VISIBLE_VIEWPORT_MIN_PADDING = 80;
 
 /**
  * Renders a left-to-right branch graph with pan and zoom controls.
@@ -146,94 +148,76 @@ export class StoryGraphView {
 		}
 
 		this.updateToggle();
-		const scaledWidth = this.layout.baseWidth * this.scale;
-		const scaledHeight = this.layout.baseHeight * this.scale;
+		const edgeEntries = this.buildEdgeRenderEntries(visibleNodes, visitedTransitions);
+		const defaultViewport = {
+			minX: 0,
+			minY: 0,
+			width: this.layout.baseWidth,
+			height: this.layout.baseHeight,
+		};
+		const viewport =
+			this.mode === "visited"
+				? computeVisibleViewportBounds(visibleNodes, edgeEntries) || defaultViewport
+				: defaultViewport;
+		const width = Math.max(1, viewport.width);
+		const height = Math.max(1, viewport.height);
+		const scaledWidth = width * this.scale;
+		const scaledHeight = height * this.scale;
 		this.svg.setAttribute("width", scaledWidth.toFixed(2));
 		this.svg.setAttribute("height", scaledHeight.toFixed(2));
-		this.svg.setAttribute("viewBox", `0 0 ${this.layout.baseWidth} ${this.layout.baseHeight}`);
+		this.svg.setAttribute("viewBox", `${viewport.minX} ${viewport.minY} ${width} ${height}`);
 		this.svg.style.width = `${scaledWidth}px`;
 		this.svg.style.height = `${scaledHeight}px`;
 
-		this.renderEdges(visibleNodes, visitedBranchIds, visitedTransitions);
+		this.renderEdges(edgeEntries);
 		this.renderNodes(visibleNodes, visitedBranchIds);
 	}
 
-	renderEdges(visibleNodes, visitedBranches, visitedTransitions) {
+	renderEdges(edgeEntries) {
 		if (!this.edgesGroup) return;
-		const visibleSet = new Set(visibleNodes.map((node) => node.id));
-		const nodeMap = this.layout.nodeMap;
-		const edgesToRender = [];
-
-		if (this.mode === "visited") {
-			for (const edge of this.layout.edges) {
-				const key = createTransitionKey(edge.from, edge.to);
-				if (!visitedTransitions.has(key)) continue;
-				if (!visibleSet.has(edge.from) || !visibleSet.has(edge.to)) continue;
-				const fromNode = nodeMap.get(edge.from);
-				const toNode = nodeMap.get(edge.to);
-				if (!fromNode || !toNode) continue;
-				edgesToRender.push({ edge, fromNode, toNode, status: "visited" });
-			}
-		} else {
-			for (const edge of this.layout.edges) {
-				const fromNode = nodeMap.get(edge.from);
-				const toNode = nodeMap.get(edge.to);
-				if (!fromNode || !toNode) {
-					continue;
-				}
-				const key = createTransitionKey(edge.from, edge.to);
-				const visited = visitedTransitions.has(key);
-				const status = visited ? "visited" : "locked";
-				edgesToRender.push({ edge, fromNode, toNode, status });
-			}
-		}
-
 		this.edgesGroup.innerHTML = "";
-		for (const entry of edgesToRender) {
+		for (const entry of edgeEntries) {
 			const path = document.createElementNS(SVG_NS, "path");
 			path.classList.add("graph-edge", entry.status);
-			const fromX = entry.fromNode.x;
-			const fromY = entry.fromNode.y;
-			const toX = entry.toNode.x;
-			const toY = entry.toNode.y;
-			const parallelIndex = entry.edge?.parallelIndex ?? 0;
-			const parallelCount = entry.edge?.parallelCount ?? 1;
-			let offset = 0;
-			if (parallelCount > 1) {
-				const center = (parallelCount - 1) / 2;
-				offset = (parallelIndex - center) * EDGE_PARALLEL_OFFSET_STEP;
-			}
-			const deltaX = toX - fromX;
-			let elbowX;
-			if (deltaX >= 0) {
-				const preferred = fromX + Math.max(60, Math.min(deltaX * 0.6, HORIZONTAL_SPACING * 0.75));
-				const padding = NODE_RADIUS + 12;
-				elbowX = Math.min(preferred, toX - padding);
-				if (elbowX <= fromX) {
-					elbowX = fromX + Math.max(40, deltaX * 0.5);
-				}
-			} else {
-				const preferred = fromX - Math.max(60, Math.min(Math.abs(deltaX) * 0.6, HORIZONTAL_SPACING * 0.75));
-				elbowX = Math.min(fromX - 40, preferred);
-			}
-			const startY = fromY + offset;
-			const endY = toY + offset;
-			const pathSegments = [`M ${fromX} ${fromY}`];
-			if (offset !== 0) {
-				pathSegments.push(`L ${fromX} ${startY}`);
-			}
-			pathSegments.push(`L ${elbowX} ${startY}`);
-			if (startY !== endY) {
-				pathSegments.push(`L ${elbowX} ${endY}`);
-			}
-			pathSegments.push(`L ${toX} ${endY}`);
-			if (offset !== 0) {
-				pathSegments.push(`L ${toX} ${toY}`);
-			}
-			const d = pathSegments.join(" ");
-			path.setAttribute("d", d);
+			path.setAttribute("d", entry.d);
 			this.edgesGroup.appendChild(path);
 		}
+	}
+
+	buildEdgeRenderEntries(visibleNodes, visitedTransitions) {
+		if (!this.layout) {
+			return [];
+		}
+		const entries = [];
+		const visibleSet = new Set(visibleNodes.map((node) => node.id));
+		const nodeMap = this.layout.nodeMap;
+		const requireVisible = this.mode === "visited";
+
+		for (const edge of this.layout.edges) {
+			const key = createTransitionKey(edge.from, edge.to);
+			const visited = visitedTransitions.has(key);
+			if (requireVisible) {
+				if (!visited) continue;
+				if (!visibleSet.has(edge.from) || !visibleSet.has(edge.to)) continue;
+			}
+			const fromNode = nodeMap.get(edge.from);
+			const toNode = nodeMap.get(edge.to);
+			if (!fromNode || !toNode) {
+				continue;
+			}
+			const status = visited ? "visited" : "locked";
+			if (requireVisible && status !== "visited") {
+				continue;
+			}
+			const pathData = buildEdgePathData(edge, fromNode, toNode);
+			if (!pathData) continue;
+			entries.push({
+				status,
+				d: pathData.d,
+				bounds: pathData.bounds,
+			});
+		}
+		return entries;
 	}
 
 	renderNodes(nodes, visitedBranches) {
@@ -409,6 +393,123 @@ export class StoryGraphView {
 			this.modeLabel.textContent = this.mode === "all" ? "Full Story" : "Visited Branches";
 		}
 	}
+}
+
+function buildEdgePathData(edge, fromNode, toNode) {
+	const fromX = fromNode.x;
+	const fromY = fromNode.y;
+	const toX = toNode.x;
+	const toY = toNode.y;
+	const parallelIndex = edge?.parallelIndex ?? 0;
+	const parallelCount = edge?.parallelCount ?? 1;
+	const center = (parallelCount - 1) / 2;
+	const offset = parallelCount > 1 ? (parallelIndex - center) * EDGE_PARALLEL_OFFSET_STEP : 0;
+	const padding = NODE_RADIUS + 12;
+	const deltaX = toX - fromX;
+	let elbowX;
+
+	if (deltaX >= 0) {
+		const elbowMin = fromX + Math.max(40, deltaX * 0.25);
+		const elbowMax = toX - padding;
+		if (elbowMax <= elbowMin) {
+			elbowX = fromX + Math.max(40, deltaX * 0.5);
+		} else {
+			const preferred = fromX + Math.max(60, Math.min(deltaX * 0.6, HORIZONTAL_SPACING * 0.75));
+			elbowX = clamp(preferred, elbowMin, elbowMax);
+		}
+		if (parallelCount > 1 && elbowMax > elbowMin) {
+			const elbowShift = (parallelIndex - center) * EDGE_PARALLEL_ELBOW_STEP;
+			elbowX = clamp(elbowX + elbowShift, elbowMin, elbowMax);
+		}
+	} else {
+		const absDeltaX = Math.abs(deltaX);
+		const elbowMax = fromX - Math.max(40, absDeltaX * 0.25);
+		const elbowMin = toX + padding;
+		if (elbowMax <= elbowMin) {
+			elbowX = fromX - Math.max(40, absDeltaX * 0.5);
+		} else {
+			const preferred = fromX - Math.max(60, Math.min(absDeltaX * 0.6, HORIZONTAL_SPACING * 0.75));
+			elbowX = clamp(preferred, elbowMin, elbowMax);
+		}
+		if (parallelCount > 1 && elbowMax > elbowMin) {
+			const elbowShift = (parallelIndex - center) * EDGE_PARALLEL_ELBOW_STEP;
+			elbowX = clamp(elbowX + elbowShift, elbowMin, elbowMax);
+		}
+	}
+
+	const startY = fromY + offset;
+	const endY = toY + offset;
+	const pathSegments = [`M ${fromX} ${fromY}`];
+	if (offset !== 0) {
+		pathSegments.push(`L ${fromX} ${startY}`);
+	}
+	pathSegments.push(`L ${elbowX} ${startY}`);
+	if (startY !== endY) {
+		pathSegments.push(`L ${elbowX} ${endY}`);
+	}
+	pathSegments.push(`L ${toX} ${endY}`);
+	if (offset !== 0) {
+		pathSegments.push(`L ${toX} ${toY}`);
+	}
+
+	const bounds = {
+		minX: Math.min(fromX, elbowX, toX),
+		maxX: Math.max(fromX, elbowX, toX),
+		minY: Math.min(fromY, startY, endY, toY),
+		maxY: Math.max(fromY, startY, endY, toY),
+	};
+
+	return {
+		d: pathSegments.join(" "),
+		bounds,
+	};
+}
+
+function computeVisibleViewportBounds(nodes, edgeEntries) {
+	if (!Array.isArray(nodes) || !nodes.length) {
+		return null;
+	}
+	let minX = Infinity;
+	let minY = Infinity;
+	let maxX = -Infinity;
+	let maxY = -Infinity;
+
+	for (const node of nodes) {
+		minX = Math.min(minX, node.x - NODE_RADIUS);
+		maxX = Math.max(maxX, node.x + NODE_RADIUS);
+		minY = Math.min(minY, node.y - NODE_RADIUS);
+		maxY = Math.max(maxY, node.y + NODE_RADIUS);
+	}
+
+	for (const entry of edgeEntries) {
+		const bounds = entry?.bounds;
+		if (!bounds) continue;
+		minX = Math.min(minX, bounds.minX);
+		minY = Math.min(minY, bounds.minY);
+		maxX = Math.max(maxX, bounds.maxX);
+		maxY = Math.max(maxY, bounds.maxY);
+	}
+
+	if (!Number.isFinite(minX) || !Number.isFinite(minY) || !Number.isFinite(maxX) || !Number.isFinite(maxY)) {
+		return null;
+	}
+
+	const paddingX = Math.max(VISIBLE_VIEWPORT_MIN_PADDING, NODE_RADIUS + EDGE_PARALLEL_ELBOW_STEP * 2);
+	const paddingY = Math.max(VISIBLE_VIEWPORT_MIN_PADDING, NODE_RADIUS + EDGE_PARALLEL_OFFSET_STEP * 2);
+
+	minX -= paddingX;
+	maxX += paddingX;
+	minY -= paddingY;
+	maxY += paddingY;
+
+	const width = Math.max(1, maxX - minX);
+	const height = Math.max(1, maxY - minY);
+	return {
+		minX,
+		minY,
+		width,
+		height,
+	};
 }
 
 function computeLayout(story) {
