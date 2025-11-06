@@ -25,6 +25,8 @@
     <header class="app-header">
       <h1 id="game-title">Untitled</h1>
       <div class="header-actions" role="group" aria-label="Game actions">
+        <button id="graph-open" class="button button-secondary" type="button" aria-haspopup="dialog"
+          aria-expanded="false">Story Map</button>
         <button id="save-button" class="button button-secondary" type="button">Save Game</button>
         <button id="restart-button" class="button button-secondary" type="button"
           aria-label="Restart story">Restart</button>
@@ -64,8 +66,27 @@
           <h3 class="choices-title" id="choices-title">Choices</h3>
           <div id="choices" class="choices" role="listbox" aria-labelledby="choices-title"></div>
         </div>
+
       </section>
     </main>
+    <div id="graph-overlay" class="graph-overlay" hidden aria-hidden="true" tabindex="-1" role="dialog"
+      aria-modal="true" aria-labelledby="graph-title">
+      <div class="graph-overlay-header">
+        <div class="graph-header-left">
+          <h2 id="graph-title" class="graph-title">Story Map</h2>
+          <div class="graph-controls" role="group" aria-label="Story map view">
+            <span id="graph-mode-label" class="graph-mode-label" aria-live="polite">Visited Branches</span>
+            <button id="graph-toggle" class="graph-toggle button button-secondary" type="button"
+              aria-pressed="false">Show Full Map</button>
+          </div>
+        </div>
+        <button id="graph-close" class="graph-close button button-secondary" type="button">Return to Game</button>
+      </div>
+      <div id="story-graph-container" class="graph-viewport graph-overlay-viewport" role="region"
+        aria-label="Story map">
+        <div id="graph-placeholder" class="graph-placeholder">Play the story to reveal the map.</div>
+      </div>
+    </div>
   </div>
 
   <noscript>

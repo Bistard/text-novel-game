@@ -52,6 +52,9 @@ export class StoryEngine {
 		const [storyText, statDefaults] = await Promise.all([storyPromise, statsPromise]);
 
 		this.story = parseStory(storyText);
+		if (this.renderer && typeof this.renderer.setStory === "function") {
+			this.renderer.setStory(this.story);
+		}
 		this.state.configureStats(statDefaults);
 		this.resetState();
 		this.render();
@@ -102,6 +105,7 @@ export class StoryEngine {
 	async handleChoice(choiceId) {
 		const branch = this.getCurrentBranch();
 		if (!branch) return;
+		const currentBranchId = branch.id || this.state.getCurrentBranchId();
 
 		if (this.choiceInProgress) {
 			return;
@@ -147,6 +151,9 @@ export class StoryEngine {
 				return;
 			}
 
+			if (currentBranchId) {
+				this.state.markBranchTransition(currentBranchId, nextBranchId);
+			}
 			this.state.setCurrentBranch(nextBranchId);
 			this.render();
 		} finally {

@@ -1,10 +1,11 @@
 import { normaliseJournal } from "./journalManager.js";
 import { snapshotVisited, restoreVisited } from "./visitTracker.js";
+import { snapshotTransitions, restoreTransitions } from "./transitionTracker.js";
 
 /**
  * Creates a serialisable snapshot of the state.
- * @param {{ branchId: string|null, stats: Record<string, number>, inventory: Record<string, number>, journal: string[], visited: Set<string> }} state
- * @returns {{ currentBranchId: string|null, stats: Record<string, number>, inventory: Record<string, number>, journal: string[], visitedBranches: string[] }}
+ * @param {{ branchId: string|null, stats: Record<string, number>, inventory: Record<string, number>, journal: string[], visited: Set<string>, transitions: Set<string> }} state
+ * @returns {{ currentBranchId: string|null, stats: Record<string, number>, inventory: Record<string, number>, journal: string[], visitedBranches: string[], visitedTransitions: { from: string, to: string }[] }}
  */
 export function createSnapshot(state) {
 	return {
@@ -13,6 +14,7 @@ export function createSnapshot(state) {
 		inventory: { ...state.inventory },
 		journal: Array.isArray(state.journal) ? state.journal.slice() : [],
 		visitedBranches: snapshotVisited(state.visited),
+		visitedTransitions: snapshotTransitions(state.transitions),
 	};
 }
 
@@ -20,7 +22,7 @@ export function createSnapshot(state) {
  * Normalises snapshot payload into clean state fragments.
  * @param {unknown} snapshot
  * @param {{ statsManager: import("./statsManager.js").StatsManager, maxJournalEntries: number }} options
- * @returns {{ stats: Record<string, number>, inventory: Record<string, number>, journal: string[], visited: Set<string>, branchId: string|null }}
+ * @returns {{ stats: Record<string, number>, inventory: Record<string, number>, journal: string[], visited: Set<string>, transitions: Set<string>, branchId: string|null }}
  */
 export function restoreFromSnapshot(snapshot, { statsManager, maxJournalEntries }) {
 	if (!snapshot || typeof snapshot !== "object") {
@@ -62,5 +64,7 @@ export function restoreFromSnapshot(snapshot, { statsManager, maxJournalEntries 
 			? snapshot.currentBranchId.trim()
 			: null;
 
-	return { stats, inventory, journal, visited, branchId };
+	const transitions = restoreTransitions(snapshot.visitedTransitions);
+
+	return { stats, inventory, journal, visited, transitions, branchId };
 }

@@ -3,6 +3,7 @@ import { hasInventoryItem, applyInventoryEffects } from "./inventoryManager.js";
 import { appendJournal } from "./journalManager.js";
 import { evaluateCondition as evaluateConditionDefinition } from "./conditionEvaluator.js";
 import { markVisited, hasVisited, snapshotVisited } from "./visitTracker.js";
+import { markTransition, snapshotTransitions } from "./transitionTracker.js";
 import { createSnapshot, restoreFromSnapshot } from "./snapshot.js";
 
 const DEFAULT_MAX_JOURNAL_ENTRIES = 8;
@@ -31,6 +32,7 @@ export class StoryState {
 		this.lastRoll = null;
 		this.systemError = null;
 		this.visitedBranches = new Set();
+		this.visitedTransitions = new Set();
 		this.currentBranchId = null;
 		if (startBranchId) {
 			this.setCurrentBranch(startBranchId);
@@ -80,6 +82,18 @@ export class StoryState {
 	}
 
 	/**
+	 * Records a branch-to-branch transition.
+	 * @param {string} fromBranchId
+	 * @param {string} toBranchId
+	 */
+	markBranchTransition(fromBranchId, toBranchId) {
+		if (!this.visitedTransitions || !(this.visitedTransitions instanceof Set)) {
+			this.visitedTransitions = new Set();
+		}
+		markTransition(this.visitedTransitions, fromBranchId, toBranchId);
+	}
+
+	/**
 	 * Checks whether a branch has been visited by the player.
 	 * @param {string} branchId
 	 */
@@ -93,6 +107,14 @@ export class StoryState {
 	 */
 	getVisitedBranches() {
 		return snapshotVisited(this.visitedBranches);
+	}
+
+	/**
+	 * Returns an array snapshot of visited transitions.
+	 * @returns {{ from: string, to: string }[]}
+	 */
+	getVisitedTransitions() {
+		return snapshotTransitions(this.visitedTransitions);
 	}
 
 	/**
@@ -210,6 +232,7 @@ export class StoryState {
 			inventory: this.inventory,
 			journal: this.journal,
 			visited: this.visitedBranches,
+			transitions: this.visitedTransitions,
 		});
 	}
 
@@ -227,6 +250,7 @@ export class StoryState {
 		this.inventory = restored.inventory;
 		this.journal = restored.journal;
 		this.visitedBranches = restored.visited;
+		this.visitedTransitions = restored.transitions;
 		this.setCurrentBranch(restored.branchId);
 
 		this.lastRoll = null;

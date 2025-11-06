@@ -8,6 +8,7 @@ import { renderInventory } from "./components/renderInventory.js";
 import { renderJournal } from "./components/renderJournal.js";
 import { renderSystemMessages } from "./components/renderSystemMessages.js";
 import { renderTitle, DOCUMENT_SUFFIX } from "./components/renderTitle.js";
+import { StoryGraphView } from "./graph/storyGraphView.js";
 
 /**
  * Handles DOM updates for the interactive story.
@@ -25,10 +26,15 @@ export class StoryRenderer {
 	 * @param {HTMLElement} [elements.titleElement]
 	 * @param {HTMLElement} [elements.skipButton]
 	 * @param {HTMLElement} [elements.skipToggle]
+	 * @param {HTMLElement} [elements.graphContainer]
+	 * @param {HTMLElement} [elements.graphToggle]
+	 * @param {HTMLElement} [elements.graphModeLabel]
+	 * @param {HTMLElement} [elements.graphPlaceholder]
 	 */
 	constructor(elements) {
 		this.elements = elements;
 		this.currentAnimation = null;
+		this.story = null;
 		this.textAnimator = new TextAnimator({
 			prefersReducedMotion: () => this.prefersReducedMotion(),
 		});
@@ -43,6 +49,28 @@ export class StoryRenderer {
 		if (this.elements.skipToggle) {
 			this.elements.skipToggle.addEventListener("click", this.handleSkipToggleClick);
 			this.syncSkipToggleState();
+		}
+		this.graphView = null;
+		if (this.elements.graphContainer) {
+			this.graphView = new StoryGraphView({
+				container: this.elements.graphContainer,
+				toggleButton: this.elements.graphToggle,
+				modeLabel: this.elements.graphModeLabel,
+				placeholder: this.elements.graphPlaceholder,
+			});
+		}
+	}
+
+	setStory(story) {
+		this.story = story || null;
+		if (this.graphView) {
+			this.graphView.setStory(this.story);
+		}
+	}
+
+	refreshGraphView() {
+		if (this.graphView) {
+			this.graphView.refresh();
 		}
 	}
 
@@ -71,6 +99,13 @@ export class StoryRenderer {
 		});
 
 		this.syncSkipButtonState();
+		if (this.graphView) {
+			this.graphView.update({
+				story: this.story,
+				state,
+				currentBranchId: branch.id,
+			});
+		}
 	}
 
 	clearChoices() {
@@ -229,5 +264,12 @@ export class StoryRenderer {
 		renderJournal(this.elements.journal, state);
 		renderSystemMessages(this.elements.systemMessages, state);
 		document.title = `Story unavailable — ${DOCUMENT_SUFFIX}`;
+		if (this.graphView) {
+			this.graphView.update({
+				story: this.story,
+				state,
+				currentBranchId: null,
+			});
+		}
 	}
 }

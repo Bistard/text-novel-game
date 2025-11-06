@@ -16,6 +16,13 @@ const elements = {
 	systemMessages: document.getElementById("system-messages"),
 	skipButton: document.getElementById("skip-button"),
 	skipToggle: document.getElementById("skip-toggle"),
+	graphOverlay: document.getElementById("graph-overlay"),
+	graphOpen: document.getElementById("graph-open"),
+	graphClose: document.getElementById("graph-close"),
+	graphContainer: document.getElementById("story-graph-container"),
+	graphToggle: document.getElementById("graph-toggle"),
+	graphModeLabel: document.getElementById("graph-mode-label"),
+	graphPlaceholder: document.getElementById("graph-placeholder"),
 };
 
 const homeScreen = document.getElementById("home-screen");
@@ -36,6 +43,10 @@ const engine = new StoryEngine({
 	titleElement: elements.title,
 	skipButton: elements.skipButton,
 	skipToggle: elements.skipToggle,
+	graphContainer: elements.graphContainer,
+	graphToggle: elements.graphToggle,
+	graphModeLabel: elements.graphModeLabel,
+	graphPlaceholder: elements.graphPlaceholder,
 });
 
 let gameVisible = false;
@@ -67,6 +78,7 @@ function resetHomeState() {
 }
 
 function returnHome() {
+	closeGraphOverlay();
 	if (appContainer) {
 		appContainer.hidden = true;
 	}
@@ -155,6 +167,54 @@ if (elements.save) {
 		handleSaveClick();
 	});
 }
+
+function openGraphOverlay() {
+	if (!elements.graphOverlay) return;
+	elements.graphOverlay.hidden = false;
+	elements.graphOverlay.setAttribute("aria-hidden", "false");
+	document.body.classList.add("graph-open");
+	if (elements.graphOpen instanceof HTMLElement) {
+		elements.graphOpen.setAttribute("aria-expanded", "true");
+		elements.graphOpen.setAttribute("aria-pressed", "true");
+	}
+	if (typeof engine.renderer?.refreshGraphView === "function") {
+		engine.renderer.refreshGraphView();
+	}
+	if (elements.graphOverlay instanceof HTMLElement) {
+		elements.graphOverlay.focus();
+	}
+}
+
+function closeGraphOverlay() {
+	if (!elements.graphOverlay || elements.graphOverlay.hidden) return;
+	elements.graphOverlay.hidden = true;
+	elements.graphOverlay.setAttribute("aria-hidden", "true");
+	document.body.classList.remove("graph-open");
+	if (elements.graphOpen instanceof HTMLElement) {
+		elements.graphOpen.setAttribute("aria-expanded", "false");
+		elements.graphOpen.setAttribute("aria-pressed", "false");
+		elements.graphOpen.focus();
+	}
+}
+
+if (elements.graphOpen) {
+	elements.graphOpen.addEventListener("click", () => {
+		openGraphOverlay();
+	});
+}
+
+if (elements.graphClose) {
+	elements.graphClose.addEventListener("click", () => {
+		closeGraphOverlay();
+	});
+}
+
+document.addEventListener("keydown", (event) => {
+	if (event.key === "Escape" && elements.graphOverlay && !elements.graphOverlay.hidden) {
+		event.preventDefault();
+		closeGraphOverlay();
+	}
+});
 
 async function handleSaveClick() {
 	if (!hasLoadedStory) {
