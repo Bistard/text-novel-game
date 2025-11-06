@@ -8,6 +8,7 @@ const HORIZONTAL_MARGIN = 90;
 const VERTICAL_MARGIN = 90;
 const MIN_SCALE = 0.5;
 const MAX_SCALE = 2.5;
+const EDGE_PARALLEL_OFFSET_STEP = 120;
 
 /**
  * Renders a left-to-right branch graph with pan and zoom controls.
@@ -171,7 +172,7 @@ export class StoryGraphView {
 				const fromNode = nodeMap.get(edge.from);
 				const toNode = nodeMap.get(edge.to);
 				if (!fromNode || !toNode) continue;
-				edgesToRender.push({ fromNode, toNode, status: "visited" });
+				edgesToRender.push({ edge, fromNode, toNode, status: "visited" });
 			}
 		} else {
 			for (const edge of this.layout.edges) {
@@ -183,7 +184,7 @@ export class StoryGraphView {
 				const key = createTransitionKey(edge.from, edge.to);
 				const visited = visitedTransitions.has(key);
 				const status = visited ? "visited" : "locked";
-				edgesToRender.push({ fromNode, toNode, status });
+				edgesToRender.push({ edge, fromNode, toNode, status });
 			}
 		}
 
@@ -195,6 +196,13 @@ export class StoryGraphView {
 			const fromY = entry.fromNode.y;
 			const toX = entry.toNode.x;
 			const toY = entry.toNode.y;
+			const parallelIndex = entry.edge?.parallelIndex ?? 0;
+			const parallelCount = entry.edge?.parallelCount ?? 1;
+			let offset = 0;
+			if (parallelCount > 1) {
+				const center = (parallelCount - 1) / 2;
+				offset = (parallelIndex - center) * EDGE_PARALLEL_OFFSET_STEP;
+			}
 			const deltaX = toX - fromX;
 			let elbowX;
 			if (deltaX >= 0) {
@@ -208,7 +216,21 @@ export class StoryGraphView {
 				const preferred = fromX - Math.max(60, Math.min(Math.abs(deltaX) * 0.6, HORIZONTAL_SPACING * 0.75));
 				elbowX = Math.min(fromX - 40, preferred);
 			}
-			const d = `M ${fromX} ${fromY} L ${elbowX} ${fromY} L ${elbowX} ${toY} L ${toX} ${toY}`;
+			const startY = fromY + offset;
+			const endY = toY + offset;
+			const pathSegments = [`M ${fromX} ${fromY}`];
+			if (offset !== 0) {
+				pathSegments.push(`L ${fromX} ${startY}`);
+			}
+			pathSegments.push(`L ${elbowX} ${startY}`);
+			if (startY !== endY) {
+				pathSegments.push(`L ${elbowX} ${endY}`);
+			}
+			pathSegments.push(`L ${toX} ${endY}`);
+			if (offset !== 0) {
+				pathSegments.push(`L ${toX} ${toY}`);
+			}
+			const d = pathSegments.join(" ");
 			path.setAttribute("d", d);
 			this.edgesGroup.appendChild(path);
 		}
@@ -396,10 +418,10 @@ function computeLayout(story) {
 		return null;
 	}
 
-	const edges = [];
+	const rawEdges = [];
 	const parents = new Map();
 	const children = new Map();
-	const edgeKeys = new Set();
+	const edgeCounts = new Map();
 
 	/** @param {string} from @param {string|null|undefined} to */
 	const trackEdge = (from, to) => {
@@ -411,10 +433,8 @@ function computeLayout(story) {
 			return;
 		}
 		const key = `${from}->${target}`;
-		if (!edgeKeys.has(key)) {
-			edgeKeys.add(key);
-			edges.push({ from, to: target });
-		}
+		rawEdges.push({ from, to: target });
+		edgeCounts.set(key, (edgeCounts.get(key) || 0) + 1);
 		if (!parents.has(target)) {
 			parents.set(target, new Set());
 		}
@@ -437,6 +457,21 @@ function computeLayout(story) {
 				trackEdge(id, choice.roll.fail);
 			}
 		}
+	}
+
+	const edges = [];
+	const parallelTracker = new Map();
+	for (const edge of rawEdges) {
+		const key = `${edge.from}->${edge.to}`;
+		const total = edgeCounts.get(key) || 1;
+		const index = parallelTracker.get(key) || 0;
+		parallelTracker.set(key, index + 1);
+		edges.push({
+			from: edge.from,
+			to: edge.to,
+			parallelIndex: index,
+			parallelCount: total,
+		});
 	}
 
 	const depthMap = computeDepths(story.start, branches, children);
