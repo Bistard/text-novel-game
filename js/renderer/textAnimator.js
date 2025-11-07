@@ -223,29 +223,29 @@ export class TextAnimator {
 }
 
 function defaultCharacterDelay(char) {
-	const base = 28;
+	const base = 22;
 	const slowChars = new Map([
-		[",", 110],
-		[".", 180],
-		["!", 180],
-		["?", 180],
-		[";", 140],
-		[":", 140],
-		["—", 160],
-		["…", 220],
-		["，", 120],
-		["。", 200],
-		["！", 200],
-		["？", 200],
-		["；", 150],
-		["：", 150],
+		[",", 90],
+		[".", 150],
+		["!", 150],
+		["?", 150],
+		[";", 120],
+		[":", 120],
+		["\u2014", 140],
+		["\u2026", 180],
+		["\uFF0C", 100],
+		["\u3002", 170],
+		["\uFF01", 170],
+		["\uFF1F", 170],
+		["\uFF1B", 120],
+		["\uFF1A", 120],
 	]);
 
 	if (!char) {
 		return base;
 	}
 	if (/\s/.test(char)) {
-		return 18;
+		return 14;
 	}
 	return slowChars.get(char) || base;
 }
@@ -259,13 +259,13 @@ function defaultParagraphPause(text) {
 		return 0;
 	}
 	const lastChar = trimmed.charAt(trimmed.length - 1);
-	if ("?!。！？".includes(lastChar)) {
-		return 260;
+	if ("?!\u3002\uFF01\uFF1F".includes(lastChar)) {
+		return 220;
 	}
-	if (",;，；、".includes(lastChar)) {
-		return 180;
+	if (",;\uFF0C\uFF1B\u3001".includes(lastChar)) {
+		return 150;
 	}
-	return 140;
+	return 120;
 }
 
 /**
