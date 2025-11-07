@@ -1,5 +1,14 @@
 import { StoryEngine } from "./storyEngine.js";
 import { saveGameToFile, loadGameFromFile } from "./saveSystem.js";
+import {
+	t,
+	setLanguage,
+	getAvailableLanguages,
+	getCurrentLanguage,
+	onLanguageChange,
+	bindText,
+	bindAttribute,
+} from "./i18n/index.js";
 
 // Cache references to key DOM elements
 const elements = {
@@ -32,6 +41,23 @@ const homeStart = document.getElementById("home-start");
 const homeLoad = document.getElementById("home-load");
 const homeNote = document.getElementById("home-note");
 const appContainer = document.getElementById("app");
+const homeTitle = document.getElementById("home-title");
+const homeTagline = document.querySelector(".home-tagline");
+const homeLanguageInfo = document.getElementById("home-language-info");
+const homeTeamTitle = document.getElementById("team-title");
+const languageSelectHome = document.getElementById("language-select-home");
+const languageSelectApp = document.getElementById("language-select-app");
+const languageLabelHome = document.querySelector('label[for="language-select-home"]');
+const languageLabelApp = document.querySelector('label[for="language-select-app"]');
+const languageBanner = document.getElementById("language-banner");
+const journalTitle = document.getElementById("journal-title");
+const statsTitle = document.getElementById("stats-title");
+const inventoryTitle = document.getElementById("inventory-title");
+const choicesTitle = document.getElementById("choices-title");
+const graphTitle = document.getElementById("graph-title");
+const headerActions = document.querySelector(".header-actions");
+const storyControls = document.querySelector(".story-controls");
+const graphControls = document.querySelector(".graph-controls");
 
 // game engine instance
 const engine = new StoryEngine({
@@ -57,6 +83,189 @@ let gameVisible = false;
 let loadingGame = false;
 let hasLoadedStory = false;
 
+initializeLanguageSelectors();
+setupStaticBindings();
+onLanguageChange(handleLanguageChange);
+handleLanguageChange(getCurrentLanguage());
+
+function initializeLanguageSelectors() {
+	const options = getAvailableLanguages();
+	populateLanguageSelect(languageSelectHome, options);
+	populateLanguageSelect(languageSelectApp, options);
+	const current = getCurrentLanguage();
+	syncLanguageSelectors(current);
+
+	if (languageSelectHome) {
+		languageSelectHome.addEventListener("change", (event) => {
+			const selected = event.target && event.target.value ? event.target.value : null;
+			if (selected) {
+				setLanguage(selected);
+			}
+		});
+	}
+
+	if (languageSelectApp) {
+		languageSelectApp.addEventListener("change", (event) => {
+			const selected = event.target && event.target.value ? event.target.value : null;
+			if (selected) {
+				setLanguage(selected);
+			}
+		});
+	}
+}
+
+function setupStaticBindings() {
+	bindText(homeTitle, "app.gameTitle");
+	bindText(homeTagline, "app.tagline");
+	bindText(homeTeamTitle, "app.teamTitle");
+
+	bindText(languageLabelHome, "common.language");
+	bindText(languageLabelApp, "common.language");
+	bindAttribute(languageSelectHome, "aria-label", "common.language");
+	bindAttribute(languageSelectApp, "aria-label", "common.language");
+
+	bindText(elements.save, "common.saveGame");
+	bindText(elements.home, "common.returnHome");
+	bindAttribute(elements.home, "aria-label", "common.returnHome");
+	bindText(elements.restart, "common.restart");
+	bindAttribute(elements.restart, "aria-label", "common.restart");
+	bindText(elements.undo, "common.undo");
+
+	bindText(elements.graphOpen, "common.storyMap");
+	bindAttribute(elements.graphOpen, "aria-label", "common.storyMap");
+	bindText(graphTitle, "graph.title");
+	bindText(elements.graphToggle, "graph.showFullMap");
+	bindText(elements.graphModeLabel, "graph.visitedBranches");
+	bindText(elements.graphPlaceholder, "common.storyMapPlaceholder");
+	bindText(elements.graphClose, "common.returnToGame");
+
+	bindAttribute(headerActions, "aria-label", "common.gameActions");
+	bindAttribute(storyControls, "aria-label", "common.textPlaybackOptions");
+	bindAttribute(graphControls, "aria-label", "common.storyMapViewLabel");
+
+	bindText(elements.skipButton, "common.skip");
+	bindAttribute(elements.skipButton, "aria-label", "common.skipTextAnimation");
+
+	bindText(choicesTitle, "common.choices");
+	bindText(journalTitle, "common.journal");
+	bindText(statsTitle, "common.stats");
+	bindText(inventoryTitle, "common.inventory");
+}
+
+function populateLanguageSelect(select, options) {
+	if (!select || !Array.isArray(options)) {
+		return;
+	}
+	select.innerHTML = "";
+	for (const option of options) {
+		const choice = document.createElement("option");
+		choice.value = option.code;
+		choice.textContent = option.label;
+		select.appendChild(choice);
+	}
+}
+
+function syncLanguageSelectors(language) {
+	if (languageSelectHome) {
+		selectLanguageOption(languageSelectHome, language);
+	}
+	if (languageSelectApp) {
+		selectLanguageOption(languageSelectApp, language);
+	}
+}
+
+function selectLanguageOption(select, language) {
+	if (!select) {
+		return;
+	}
+	const target = typeof language === "string" ? language : getCurrentLanguage();
+	const optionExists = Array.from(select.options).some((option) => option.value === target);
+	if (optionExists) {
+		select.value = target;
+	} else if (select.options.length) {
+		select.value = select.options[0].value;
+	}
+}
+
+function handleLanguageChange(language) {
+	const current = language || getCurrentLanguage();
+	syncLanguageSelectors(current);
+	updateDynamicLabels();
+	updateLanguageNotices(current);
+	if (hasLoadedStory) {
+		engine.render();
+		if (engine?.renderer && typeof engine.renderer.refreshGraphView === "function") {
+			engine.renderer.refreshGraphView();
+		}
+	}
+	if (engine?.renderer) {
+		if (typeof engine.renderer.syncSkipToggleState === "function") {
+			engine.renderer.syncSkipToggleState();
+		}
+		if (typeof engine.renderer.syncSkipButtonState === "function") {
+			engine.renderer.syncSkipButtonState();
+		}
+	}
+}
+
+function updateDynamicLabels() {
+	if (homeNote && !homeNote.textContent) {
+		homeNote.hidden = true;
+	}
+
+	if (!hasLoadedStory) {
+		if (elements.title) {
+			elements.title.textContent = t("app.gameTitle");
+		}
+		updateDocumentTitleBase();
+	}
+
+	if (homeStart) {
+		const isBusy = loadingGame && homeStart.disabled;
+		homeStart.textContent = t(isBusy ? "common.loading" : "home.newGame");
+	}
+
+	if (homeLoad) {
+		const isBusy = loadingGame && homeLoad.disabled;
+		homeLoad.textContent = t(isBusy ? "common.loading" : "home.loadGame");
+	}
+
+	if (elements.load) {
+		const isBusy = loadingGame && elements.load.disabled;
+		elements.load.textContent = t(isBusy ? "common.loading" : "common.loadGame");
+	}
+}
+
+function updateLanguageNotices(language) {
+	const shouldShowNotice = language !== "en";
+
+	if (homeLanguageInfo) {
+		if (shouldShowNotice) {
+			homeLanguageInfo.hidden = false;
+			homeLanguageInfo.textContent = t("home.languageInfo");
+		} else {
+			homeLanguageInfo.textContent = "";
+			homeLanguageInfo.hidden = true;
+		}
+	}
+
+	if (languageBanner) {
+		if (shouldShowNotice) {
+			languageBanner.hidden = false;
+			languageBanner.textContent = t("notice.storyPlaceholder");
+		} else {
+			languageBanner.textContent = "";
+			languageBanner.hidden = true;
+		}
+	}
+}
+
+function updateDocumentTitleBase() {
+	const base = t("app.gameTitle");
+	const suffix = t("app.documentTitleSuffix");
+	document.title = suffix ? `${base} - ${suffix}` : base;
+}
+
 function revealGame() {
 	if (homeScreen) {
 		homeScreen.hidden = true;
@@ -69,14 +278,20 @@ function revealGame() {
 
 function setHomeMessage(message) {
 	if (homeNote) {
-		homeNote.textContent = message || "";
+		if (message) {
+			homeNote.hidden = false;
+			homeNote.textContent = message;
+		} else {
+			homeNote.textContent = "";
+			homeNote.hidden = true;
+		}
 	}
 }
 
 function resetHomeState() {
 	if (homeStart) {
 		homeStart.disabled = false;
-		homeStart.textContent = "New Game";
+		homeStart.textContent = t("home.newGame");
 	}
 	setHomeMessage("");
 }
@@ -96,11 +311,10 @@ function returnHome() {
 async function startGame() {
 	if (loadingGame) return;
 	loadingGame = true;
-	const originalLabel = homeStart ? homeStart.textContent : "";
 	setHomeMessage("");
 	if (homeStart) {
 		homeStart.disabled = true;
-		homeStart.textContent = "Loading...";
+		homeStart.textContent = t("common.loading");
 	}
 
 	try {
@@ -113,14 +327,12 @@ async function startGame() {
 		revealGame();
 	} catch (error) {
 		console.error(error);
-		setHomeMessage("Failed to start the story. Please check the game files and try again.");
-		showFatalError(
-			"Unable to load story file. Please ensure assets/story.txt exists and is well formatted."
-		);
+		setHomeMessage(t("messages.failedToStartStory"));
+		showFatalError(t("messages.unableToLoadStoryFile"));
 	} finally {
 		if (!gameVisible && homeStart) {
 			homeStart.disabled = false;
-			homeStart.textContent = originalLabel || "New Game";
+			homeStart.textContent = t("home.newGame");
 		}
 		loadingGame = false;
 	}
@@ -128,7 +340,7 @@ async function startGame() {
 
 function showFatalError(message) {
 	if (elements.nodeTitle) {
-		elements.nodeTitle.textContent = "Story Load Failed";
+		elements.nodeTitle.textContent = t("messages.storyLoadFailedTitle");
 	}
 	if (elements.storyText) {
 		elements.storyText.textContent = message;
@@ -144,9 +356,7 @@ if (elements.restart) {
 			return;
 		}
 
-		const confirmed = window.confirm(
-			"Restarting wipes your current progress and takes you back to the beginning. Do you really want to restart?"
-		);
+		const confirmed = window.confirm(t("messages.restartConfirm"));
 		if (!confirmed) {
 			return;
 		}
@@ -178,9 +388,7 @@ if (homeLoad) {
 
 if (elements.home) {
 	elements.home.addEventListener("click", () => {
-		const confirmed = window.confirm(
-			"Returning home will leave the current story session. Do you want to go back to the home screen?"
-		);
+		const confirmed = window.confirm(t("messages.returnHomeConfirm"));
 		if (!confirmed) {
 			return;
 		}
@@ -275,26 +483,25 @@ function handleUndoClick() {
 		return;
 	}
 
-	const firstPrompt =
-		"Every choice carries weight; once a move is made, there's no taking it back. Do you still want to try to undo your last decision?";
+	const firstPrompt = t("messages.undoPromptPrimary");
 	if (!window.confirm(firstPrompt)) {
 		return;
 	}
 
-	const secondPrompt = "Are you absolutely sure you want to 'undo' your previous move?";
+	const secondPrompt = t("messages.undoPromptSecondary");
 	if (!window.confirm(secondPrompt)) {
 		return;
 	}
 
 	const undone = engine.undoLastChoice();
 	if (!undone) {
-		window.alert("There's no choice to undo right now.");
+		window.alert(t("messages.undoUnavailable"));
 	}
 }
 
 async function handleSaveClick() {
 	if (!hasLoadedStory) {
-		window.alert("A game needs to be running before it can be saved.");
+		window.alert(t("messages.needRunningGameSave"));
 		return;
 	}
 
@@ -303,7 +510,7 @@ async function handleSaveClick() {
 		payload = engine.createSavePayload();
 	} catch (error) {
 		console.error(error);
-		window.alert("Unable to capture the current game state for saving.");
+		window.alert(t("messages.unableToCaptureState"));
 		return;
 	}
 
@@ -313,12 +520,12 @@ async function handleSaveClick() {
 	}
 	if (result.status === "error") {
 		console.error(result.error);
-		window.alert("Saving failed. Please check the console for details.");
+		window.alert(t("messages.saveFailed"));
 		return;
 	}
 
-	const name = result.fileName || "the chosen location";
-	window.alert(`Game saved to ${name}.`);
+	const name = result.fileName || t("messages.saveFallbackName");
+	window.alert(t("messages.gameSaved", { name }));
 }
 
 async function handleLoadGame({ source = "home" } = {}) {
@@ -327,35 +534,33 @@ async function handleLoadGame({ source = "home" } = {}) {
 	const isHome = source === "home";
 	const triggerButton = isHome ? homeLoad : elements.load;
 	const secondaryButton = isHome ? homeStart : null;
-	const originalTriggerLabel = triggerButton ? triggerButton.textContent : "";
-	const originalSecondaryLabel = secondaryButton ? secondaryButton.textContent : "";
-
 	if (triggerButton) {
 		triggerButton.disabled = true;
-		triggerButton.textContent = "Loading...";
+		triggerButton.textContent = t("common.loading");
 	}
 	if (secondaryButton) {
 		secondaryButton.disabled = true;
-		secondaryButton.textContent = "Loading...";
+		secondaryButton.textContent = t("common.loading");
 	}
 	if (isHome) {
-		setHomeMessage("Select a save file to load.");
+		setHomeMessage(t("messages.selectSaveFile"));
 	}
 
 	try {
 		const result = await loadGameFromFile();
 		if (result.status === "cancelled") {
 			if (isHome) {
-				setHomeMessage("Load cancelled.");
+				setHomeMessage(t("messages.loadCancelled"));
 			}
 			return;
 		}
 		if (result.status === "error") {
 			console.error(result.error);
+			const message = result.message || t("messages.failedToReadSave");
 			if (isHome) {
-				setHomeMessage(result.message || "Failed to read the save file.");
+				setHomeMessage(message);
 			} else {
-				window.alert(result.message || "Failed to read the save file.");
+				window.alert(message);
 			}
 			return;
 		}
@@ -369,18 +574,18 @@ async function handleLoadGame({ source = "home" } = {}) {
 	} catch (error) {
 		console.error(error);
 		if (isHome) {
-			setHomeMessage("Loading the save file failed.");
+			setHomeMessage(t("messages.loadingSaveFailed"));
 		} else {
-			window.alert("Loading the save file failed.");
+			window.alert(t("messages.loadingSaveFailed"));
 		}
 	} finally {
 		if (triggerButton) {
 			triggerButton.disabled = false;
-			triggerButton.textContent = originalTriggerLabel || "Load Game";
+			triggerButton.textContent = t("common.loadGame");
 		}
 		if (secondaryButton) {
 			secondaryButton.disabled = false;
-			secondaryButton.textContent = originalSecondaryLabel || "New Game";
+			secondaryButton.textContent = t("home.newGame");
 		}
 		loadingGame = false;
 	}

@@ -1,4 +1,5 @@
 import { formatLabel, formatSigned } from "../../storyUtilities.js";
+import { t } from "../../i18n/index.js";
 
 /**
  * Handles presentation of dice roll overlays and animations.
@@ -21,6 +22,7 @@ export class DiceOverlay {
 		if (!result) return;
 		const overlay = this.ensureRollOverlay();
 		const { root, die, status, detail, continueButton } = overlay;
+		continueButton.textContent = t("common.continue");
 
 		root.hidden = false;
 		root.classList.add("visible");
@@ -37,7 +39,7 @@ export class DiceOverlay {
 		await this.animateDie(die, result, options);
 
 		const isSuccess = Boolean(result.success);
-		status.textContent = isSuccess ? "Success" : "Failure";
+		status.textContent = isSuccess ? t("common.success") : t("common.failure");
 		status.className = `roll-overlay-status ${isSuccess ? "success" : "failure"}`;
 
 		this.populateRollDetail(detail, result, isSuccess, options);
@@ -150,7 +152,7 @@ export class DiceOverlay {
 		const continueButton = document.createElement("button");
 		continueButton.type = "button";
 		continueButton.className = "button roll-overlay-continue";
-		continueButton.textContent = "Continue";
+		continueButton.textContent = t("common.continue");
 
 		dialog.appendChild(dieWrapper);
 		dialog.appendChild(status);
@@ -206,17 +208,20 @@ export class DiceOverlay {
 			}
 			const modifier = formatSigned(modifierTotal);
 			if (label) {
-				rows.push({ label: "Modifier", value: `${label} ${modifier}` });
+				rows.push({ label: t("roll.modifierLine"), value: `${label} ${modifier}` });
 			}
 		}
 		if (Array.isArray(result?.rolls) && result.rolls.length) {
 			const dice = result.directive?.dice || { count: 1, sides: 6 };
 			const diceLabel = dice.count === 1 ? `d${dice.sides}` : `${dice.count}d${dice.sides}`;
-			rows.push({ label: "Dice", value: `${diceLabel} → ${result.rolls.join(" + ")}` });
+			rows.push({
+				label: t("roll.diceLine"),
+				value: `${diceLabel} -> ${result.rolls.join(" + ")}`,
+			});
 		}
-		rows.push({ label: "Total", value: String(result.total) });
+		rows.push({ label: t("roll.totalLine"), value: String(result.total) });
 		if (result?.directive?.target != null) {
-			rows.push({ label: "Target", value: String(result.directive.target) });
+			rows.push({ label: t("roll.targetLine"), value: String(result.directive.target) });
 		}
 
 		for (const row of rows) {
@@ -237,7 +242,7 @@ export class DiceOverlay {
 			fallback.className = "roll-detail-row";
 			const value = document.createElement("span");
 			value.className = "roll-detail-value";
-			value.textContent = "No roll details.";
+			value.textContent = t("roll.noDetails");
 			fallback.appendChild(value);
 			container.appendChild(fallback);
 		}

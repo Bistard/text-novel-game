@@ -11,8 +11,13 @@
 <body>
   <section id="home-screen" class="home-screen" aria-labelledby="home-title">
     <div class="home-card">
+      <div class="language-switcher home-language">
+        <label for="language-select-home" class="visually-hidden">Language</label>
+        <select id="language-select-home" class="language-select"></select>
+      </div>
       <h1 id="home-title" class="home-title">Equilibrium</h1>
       <p class="home-tagline">An Interactive Narrative Game</p>
+      <p id="home-language-info" class="home-language-info"></p>
       <p id="home-note" class="home-note" aria-live="polite"></p>
       <div class="home-actions">
         <button id="home-start" class="button button-secondary" type="button">New Game</button>
@@ -48,7 +53,13 @@
 
   <div id="app" hidden>
     <header class="app-header">
-      <h1 id="game-title">Equilibrium</h1>
+      <div class="app-header-top">
+        <h1 id="game-title">Equilibrium</h1>
+        <div class="language-switcher app-language">
+          <label for="language-select-app" class="visually-hidden">Language</label>
+          <select id="language-select-app" class="language-select"></select>
+        </div>
+      </div>
       <div class="header-actions" role="group" aria-label="Game actions">
         <button id="graph-open" class="button button-secondary" type="button" aria-haspopup="dialog"
           aria-expanded="false">Story Map</button>
@@ -58,20 +69,21 @@
         <button id="restart-button" class="button button-danger" type="button" aria-label="Restart story">Restart</button>
         <button id="undo-button" class="button button-danger" type="button" disabled>Undo Last Choice</button>
       </div>
+      <p id="language-banner" class="language-banner" hidden></p>
     </header>
 
     <main class="app-main">
       <aside class="sidebar" aria-label="Character status">
         <section class="panel">
-          <h2 class="panel-title">Journal</h2>
+          <h2 id="journal-title" class="panel-title">Journal</h2>
           <ul id="journal" class="journal"></ul>
         </section>
         <section class="panel">
-          <h2 class="panel-title">Stats</h2>
+          <h2 id="stats-title" class="panel-title">Stats</h2>
           <dl id="stats" class="stats"></dl>
         </section>
         <section class="panel">
-          <h2 class="panel-title">Inventory</h2>
+          <h2 id="inventory-title" class="panel-title">Inventory</h2>
           <ul id="inventory" class="inventory"></ul>
         </section>
       </aside>

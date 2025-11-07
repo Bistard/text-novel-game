@@ -1,3 +1,5 @@
+import { t } from "./i18n/index.js";
+
 /**
  * Breaks a raw description into clean paragraphs.
  * @param {string} text
@@ -68,10 +70,15 @@ export function buildRollSummary(result) {
 			result.directive.dice.count === 1
 				? `d${result.directive.dice.sides}`
 				: `${result.directive.dice.count}d${result.directive.dice.sides}`;
-		parts.push(`${diceLabel} → ${result.rolls.join(", ")}`);
+		const rolls = result.rolls.join(", ");
+		parts.push(t("roll.summaryDice", { dice: diceLabel, rolls }));
 	}
-	parts.push(`Total ${result.total} / Target ${result.directive.target}`);
-	parts.push(result.success ? "Success" : "Failure");
+	if (result.directive.target != null) {
+		parts.push(t("roll.summaryTotal", { total: result.total, target: result.directive.target }));
+	} else {
+		parts.push(t("roll.summaryTotalNoTarget", { total: result.total }));
+	}
+	parts.push(result.success ? t("common.success") : t("common.failure"));
 	return parts.join(" | ");
 }
 

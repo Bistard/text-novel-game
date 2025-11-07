@@ -1,3 +1,5 @@
+import { t } from "../../i18n/index.js";
+
 const DOCUMENT_SUFFIX = "Narrative Demo";
 
 /**
@@ -12,7 +14,8 @@ export function renderTitle(elements, branch) {
 	if (elements.titleElement) {
 		elements.titleElement.textContent = branch.title;
 	}
-	document.title = `${branch.title} — ${DOCUMENT_SUFFIX}`;
+	const suffix = t("app.documentTitleSuffix") || DOCUMENT_SUFFIX;
+	document.title = `${branch.title} - ${suffix}`;
 }
 
 export { DOCUMENT_SUFFIX };

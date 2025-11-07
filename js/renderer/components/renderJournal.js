@@ -1,3 +1,5 @@
+import { t } from "../../i18n/index.js";
+
 /**
  * Renders the journal history.
  * @param {HTMLElement|null} list
@@ -10,7 +12,7 @@ export function renderJournal(list, state) {
 	if (!state.journal.length) {
 		const placeholder = document.createElement("li");
 		placeholder.className = "muted";
-		placeholder.textContent = "No actions recorded yet.";
+		placeholder.textContent = t("journal.empty");
 		list.appendChild(placeholder);
 		return;
 	}

@@ -1,12 +1,16 @@
-const SAVE_FILE_TYPES = [
-	{
-		description: "Narrative Save Files",
-		accept: {
-			"application/json": [".save"],
-			"text/plain": [".save"],
+import { t } from "./i18n/index.js";
+
+function getSaveFileTypes() {
+	return [
+		{
+			description: t("saveSystem.fileDescription"),
+			accept: {
+				"application/json": [".save"],
+				"text/plain": [".save"],
+			},
 		},
-	},
-];
+	];
+}
 
 /**
  * Generates a filename like "single-narrative-game-20251104-153045.save".
@@ -36,7 +40,7 @@ export async function saveGameToFile(payload) {
 		try {
 			const fileHandle = await window.showSaveFilePicker({
 				suggestedName: filename,
-				types: SAVE_FILE_TYPES,
+				types: getSaveFileTypes(),
 			});
 			const writable = await fileHandle.createWritable();
 			await writable.write(serialized);
@@ -63,7 +67,7 @@ export async function loadGameFromFile() {
 		try {
 			const handles = await window.showOpenFilePicker({
 				multiple: false,
-				types: SAVE_FILE_TYPES,
+				types: getSaveFileTypes(),
 			});
 			if (!handles || !handles.length) {
 				return { status: "cancelled" };
@@ -152,7 +156,7 @@ function parseSaveFile(text, fileName) {
 			status: "error",
 			error,
 			fileName,
-			message: "Save file is not valid JSON.",
+			message: t("saveSystem.invalidJson"),
 		};
 	}
 }

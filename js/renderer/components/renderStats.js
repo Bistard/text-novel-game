@@ -1,4 +1,5 @@
 import { formatLabel } from "../../storyUtilities.js";
+import { t } from "../../i18n/index.js";
 
 /**
  * Renders stat values into the definition list container.
@@ -13,7 +14,7 @@ export function renderStats(container, state) {
 	if (!entries.length) {
 		const placeholder = document.createElement("div");
 		placeholder.className = "muted";
-		placeholder.textContent = "No stats configured.";
+		placeholder.textContent = t("stats.empty");
 		container.appendChild(placeholder);
 		return;
 	}

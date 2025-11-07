@@ -1,4 +1,5 @@
 import { formatLabel, formatSigned } from "../../storyUtilities.js";
+import { t } from "../../i18n/index.js";
 
 /**
  * Presents stat and inventory changes in an overlay similar to the dice roll UI.
@@ -29,21 +30,26 @@ export class ChangeOverlay {
 		const overlay = this.ensureOverlay();
 		const { root, title, subtitle, list, continueButton } = overlay;
 		const reduceMotion = this.prefersReducedMotion();
+		continueButton.textContent = t("common.continue");
 
 		root.hidden = false;
 		root.classList.add("visible");
 
-		const derivedTitle = hasStats && hasInventory ? "Status Updated" : hasStats ? "Stats Updated" : "Inventory Updated";
+		const derivedTitle = hasStats && hasInventory
+			? t("change.statusUpdated")
+			: hasStats
+				? t("change.statsUpdated")
+				: t("change.inventoryUpdated");
 		title.textContent = derivedTitle;
 
 		const source = typeof changes.sourceLabel === "string" && changes.sourceLabel.trim() ? changes.sourceLabel.trim() : "";
-		subtitle.textContent = source ? `After "${source}"` : "Recent changes applied";
+		subtitle.textContent = source ? t("change.afterSource", { source }) : t("change.recentChanges");
 
 		list.innerHTML = "";
 
 		let index = 0;
 		if (hasStats) {
-			list.appendChild(this.createSectionHeading("Stats"));
+			list.appendChild(this.createSectionHeading(t("change.statsSection")));
 			for (const effect of stats) {
 				const entry = this.createChangeEntry({
 					label: formatLabel(effect.stat),
@@ -58,7 +64,7 @@ export class ChangeOverlay {
 		}
 
 		if (hasInventory) {
-			list.appendChild(this.createSectionHeading("Inventory"));
+			list.appendChild(this.createSectionHeading(t("change.inventorySection")));
 			for (const effect of inventory) {
 				const entry = this.createChangeEntry({
 					label: formatLabel(effect.item),
@@ -123,7 +129,7 @@ export class ChangeOverlay {
 		const continueButton = document.createElement("button");
 		continueButton.type = "button";
 		continueButton.className = "button roll-overlay-continue change-overlay-continue";
-		continueButton.textContent = "Continue";
+		continueButton.textContent = t("common.continue");
 
 		dialog.appendChild(header);
 		dialog.appendChild(list);

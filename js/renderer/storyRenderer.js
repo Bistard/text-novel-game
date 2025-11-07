@@ -9,6 +9,7 @@ import { renderJournal } from "./components/renderJournal.js";
 import { renderSystemMessages } from "./components/renderSystemMessages.js";
 import { renderTitle, DOCUMENT_SUFFIX } from "./components/renderTitle.js";
 import { StoryGraphView } from "./graph/storyGraphView.js";
+import { t } from "../i18n/index.js";
 
 /**
  * Handles DOM updates for the interactive story.
@@ -153,8 +154,8 @@ export class StoryRenderer {
 		if (!toggle) return;
 		const pressed = this.alwaysSkipText;
 		toggle.setAttribute("aria-pressed", pressed ? "true" : "false");
-		toggle.textContent = pressed ? "Auto Skip: On" : "Auto Skip: Off";
-		toggle.setAttribute("aria-label", pressed ? "Disable always skip text" : "Enable always skip text");
+		toggle.textContent = pressed ? t("common.autoSkipOn") : t("common.autoSkipOff");
+		toggle.setAttribute("aria-label", pressed ? t("common.autoSkipDisable") : t("common.autoSkipEnable"));
 	}
 
 	setSkipButtonVisibility(isVisible) {
@@ -251,12 +252,12 @@ export class StoryRenderer {
 	renderEmptyState(state) {
 		this.setSkipButtonVisibility(false);
 		if (this.elements.nodeTitle) {
-			this.elements.nodeTitle.textContent = "Story unavailable";
+			this.elements.nodeTitle.textContent = t("storyRenderer.storyUnavailable");
 		}
 		if (this.elements.storyText) {
 			this.elements.storyText.textContent = state.systemError
 				? state.systemError
-				: "Unable to locate the next branch.";
+				: t("storyRenderer.unableToLocate");
 		}
 		if (this.elements.choices) {
 			this.elements.choices.innerHTML = "";
@@ -266,7 +267,8 @@ export class StoryRenderer {
 		renderInventory(this.elements.inventory, state);
 		renderJournal(this.elements.journal, state);
 		renderSystemMessages(this.elements.systemMessages, state);
-		document.title = `Story unavailable — ${DOCUMENT_SUFFIX}`;
+		const suffix = t("app.documentTitleSuffix") || DOCUMENT_SUFFIX;
+		document.title = `${t("storyRenderer.storyUnavailable")} - ${suffix}`;
 		if (this.graphView) {
 			this.graphView.update({
 				story: this.story,

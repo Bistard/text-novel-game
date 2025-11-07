@@ -1,3 +1,5 @@
+import { t } from "../../i18n/index.js";
+
 /**
  * Renders interactive choice buttons for the current branch.
  * @param {HTMLElement|null} container
@@ -12,7 +14,7 @@ export function renderChoices(container, branch, state, onChoiceSelected) {
 	if (!branch.choices.length) {
 		const message = document.createElement("p");
 		message.className = "muted";
-		message.textContent = "This path has no further choices.";
+		message.textContent = t("choices.noFurtherChoices");
 		container.appendChild(message);
 		return;
 	}
@@ -48,7 +50,7 @@ export function renderChoices(container, branch, state, onChoiceSelected) {
 	if (!visibleChoices) {
 		const message = document.createElement("p");
 		message.className = "muted";
-		message.textContent = "No available choices.";
+		message.textContent = t("choices.noneAvailable");
 		container.appendChild(message);
 	}
 }

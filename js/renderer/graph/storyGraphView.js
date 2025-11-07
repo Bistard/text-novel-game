@@ -1,4 +1,5 @@
 import { buildMermaidGraphDefinition } from "./storyGraphMermaid.js";
+import { t } from "../../i18n/index.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 const MIN_SCALE = 0.5;
@@ -88,7 +89,7 @@ export class StoryGraphView {
 			this.toggleButton.setAttribute("tabindex", "-1");
 		}
 		if (this.modeLabel) {
-			this.modeLabel.textContent = "Story Map";
+			this.modeLabel.textContent = t("graph.title");
 		}
 		if (this.container) {
 			this.container.addEventListener("wheel", this.handleWheel, { passive: false });
@@ -108,7 +109,7 @@ export class StoryGraphView {
 		if (!story || typeof story !== "object" || !story.branches) {
 			this.story = null;
 			this.clearGraph();
-			this.showPlaceholder("Story map unavailable.");
+			this.showPlaceholder(t("graphView.storyMapUnavailable"));
 			return;
 		}
 		this.story = story;
@@ -147,7 +148,7 @@ export class StoryGraphView {
 		}
 		if (!this.story || !this.story.branches) {
 			this.clearGraph();
-			this.showPlaceholder("Story map unavailable.");
+			this.showPlaceholder(t("graphView.storyMapUnavailable"));
 			return;
 		}
 
@@ -159,7 +160,7 @@ export class StoryGraphView {
 		const hasDefinition = graph && typeof graph.definition === "string" && graph.definition.trim().length > 0;
 		if (!hasDefinition) {
 			this.clearGraph();
-			this.showPlaceholder("Story map unavailable.");
+			this.showPlaceholder(t("graphView.storyMapUnavailable"));
 			return;
 		}
 
@@ -181,7 +182,7 @@ export class StoryGraphView {
 			}
 			console.error("[StoryGraph] Unable to load Mermaid:", error);
 			this.clearGraph();
-			this.showPlaceholder("Story map unavailable.");
+			this.showPlaceholder(t("graphView.storyMapUnavailable"));
 			this.isRendering = false;
 			return;
 		}
@@ -195,7 +196,7 @@ export class StoryGraphView {
 			}
 			console.error("[StoryGraph] Mermaid rendering failed:", error);
 			this.clearGraph();
-			this.showPlaceholder("Story map unavailable.");
+			this.showPlaceholder(t("graphView.storyMapUnavailable"));
 			this.isRendering = false;
 			return;
 		}
@@ -400,7 +401,7 @@ export class StoryGraphView {
 		indicator.setAttribute("x", center.x.toFixed(2));
 		indicator.setAttribute("y", labelY.toFixed(2));
 		indicator.setAttribute("text-anchor", "middle");
-		indicator.textContent = "You Are Here";
+		indicator.textContent = t("graphView.youAreHere");
 		svg.appendChild(indicator);
 		this.currentIndicator = indicator;
 	}
