@@ -4,14 +4,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Untitled</title>
+  <title>Equilibrium</title>
   <link rel="stylesheet" href="css/styles.css">
 </head>
 
 <body>
   <section id="home-screen" class="home-screen" aria-labelledby="home-title">
     <div class="home-card">
-      <h1 id="home-title" class="home-title">Untitled</h1>
+      <h1 id="home-title" class="home-title">Equilibrium</h1>
       <p class="home-tagline">An Interactive Narrative Game</p>
       <p id="home-note" class="home-note" aria-live="polite"></p>
       <div class="home-actions">
@@ -26,12 +26,12 @@
             <a class="home-team-email" href="mailto:s795li@uwaterloo.ca">s795li@uwaterloo.ca</a>
           </li>
           <li class="home-team-member">
-            <span class="home-team-name">Davion Birbal</span>
-            <a class="home-team-email" href="mailto:dbirbal@uwaterloo.ca">dbirbal@uwaterloo.ca</a>
-          </li>
-          <li class="home-team-member">
             <span class="home-team-name">Doojean Park</span>
             <a class="home-team-email" href="mailto:d43park@uwaterloo.ca">d43park@uwaterloo.ca</a>
+          </li>
+          <li class="home-team-member">
+            <span class="home-team-name">Davion Birbal</span>
+            <a class="home-team-email" href="mailto:dbirbal@uwaterloo.ca">dbirbal@uwaterloo.ca</a>
           </li>
           <li class="home-team-member">
             <span class="home-team-name">Klaver Curtis</span>
@@ -48,7 +48,7 @@
 
   <div id="app" hidden>
     <header class="app-header">
-      <h1 id="game-title">Untitled</h1>
+      <h1 id="game-title">Equilibrium</h1>
       <div class="header-actions" role="group" aria-label="Game actions">
         <button id="graph-open" class="button button-secondary" type="button" aria-haspopup="dialog"
           aria-expanded="false">Story Map</button>
@@ -91,6 +91,9 @@
         <div class="choices-area">
           <h3 class="choices-title" id="choices-title">Choices</h3>
           <div id="choices" class="choices" role="listbox" aria-labelledby="choices-title"></div>
+          <div class="choices-actions">
+            <button id="undo-button" class="button button-secondary" type="button" disabled>Undo Last Choice</button>
+          </div>
         </div>
 
       </section>

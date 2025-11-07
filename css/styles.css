@@ -389,6 +389,13 @@ body::before {
 	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
 }
 
+.choices-actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 12px;
+	flex-wrap: wrap;
+}
+
 .choice-button {
 	appearance: none;
 	border: 1px solid rgba(73, 210, 255, 0.3);

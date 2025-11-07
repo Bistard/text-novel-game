@@ -25,6 +25,8 @@ export class StoryEngine {
 		this.state = new StoryState();
 		this.story = null;
 		this.choiceInProgress = false;
+		this.choiceHistory = [];
+		this.stateChangeCallback = null;
 		this.storyUrl = null;
 		this.statsConfigUrl = null;
 	}
@@ -63,6 +65,7 @@ export class StoryEngine {
 	/** Resets the runtime state to the defaults. */
 	resetState() {
 		if (!this.story) return;
+		this.clearUndoHistory({ silent: true });
 		this.state.reset(this.story.start);
 	}
 
@@ -112,20 +115,28 @@ export class StoryEngine {
 		}
 
 		this.choiceInProgress = true;
+		this.notifyStateChange();
 
 		const choice = branch.choices.find((entry) => entry.id === choiceId);
 		if (!choice) {
 			this.choiceInProgress = false;
+			this.notifyStateChange();
 			return;
 		}
 		if (choice.visibilityCondition && !this.state.evaluateCondition(choice.visibilityCondition)) {
 			this.choiceInProgress = false;
+			this.notifyStateChange();
 			return;
 		}
 		if (choice.validCondition && !this.state.evaluateCondition(choice.validCondition)) {
 			this.choiceInProgress = false;
+			this.notifyStateChange();
 			return;
 		}
+
+		const previousHistoryLength = this.choiceHistory.length;
+		const snapshot = this.state.createSnapshot();
+		this.choiceHistory.push(snapshot);
 
 		try {
 			this.state.clearSystemError();
@@ -140,12 +151,14 @@ export class StoryEngine {
 			});
 
 			if (!nextBranchId) {
+				this.choiceHistory.splice(previousHistoryLength);
 				this.state.setSystemError("Choice does not specify a destination branch.");
 				this.render();
 				return;
 			}
 
 			if (!this.story.branches[nextBranchId]) {
+				this.choiceHistory.splice(previousHistoryLength);
 				this.state.setSystemError(`Missing branch "${nextBranchId}".`);
 				this.render();
 				return;
@@ -155,9 +168,18 @@ export class StoryEngine {
 				this.state.markBranchTransition(currentBranchId, nextBranchId);
 			}
 			this.state.setCurrentBranch(nextBranchId);
+
+			if (this.choiceHistory.length > 1) {
+				this.choiceHistory.splice(0, this.choiceHistory.length - 1);
+			}
+
 			this.render();
+		} catch (error) {
+			this.choiceHistory.splice(previousHistoryLength);
+			throw error;
 		} finally {
 			this.choiceInProgress = false;
+			this.notifyStateChange();
 		}
 	}
 
@@ -165,6 +187,52 @@ export class StoryEngine {
 	render() {
 		const branch = this.getCurrentBranch();
 		this.renderer.render(branch, this.state, (choiceId) => this.handleChoice(choiceId));
+		this.notifyStateChange();
+	}
+
+	setStateChangeListener(handler) {
+		this.stateChangeCallback = typeof handler === "function" ? handler : null;
+		this.notifyStateChange();
+	}
+
+	notifyStateChange() {
+		if (typeof this.stateChangeCallback !== "function") {
+			return;
+		}
+		this.stateChangeCallback({
+			canUndo: this.canUndo(),
+			isProcessingChoice: this.choiceInProgress,
+			currentBranchId: this.state.getCurrentBranchId(),
+		});
+	}
+
+	canUndo() {
+		return this.choiceHistory.length > 0;
+	}
+
+	clearUndoHistory(options = {}) {
+		this.choiceHistory = [];
+		if (!options || options.silent !== true) {
+			this.notifyStateChange();
+		}
+	}
+
+	undoLastChoice() {
+		if (!this.canUndo() || this.choiceInProgress) {
+			return false;
+		}
+
+		const snapshot = this.choiceHistory.pop();
+		if (!snapshot) {
+			this.clearUndoHistory({ silent: true });
+			this.notifyStateChange();
+			return false;
+		}
+
+		this.clearUndoHistory({ silent: true });
+		this.state.restoreSnapshot(snapshot);
+		this.render();
+		return true;
 	}
 
 	/**
@@ -216,6 +284,7 @@ export class StoryEngine {
 			throw new Error("Save data missing required state information.");
 		}
 
+		this.clearUndoHistory({ silent: true });
 		this.state.restoreSnapshot(saveData.state);
 		const branchId = this.state.getCurrentBranchId();
 		if (!branchId || !this.story.branches[branchId]) {

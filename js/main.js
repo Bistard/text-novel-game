@@ -7,6 +7,7 @@ const elements = {
 	nodeTitle: document.getElementById("node-title"),
 	storyText: document.getElementById("story-text"),
 	choices: document.getElementById("choices"),
+	undo: document.getElementById("undo-button"),
 	stats: document.getElementById("stats"),
 	journal: document.getElementById("journal"),
 	inventory: document.getElementById("inventory"),
@@ -49,6 +50,8 @@ const engine = new StoryEngine({
 	graphModeLabel: elements.graphModeLabel,
 	graphPlaceholder: elements.graphPlaceholder,
 });
+
+engine.setStateChangeListener(updateUndoButtonState);
 
 let gameVisible = false;
 let loadingGame = false;
@@ -139,6 +142,10 @@ if (elements.restart) {
 	elements.restart.addEventListener("click", () => engine.restart());
 }
 
+if (elements.undo) {
+	elements.undo.addEventListener("click", handleUndoClick);
+}
+
 if (homeStart) {
 	homeStart.addEventListener("click", () => {
 		if (gameVisible) {
@@ -224,6 +231,46 @@ document.addEventListener("keydown", (event) => {
 		closeGraphOverlay();
 	}
 });
+
+function updateUndoButtonState(status = {}) {
+	const button = elements.undo;
+	if (!button) return;
+
+	const canUndo = Boolean(status && status.canUndo);
+	const isProcessing = Boolean(status && status.isProcessingChoice);
+	const shouldEnable = canUndo && !isProcessing;
+
+	button.disabled = !shouldEnable;
+	button.setAttribute("aria-disabled", shouldEnable ? "false" : "true");
+}
+
+function handleUndoClick() {
+	const button = elements.undo;
+	if (!button || button.disabled) {
+		return;
+	}
+
+	if (!engine.canUndo()) {
+		updateUndoButtonState({ canUndo: false, isProcessingChoice: false });
+		return;
+	}
+
+	const firstPrompt =
+		"Every choice carries weight; once a move is made, there's no taking it back. Do you still want to try to undo your last decision?";
+	if (!window.confirm(firstPrompt)) {
+		return;
+	}
+
+	const secondPrompt = "Are you absolutely sure you want to 'undo' your previous move?";
+	if (!window.confirm(secondPrompt)) {
+		return;
+	}
+
+	const undone = engine.undoLastChoice();
+	if (!undone) {
+		window.alert("There's no choice to undo right now.");
+	}
+}
 
 async function handleSaveClick() {
 	if (!hasLoadedStory) {
