@@ -12,6 +12,7 @@ const elements = {
 	inventory: document.getElementById("inventory"),
 	restart: document.getElementById("restart-button"),
 	save: document.getElementById("save-button"),
+	load: document.getElementById("load-button"),
 	home: document.getElementById("home-button"),
 	systemMessages: document.getElementById("system-messages"),
 	skipButton: document.getElementById("skip-button"),
@@ -151,7 +152,7 @@ if (homeStart) {
 if (homeLoad) {
 	homeLoad.addEventListener("click", () => {
 		if (loadingGame) return;
-		handleLoadGame();
+		handleLoadGame({ source: "home" });
 	});
 }
 
@@ -165,6 +166,13 @@ if (elements.save) {
 	elements.save.addEventListener("click", () => {
 		if (loadingGame) return;
 		handleSaveClick();
+	});
+}
+
+if (elements.load) {
+	elements.load.addEventListener("click", () => {
+		if (loadingGame) return;
+		handleLoadGame({ source: "game" });
 	});
 }
 
@@ -246,39 +254,66 @@ async function handleSaveClick() {
 	window.alert(`Game saved to ${name}.`);
 }
 
-async function handleLoadGame() {
+async function handleLoadGame({ source = "home" } = {}) {
 	if (loadingGame) return;
 	loadingGame = true;
-	const originalLabel = homeStart ? homeStart.textContent : "";
-	if (homeStart) {
-		homeStart.disabled = true;
-		homeStart.textContent = "Loading...";
+	const isHome = source === "home";
+	const triggerButton = isHome ? homeLoad : elements.load;
+	const secondaryButton = isHome ? homeStart : null;
+	const originalTriggerLabel = triggerButton ? triggerButton.textContent : "";
+	const originalSecondaryLabel = secondaryButton ? secondaryButton.textContent : "";
+
+	if (triggerButton) {
+		triggerButton.disabled = true;
+		triggerButton.textContent = "Loading...";
 	}
-	setHomeMessage("Select a save file to load.");
+	if (secondaryButton) {
+		secondaryButton.disabled = true;
+		secondaryButton.textContent = "Loading...";
+	}
+	if (isHome) {
+		setHomeMessage("Select a save file to load.");
+	}
 
 	try {
 		const result = await loadGameFromFile();
 		if (result.status === "cancelled") {
-			setHomeMessage("Load cancelled.");
+			if (isHome) {
+				setHomeMessage("Load cancelled.");
+			}
 			return;
 		}
 		if (result.status === "error") {
 			console.error(result.error);
-			setHomeMessage(result.message || "Failed to read the save file.");
+			if (isHome) {
+				setHomeMessage(result.message || "Failed to read the save file.");
+			} else {
+				window.alert(result.message || "Failed to read the save file.");
+			}
 			return;
 		}
 
 		await engine.loadFromSave(result.data);
 		hasLoadedStory = true;
-		setHomeMessage("");
-		revealGame();
+		if (isHome) {
+			setHomeMessage("");
+			revealGame();
+		}
 	} catch (error) {
 		console.error(error);
-		setHomeMessage("Loading the save file failed.");
+		if (isHome) {
+			setHomeMessage("Loading the save file failed.");
+		} else {
+			window.alert("Loading the save file failed.");
+		}
 	} finally {
-		if (!gameVisible && homeStart) {
-			homeStart.disabled = false;
-			homeStart.textContent = originalLabel || "New Game";
+		if (triggerButton) {
+			triggerButton.disabled = false;
+			triggerButton.textContent = originalTriggerLabel || "Load Game";
+		}
+		if (secondaryButton) {
+			secondaryButton.disabled = false;
+			secondaryButton.textContent = originalSecondaryLabel || "New Game";
 		}
 		loadingGame = false;
 	}

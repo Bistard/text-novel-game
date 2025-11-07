@@ -228,7 +228,7 @@ Choice: display=[Head to the Black Hole]; valid=visited-any(C1); next=D1
 
 Title: Bad Ending (Ending)
 Branch: Ending
-Description: Your journey on Mossara ends here. Perhaps another path awaits if you restart and make different choices.
+Description: Your journey ends here. Perhaps another path awaits if you restart and make different choices.
 
 Title: Glaciera Approach (C1)
 Branch: C1
