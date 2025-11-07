@@ -7,43 +7,38 @@ import { t } from "./i18n/index.js";
  */
 export function chunkParagraphs(text) {
 	if (!text) return [];
-	const lines = text.split(/\n/);
+	const lines = text.split(/\r?\n/);
 	const paragraphs = [];
-	let buffer = [];
-
-	const flush = () => {
-		if (!buffer.length) return;
-
-		// Remove leading/trailing empty lines inside the buffered block.
-		while (buffer.length && !buffer[0].trim()) {
-			buffer.shift();
-		}
-		while (buffer.length && !buffer[buffer.length - 1].trim()) {
-			buffer.pop();
-		}
-
-		if (!buffer.length) {
-			return;
-		}
-
-		const paragraph = buffer.join("\n");
-		if (paragraph.trim()) {
-			paragraphs.push(paragraph);
-		}
-
-		buffer = [];
-	};
 
 	for (const line of lines) {
 		const trimmed = line.trim();
 		if (!trimmed) {
-			flush();
+			// Collapse consecutive blank lines into a single empty paragraph marker.
+			if (paragraphs.length && paragraphs[paragraphs.length - 1] === "") {
+				continue;
+			}
+			paragraphs.push("");
+			continue;
+		}
+
+		// Preserve leading whitespace but strip trailing spaces introduced by formatting.
+		const content = line.replace(/\s+$/u, "");
+		if (paragraphs.length && /^\s/.test(line)) {
+			const previous = paragraphs[paragraphs.length - 1] || "";
+			paragraphs[paragraphs.length - 1] = previous ? `${previous}\n${content}` : content;
 		} else {
-			buffer.push(line);
+			paragraphs.push(content);
 		}
 	}
 
-	flush();
+	// Drop blank paragraphs at the start/end that resulted from surrounding whitespace.
+	while (paragraphs.length && paragraphs[0] === "") {
+		paragraphs.shift();
+	}
+	while (paragraphs.length && paragraphs[paragraphs.length - 1] === "") {
+		paragraphs.pop();
+	}
+
 	return paragraphs;
 }
 
