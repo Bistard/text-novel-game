@@ -31,12 +31,14 @@ Choice: display=[Roll 2d6]; roll=luck, dice=2d6, target=10, ok=A11, fail=A10; st
 |-----------|----------|---------|
 | `Title:` | Yes | Human-readable branch name shown in the UI and window title. |
 | `Branch:` | Yes | Unique branch ID used in `next`, `ok`, and `fail` references. Value is trimmed verbatim; maintain consistent casing. |
-| `Description:` | Yes | Begins the narrative body. Everything after the colon on the same line is the first paragraph. Subsequent non-empty lines (until another directive or comment) are appended as additional paragraphs, with blank lines preserved as paragraph breaks. |
+| `Description:` | Yes | Begins the narrative body. Content after the colon on the same line becomes the first paragraph, but you may also leave it blank and continue on the following lines. Subsequent non-empty lines (until another directive or comment) are appended as additional paragraphs, with blank lines preserved as paragraph breaks. |
 | `Choice:` | Yes (≥1) | Adds an interactive option. The remainder of the line is parsed into directives separated by semicolons. |
 
 ### Description Notes
 
 - Wrap text as needed. Internal blank lines insert empty paragraphs.
+- You may omit content on the `Description:` line itself when you prefer the prose to start on the next line.
+- Line breaks within a paragraph are preserved when the story is rendered.
 - Markdown is not parsed; all content is shown as plain text.
 
 ## Choice Directive Reference

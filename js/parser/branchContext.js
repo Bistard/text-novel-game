@@ -47,13 +47,14 @@ export function finalizeBranch(context) {
  * @param {number} lineIndex
  * @returns {string}
  */
-export function extractDirectiveValue(raw, label, lineIndex) {
+export function extractDirectiveValue(raw, label, lineIndex, options = {}) {
+	const { allowEmpty = false } = options;
 	const delimiter = raw.indexOf(":");
 	if (delimiter === -1) {
 		throw new Error(`${label} definition on line ${lineIndex + 1} is missing ":".`);
 	}
 	const value = raw.slice(delimiter + 1).trim();
-	if (!value) {
+	if (!allowEmpty && !value) {
 		throw new Error(`${label} definition on line ${lineIndex + 1} is missing its value.`);
 	}
 	return value;

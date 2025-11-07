@@ -13,10 +13,24 @@ export function chunkParagraphs(text) {
 
 	const flush = () => {
 		if (!buffer.length) return;
-		const paragraph = buffer.join(" ").trim();
-		if (paragraph) {
+
+		// Remove leading/trailing empty lines inside the buffered block.
+		while (buffer.length && !buffer[0].trim()) {
+			buffer.shift();
+		}
+		while (buffer.length && !buffer[buffer.length - 1].trim()) {
+			buffer.pop();
+		}
+
+		if (!buffer.length) {
+			return;
+		}
+
+		const paragraph = buffer.join("\n");
+		if (paragraph.trim()) {
 			paragraphs.push(paragraph);
 		}
+
 		buffer = [];
 	};
 
@@ -25,7 +39,7 @@ export function chunkParagraphs(text) {
 		if (!trimmed) {
 			flush();
 		} else {
-			buffer.push(trimmed);
+			buffer.push(line);
 		}
 	}
 

@@ -69,8 +69,8 @@ export function parseStory(raw) {
 		}
 
 		if (lower.startsWith("description:")) {
-			const firstLine = extractDirectiveValue(rawLine, "Description", index);
-			context.current.descriptionLines = [firstLine];
+			const firstLine = extractDirectiveValue(rawLine, "Description", index, { allowEmpty: true });
+			context.current.descriptionLines = firstLine ? [firstLine] : [];
 			context.descriptionActive = true;
 			continue;
 		}
