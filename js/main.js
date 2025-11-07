@@ -139,7 +139,20 @@ function showFatalError(message) {
 }
 
 if (elements.restart) {
-	elements.restart.addEventListener("click", () => engine.restart());
+	elements.restart.addEventListener("click", () => {
+		if (engine.choiceInProgress) {
+			return;
+		}
+
+		const confirmed = window.confirm(
+			"Restarting wipes your current progress and takes you back to the beginning. Do you really want to restart?"
+		);
+		if (!confirmed) {
+			return;
+		}
+
+		engine.restart();
+	});
 }
 
 if (elements.undo) {
@@ -165,6 +178,13 @@ if (homeLoad) {
 
 if (elements.home) {
 	elements.home.addEventListener("click", () => {
+		const confirmed = window.confirm(
+			"Returning home will leave the current story session. Do you want to go back to the home screen?"
+		);
+		if (!confirmed) {
+			return;
+		}
+
 		returnHome();
 	});
 }

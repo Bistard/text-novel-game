@@ -389,13 +389,6 @@ body::before {
 	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
 }
 
-.choices-actions {
-	display: flex;
-	justify-content: flex-end;
-	gap: 12px;
-	flex-wrap: wrap;
-}
-
 .choice-button {
 	appearance: none;
 	border: 1px solid rgba(73, 210, 255, 0.3);
@@ -601,6 +594,29 @@ body.graph-open {
 	background: rgba(99, 245, 192, 0.18);
 	color: var(--accent-strong);
 	outline: none;
+}
+
+.button-danger {
+	background: rgba(255, 107, 107, 0.18);
+	color: var(--danger);
+	border: 1px solid rgba(255, 107, 107, 0.45);
+}
+
+.button-danger:hover,
+.button-danger:focus-visible {
+	background: rgba(255, 107, 107, 0.28);
+	color: #ffd5d5;
+	border-color: rgba(255, 107, 107, 0.65);
+	outline: none;
+}
+
+.button-danger:disabled,
+.button-danger[aria-disabled="true"] {
+	background: rgba(255, 107, 107, 0.08);
+	color: rgba(255, 107, 107, 0.6);
+	border-color: rgba(255, 107, 107, 0.25);
+	cursor: not-allowed;
+	transform: none;
 }
 
 .noscript {
