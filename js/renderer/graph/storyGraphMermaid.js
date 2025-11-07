@@ -1,5 +1,3 @@
-const MAX_LABEL_LENGTH = 16;
-
 /**
  * Builds a Mermaid flowchart definition representing the story graph.
  * @param {{ story?: { branches?: Record<string, import("../../parser/types.js").StoryBranch> }, currentBranchId?: string|null }} options
@@ -29,8 +27,8 @@ export function buildMermaidGraphDefinition({
 		sanitizedMap.set(branchId, sanitized);
 
 		const branch = branches[branchId];
-		const labelSource = branch?.title || branch?.id || branchId;
-		const label = shortenLabel(labelSource, MAX_LABEL_LENGTH);
+		const labelSource = (branch?.title || branch?.id || branchId || "").trim();
+		const label = labelSource || branchId;
 		const tooltipParts = [];
 		if (branch?.title) {
 			tooltipParts.push(branch.title);
@@ -157,13 +155,6 @@ function sanitizeMermaidId(value) {
 		return `N_${cleaned}`;
 	}
 	return cleaned;
-}
-
-function shortenLabel(text, maxLength) {
-	const value = typeof text === "string" ? text.trim() : "";
-	if (!value) return "";
-	if (value.length <= maxLength) return value;
-	return `${value.slice(0, Math.max(1, maxLength - 3))}...`;
 }
 
 function escapeMermaidLabel(value) {
