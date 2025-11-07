@@ -69,6 +69,7 @@ C20["Glaciera-C20"]
 C21["Glaciera-C21"]
 C22["Glaciera-C22"]
 C23["Glaciera-C23"]
+C24["C24"]
 A1 -->|Next| A2
 A2 -->|Next| A3
 A3 -->|A Swift Agile Ship - Light Fishing Boat+| A4
@@ -162,4 +163,6 @@ C20 -->|Return victorious| C24
 C21 -->|Return to base| C24
 C22 -->|Return to home planet| C23
 C23 -->|Bad ending| Ending
+C24 -->|Head to Mossara| B1
+C24 -->|Head to the Black Hole| D1
 ```

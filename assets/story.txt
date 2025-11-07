@@ -229,3 +229,129 @@ Choice: display=[Head to the Black Hole]; valid=visited-any(C1); next=D1
 Title: Bad End
 Branch: Ending
 Description: Your journey on Mossara ends here. Perhaps another path awaits if you restart and make different choices.
+
+Title: Glaciera-01
+Branch: C1
+Description: As you descend through the clouds of Glaciera, a translucent shimmer stretches across the planet’s surface—like an ocean frozen mid-wave. The sun peeks from the horizon, refracting light across the glassy crust. You're struck with awe—until something thuds against your windshield. It's a fish—no, something stranger. Covered in white fur, it twirls through the air like a snowflake, then vanishes into the gleaming light. The moment lingers.
+Choice: display=[Land the ship]; next=C2
+
+Title: Glaciera-02
+Branch: C2
+Description: As you prepare for landing, you notice dots on the ice field—small at first, then growing larger, morphing into lines, then shapes. They're not cracks. They're bicycles—massive ones—riding straight toward you. In an instant, iron chains whip through the air and latch onto your ship’s frame. The vessels encircle you like a pack of wolves. From each bike, figures in fur-lined armor leap onto the chains and approach your ship with synchronized steps.
+Choice: display=[Speak to them]; next=C3
+
+Title: Glaciera-03
+Branch: C3
+Description: A towering figure lands at your hatch and raps on it twice before it slides open. “A foreign rig in our territory?” he booms with a crooked grin. “Welcome to Glaciera. We’ll be taking your ship and whatever’s inside. Redistribution, you know?” The rest of the bikers fan out, scanning your vessel as tension grows thick in the air.
+Choice: display=[Ask for an explanation]; next=C4
+Choice: display=[Try to barter]; next=C5
+
+Title: Glaciera-04
+Branch: C4
+Description: He scoffs, folding his arms. “You really don’t know how things work here?” He gestures across the glistening plains. “This planet runs on shared survival. We gather, we distribute, and we endure. No hoarding. No heroes. Everyone pulls for the group—or not at all.” His eyes narrow. “You wanna be useful? Prove you’re not here for yourself.”
+Choice: display=[Offer your ship as support]; next=C5
+
+Title: Glaciera-05
+Branch: C5
+Description: You take a deep breath. “My ship’s capable of deep-space fishing,” you say. “That’s more useful than whatever you’ll scrap from it. Let me help your cause, not waste what I can offer.” The gang murmurs among themselves as the leader eyes you sharply.
+Choice: display=[Persuade]; roll=luck, dice=2d6, target=11, ok=C6, fail=C10
+
+Title: Glaciera-06
+Branch: C6
+Description: The gang leader lets out a low whistle. “Heh… got some guts and gears, huh?” He signals to his crew. “Mount up. You're fishing for Glaciera now.” Several members climb aboard your ship. “Don’t get clever. We’ll be watching.” As you launch toward the polar sea, the assigned crew brief you on the planet’s collectivist ideals and their fragile food systems. You begin to understand what balance here truly means.
+Choice: display=[Head to fishing grounds]; next=C7
+
+Title: Glaciera-07
+Branch: C7
+Description: One crew member, a woman with braided white hair, leans on the console. “We don’t care much for leaders here, just results. You want off this planet? Do something that helps everyone.” She nods toward a tattered logbook. “There were rumors once… of a celestial being. Massive. Sustaining entire ecosystems. Maybe the Leviathan? Could be myth.” As she speaks, the ship slows. You’ve reached the icy trench—time to fish.
+Choice: display=[Cast the line]; roll=luck, dice=2d6, target=7, ok=C8, fail=C9
+
+Title: Glaciera-08
+Branch: C8
+Description: The waters below churn as your harpoons lock onto something beneath the ice shelf. With teamwork and quick reflexes, you pull in a catch unlike any other—thick-furred aquatic beasts, glimmering with radiant scales. The crew cheers as you set course for base. Seems you’ve made a good impression.
+Choice: display=[Return to central base]; stat=luck+1; next=C13
+
+Title: Glaciera-C9
+Branch: C9
+Description: You cast the line, but something feels off. A sudden jolt pulls the harpoon rig, but the tension snaps as quickly as it came. The crew scrambles to recover the equipment, but it’s clear—nothing was caught. One of the gang members clicks their tongue. “No haul. That won’t look good.” You set course back to the base, empty-handed.
+Choice: display=[Return to central base]; next=C13
+
+Title: Glaciera-C10
+Branch: C10
+Description: The leader frowns. “Nice try.” With a wave of his hand, the gang dismantles your ship’s systems and hauls it away. “You wanna be part of this planet? Then work like we do.” You're sent to labor within one of the igloo settlements nearby. Among the domes, two structures catch your attention: one with wooden interiors and scattered papers, the other larger, smoke curling from a chimney overhead.
+Choice: display=[Enter the smaller igloo]; next=C11
+Choice: display=[Enter the larger igloo]; next=C12
+
+Title: Glaciera-C11
+Branch: C11
+Description: You step inside the smaller igloo. The interior is cluttered but warm. Scrolls, books, and maps lie scattered across a wooden desk. An elderly figure looks up. “Ah, a stranger. Curious about how we survive?” They begin to explain the planet’s collectivist system—resources pooled, no leaders, all shared. A worn book mentions something massive that once swam through the stars—something called the Leviathan.
+Choice: display=[Return to the camp]; next=C13
+
+Title: Glaciera-C12
+Branch: C12
+Description: Inside the larger igloo, several people are gathered around a central cooking pit. One of them gestures for you to sit. Over shared rations, they speak of Glaciera’s values: unity over ego, contribution over ambition. “If only we had the Leviathan,” someone says. “That thing could sustain a whole continent.” The name lingers like a ghost of a solution.
+Choice: display=[Return to the camp]; next=C13
+
+Title: Glaciera-C13
+Branch: C13
+Description: As night falls, alarms blare across the settlement. A nearby glacier is breaking apart, threatening to flood the lower domes. You approach the gang leader, offering your help. He hesitates, then nods. “You’ve earned some trust. Let’s see if you follow through. Pick a route. But choose wisely—each approach has its risk.”
+Choice: display=[Choose a fast, agile route]; next=C14
+Choice: display=[Choose a powerful, direct route]; next=C19
+
+Title: Glaciera-C14
+Branch: C14
+Description: You chart a path through narrow ice canyons where speed is your greatest ally. The terrain is tight, the turns sharp, the air filled with shards of drifting frost. Each second you hesitate, the glacier moves closer to collapse. You can almost feel the weight of the planet’s expectation pressing on your hull.
+Choice: display=[Execute the maneuver]; next=C15
+
+Title: Glaciera-C15
+Branch: C15
+Description: The engines roar to life, the vibrations shaking the console beneath your hands. You push the throttle forward, the ship darting into the icy maze. The controls fight back—each gust of frozen wind threatens to throw you off course. Your mind races: this is it, a test of both your ship and your resolve.
+Choice: display=[If you have the Light Fishing Boat, attempt the run]; optional=has(Light Fishing Boat); next=C16
+Choice: display=[Attempt the run relying on luck]; roll=luck, dice=2d6, target=12, ok=C17, fail=C18
+
+Title: Glaciera-C16
+Branch: C16
+Description: Your light vessel slices through the narrow canyons like a blade. Frozen cliffs blur past. You reach the fracture point ahead of the collapse and trigger a detonation that diverts the iceflow safely. The danger is avoided entirely.
+Choice: display=[Return victorious]; next=C24
+
+Title: Glaciera-C17
+Branch: C17
+Description: You steer through the icy gauntlet with expert timing. Just before the last corner, a ridge crumbles—your ship grazes it but pulls through. Shaken but successful, you make it to the collapse zone and carry out your task just in time.
+Choice: display=[Return to base]; next=C24
+
+Title: Glaciera-C18
+Branch: C18
+Description: The turns are too sharp. The weight of your ship proves too much to control. A misstep sends it careening into the glacier wall. Systems fail. The collapse begins. There's no time to recover. You are forced to abandon the operation and return defeated.
+Choice: display=[Return to home planet]; next=C23
+
+Title: Glaciera-C19
+Branch: C19
+Description: You choose the direct approach, through a heavily packed ice field. There’s no way around—it’s a test of raw force. If your vessel has the power, you might make it. If not, luck will decide.
+Choice: display=[Plow through with power]; roll=luck, dice=2d6, target=12, ok=C21, fail=C22; optional=has(Medium Carcass Trawler)
+Choice: display=[Use powerful vessel]; next=C20; optional=has(Medium Carcass Trawler)
+
+Title: Glaciera-C20
+Branch: C20
+Description: With sheer momentum, your vessel crushes through the wall of ice. Chunks scatter in every direction as you forge a tunnel straight to the impact zone. You arrive well ahead of schedule, giving the settlement time to respond and reinforce.
+Choice: display=[Return victorious]; next=C24
+
+Title: Glaciera-C21
+Branch: C21
+Description: Despite the odds, your ship thunders forward. The ice groans and fractures, but you hold course. You emerge at the critical point, battered but intact. The emergency systems deploy, and the damage is contained.
+Choice: display=[Return to base]; next=C24
+
+Title: Glaciera-C22
+Branch: C22
+Description: The icefield proves too dense. Your vessel gets stuck midway, unable to continue. Reinforcements arrive too late, and the glacier collapses into the lower domes. The mission is a failure.
+Choice: display=[Return to home planet]; next=C23
+
+Title: Glaciera-C23
+Branch: C23
+Description: With your vessel damaged and the mission failed, the people of Glaciera offer no harsh words—but they no longer need your help. You are released from duty and return to your home planet with empty hands and a heavy heart.
+Choice: display=[Bad ending]; next=Ending
+
+Title: C24
+Branch: C24
+Description: You return to the Glaciera base under a sky thick with auroras. The people gather, celebrating the averted disaster. The gang leader claps you on the back. “Not bad, outsider.” Before you depart, someone hands you a scroll: an old record that mentions sightings of a great being near a black hole—massive enough to seed ecosystems in its wake. You board your ship, purpose renewed.
+Choice: display=[Head to Mossara]; optional=visited-any(B1); next=B1
+Choice: display=[Head to the Black Hole]; valid=visited-any(B1); next=D1
