@@ -545,74 +545,24 @@ body.graph-open {
 	cursor: grabbing;
 }
 
-.graph-svg {
+.graph-mermaid-root {
+	position: relative;
+	transform-origin: 0 0;
+	min-width: max-content;
+}
+
+.graph-mermaid-root svg {
 	display: block;
+	max-width: none;
 }
 
-.graph-edge {
-	fill: none;
-	stroke: rgba(185, 194, 240, 0.35);
-	stroke-linecap: round;
-	stroke-linejoin: round;
-	stroke-width: 2.4;
-	opacity: 0.95;
-	transition: stroke var(--transition), opacity var(--transition), stroke-dasharray var(--transition);
+.graph-mermaid-root .node rect,
+.graph-mermaid-root .node circle {
+	transition: fill var(--transition), stroke var(--transition), stroke-width var(--transition);
 }
 
-.graph-edge.visited {
-	stroke: rgba(99, 245, 192, 0.85);
-}
-
-.graph-edge.locked {
-	stroke: rgba(185, 194, 240, 0.25);
-	stroke-dasharray: 6 6;
-	opacity: 0.8;
-}
-
-.graph-node circle {
-	fill: rgba(20, 26, 49, 0.85);
-	stroke: rgba(73, 210, 255, 0.65);
-	stroke-width: 2;
-	transition: fill var(--transition), stroke var(--transition), opacity var(--transition);
-}
-
-.graph-node.visited circle {
-	fill: rgba(73, 210, 255, 0.18);
-	stroke: rgba(99, 245, 192, 0.85);
-}
-
-.graph-node.unvisited circle {
-	fill: rgba(185, 194, 240, 0.12);
-	stroke: rgba(185, 194, 240, 0.35);
-}
-
-.graph-node.current circle {
-	stroke: rgba(99, 245, 192, 1);
-	stroke-width: 3;
-}
-
-.graph-node text {
-	fill: var(--fg);
+.graph-mermaid-root .nodeLabel {
 	font-size: 0.75rem;
-	pointer-events: none;
-	font-weight: 600;
-	text-anchor: middle;
-	dominant-baseline: middle;
-}
-
-.graph-node.unvisited text {
-	fill: rgba(185, 194, 240, 0.7);
-}
-
-.graph-node.visited text {
-	fill: var(--fg);
-}
-
-.graph-node.current text {
-	fill: var(--accent-strong);
-}
-
-.graph-node-label {
 	filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.65));
 }
 

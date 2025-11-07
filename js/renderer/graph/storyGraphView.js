@@ -1,15 +1,59 @@
-import { createKey as createTransitionKey } from "../../state/transitionTracker.js";
-import { SVG_NS, NODE_RADIUS, MIN_SCALE, MAX_SCALE } from "./storyGraphConfig.js";
-import { computeLayout } from "./storyGraphLayout.js";
-import { buildEdgePathData, computeVisibleViewportBounds, clamp } from "./storyGraphGeometry.js";
-import {
-	buildVisitedSet,
-	buildVisitedTransitionSet,
-	filterVisitedNodes,
-} from "./storyGraphStateUtils.js";
+import { buildMermaidGraphDefinition } from "./storyGraphMermaid.js";
+import { buildVisitedSet, buildVisitedTransitionSet } from "./storyGraphStateUtils.js";
+
+const SVG_NS = "http://www.w3.org/2000/svg";
+const MIN_SCALE = 0.5;
+const MAX_SCALE = 2.5;
+const MERMAID_MODULE_URL = "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+
+const MERMAID_CONFIG = {
+	startOnLoad: false,
+	securityLevel: "strict",
+	theme: "base",
+	flowchart: {
+		htmlLabels: true,
+		useMaxWidth: false,
+		curve: "basis",
+		padding: 16,
+		nodeSpacing: 120,
+		rankSpacing: 150,
+	},
+	themeVariables: {
+		fontFamily: '"Segoe UI", system-ui, -apple-system, sans-serif',
+		primaryColor: "rgba(20,26,49,0.85)",
+		primaryBorderColor: "rgba(73,210,255,0.45)",
+		primaryTextColor: "#f1f4ff",
+		lineColor: "rgba(185,194,240,0.35)",
+	},
+	themeCSS: `
+		.mermaid svg {
+			background: transparent !important;
+		}
+		.mermaid svg .edgePath .path {
+			stroke-linecap: round;
+			stroke-linejoin: round;
+		}
+		.mermaid svg .marker {
+			fill: rgba(73,210,255,0.45);
+		}
+		.mermaid svg .label,
+		.mermaid svg .nodeLabel {
+			fill: #f1f4ff;
+			font-size: 12px;
+			font-weight: 600;
+		}
+		.mermaid svg .edgeLabel {
+			fill: #b9c2f0;
+			font-size: 11px;
+		}
+	`,
+};
+
+let mermaidPromise = null;
+let renderCounter = 0;
 
 /**
- * Renders a left-to-right branch graph with pan and zoom controls.
+ * Renders the story graph using Mermaid, preserving visited/full modes and the existing overlay chrome.
  */
 export class StoryGraphView {
 	/**
@@ -24,12 +68,13 @@ export class StoryGraphView {
 		this.mode = "visited";
 		this.scale = 1;
 		this.story = null;
-		this.layout = null;
-		this.svg = null;
-		this.edgesGroup = null;
-		this.nodesGroup = null;
 		this.latestState = null;
 		this.currentBranchId = null;
+
+		this.graphRoot = null;
+		this.currentRenderToken = null;
+		this.isRendering = false;
+
 		this.panOrigin = null;
 		this.activePointerId = null;
 
@@ -60,13 +105,11 @@ export class StoryGraphView {
 	setStory(story) {
 		if (!story || typeof story !== "object" || !story.branches) {
 			this.story = null;
-			this.layout = null;
-			this.destroySvg();
+			this.clearGraph();
 			this.showPlaceholder("Story map unavailable.");
 			return;
 		}
 		this.story = story;
-		this.layout = computeLayout(story);
 		this.scale = 1;
 		if (this.container) {
 			this.container.scrollLeft = 0;
@@ -117,145 +160,98 @@ export class StoryGraphView {
 	}
 
 	render() {
-		if (!this.container || !this.layout) {
-			this.destroySvg();
+		if (!this.container) {
+			return;
+		}
+		if (!this.story || !this.story.branches) {
+			this.clearGraph();
 			this.showPlaceholder("Story map unavailable.");
 			return;
 		}
 
-		const visitedBranchIds = buildVisitedSet(this.latestState);
+		const visitedBranches = buildVisitedSet(this.latestState);
 		const visitedTransitions = buildVisitedTransitionSet(this.latestState);
-		const visibleNodes = this.mode === "visited" ? filterVisitedNodes(this.layout.nodes, visitedBranchIds) : this.layout.nodes;
+		const graph = buildMermaidGraphDefinition({
+			story: this.story,
+			mode: this.mode,
+			currentBranchId: this.currentBranchId,
+			visitedBranches,
+			visitedTransitions,
+		});
 
-		if (!visibleNodes.length) {
+		const hasDefinition = graph && typeof graph.definition === "string" && graph.definition.trim().length > 0;
+		if (!hasDefinition) {
+			this.clearGraph();
 			const message =
 				this.mode === "visited"
-					? "Play the story to reveal your progress."
+					? visitedBranches.size
+						? "Play further to unlock more of the map."
+						: "Play the story to reveal the map."
 					: "Story map unavailable.";
-			this.destroySvg();
 			this.showPlaceholder(message);
 			return;
 		}
 
 		this.hidePlaceholder();
-		this.ensureSvg();
-		if (!this.svg || !this.edgesGroup || !this.nodesGroup) {
+		this.renderMermaidGraph(graph);
+	}
+
+	async renderMermaidGraph(graph) {
+		const token = Symbol(`render-${renderCounter++}`);
+		this.currentRenderToken = token;
+		this.isRendering = true;
+
+		let mermaid;
+		try {
+			mermaid = await loadMermaid();
+		} catch (error) {
+			if (this.currentRenderToken !== token) {
+				return;
+			}
+			console.error("[StoryGraph] Unable to load Mermaid:", error);
+			this.clearGraph();
+			this.showPlaceholder("Story map unavailable.");
+			this.isRendering = false;
 			return;
 		}
 
-		this.updateToggle();
-		const edgeEntries = this.buildEdgeRenderEntries(visibleNodes, visitedTransitions);
-		const defaultViewport = {
-			minX: 0,
-			minY: 0,
-			width: this.layout.baseWidth,
-			height: this.layout.baseHeight,
-		};
-		const viewport =
-			this.mode === "visited"
-				? computeVisibleViewportBounds(visibleNodes, edgeEntries) || defaultViewport
-				: defaultViewport;
-		const width = Math.max(1, viewport.width);
-		const height = Math.max(1, viewport.height);
-		const scaledWidth = width * this.scale;
-		const scaledHeight = height * this.scale;
-		this.svg.setAttribute("width", scaledWidth.toFixed(2));
-		this.svg.setAttribute("height", scaledHeight.toFixed(2));
-		this.svg.setAttribute("viewBox", `${viewport.minX} ${viewport.minY} ${width} ${height}`);
-		this.svg.style.width = `${scaledWidth}px`;
-		this.svg.style.height = `${scaledHeight}px`;
-
-		this.renderEdges(edgeEntries);
-		this.renderNodes(visibleNodes, visitedBranchIds);
-	}
-
-	renderEdges(edgeEntries) {
-		if (!this.edgesGroup) return;
-		this.edgesGroup.innerHTML = "";
-		for (const entry of edgeEntries) {
-			const path = document.createElementNS(SVG_NS, "path");
-			path.classList.add("graph-edge", entry.status);
-			path.setAttribute("d", entry.d);
-			this.edgesGroup.appendChild(path);
+		let renderResult;
+		try {
+			renderResult = await mermaid.render(`storyGraph_${renderCounter}`, graph.definition);
+		} catch (error) {
+			if (this.currentRenderToken !== token) {
+				return;
+			}
+			console.error("[StoryGraph] Mermaid rendering failed:", error);
+			this.clearGraph();
+			this.showPlaceholder("Story map unavailable.");
+			this.isRendering = false;
+			return;
 		}
-	}
 
-	buildEdgeRenderEntries(visibleNodes, visitedTransitions) {
-		if (!this.layout) {
-			return [];
+		if (this.currentRenderToken !== token) {
+			this.isRendering = false;
+			return;
 		}
-		const entries = [];
-		const visibleSet = new Set(visibleNodes.map((node) => node.id));
-		const nodeMap = this.layout.nodeMap;
-		const requireVisible = this.mode === "visited";
 
-		for (const edge of this.layout.edges) {
-			const key = createTransitionKey(edge.from, edge.to);
-			const visited = visitedTransitions.has(key);
-			if (requireVisible) {
-				if (!visited) continue;
-				if (!visibleSet.has(edge.from) || !visibleSet.has(edge.to)) continue;
-			}
-			const fromNode = nodeMap.get(edge.from);
-			const toNode = nodeMap.get(edge.to);
-			if (!fromNode || !toNode) {
-				continue;
-			}
-			const status = visited ? "visited" : "locked";
-			if (requireVisible && status !== "visited") {
-				continue;
-			}
-			const pathData = buildEdgePathData(edge, fromNode, toNode);
-			if (!pathData) continue;
-			entries.push({
-				status,
-				d: pathData.d,
-				bounds: pathData.bounds,
-			});
+		this.ensureGraphRoot();
+		if (!this.graphRoot) {
+			this.isRendering = false;
+			return;
 		}
-		return entries;
-	}
 
-	renderNodes(nodes, visitedBranches) {
-		if (!this.nodesGroup) return;
-		this.nodesGroup.innerHTML = "";
-		for (const node of nodes) {
-			const group = document.createElementNS(SVG_NS, "g");
-			group.classList.add("graph-node");
-			if (visitedBranches.has(node.id)) {
-				group.classList.add("visited");
-			} else {
-				group.classList.add("unvisited");
-			}
-			if (this.currentBranchId && node.id === this.currentBranchId) {
-				group.classList.add("current");
-			}
-
-			const circle = document.createElementNS(SVG_NS, "circle");
-			circle.setAttribute("cx", node.x);
-			circle.setAttribute("cy", node.y);
-			circle.setAttribute("r", NODE_RADIUS);
-			group.appendChild(circle);
-
-			const text = document.createElementNS(SVG_NS, "text");
-			text.setAttribute("x", node.x);
-			text.setAttribute("y", node.y);
-			text.classList.add("graph-node-label");
-			text.textContent = node.label;
-			group.appendChild(text);
-
-			if (node.tooltip) {
-				const title = document.createElementNS(SVG_NS, "title");
-				title.textContent = node.tooltip;
-				group.appendChild(title);
-			}
-
-			this.nodesGroup.appendChild(group);
+		this.graphRoot.innerHTML = renderResult.svg;
+		this.applyScale();
+		this.applyNodeTooltips(graph.nodeMeta);
+		if (typeof renderResult.bindFunctions === "function") {
+			renderResult.bindFunctions(this.graphRoot);
 		}
+
+		this.isRendering = false;
 	}
 
 	handleWheel(event) {
-		if (!this.container || !this.layout) return;
+		if (!this.container) return;
 		if (!event.ctrlKey) {
 			return;
 		}
@@ -275,7 +271,7 @@ export class StoryGraphView {
 		const relativeY = offsetY / this.scale;
 
 		this.scale = nextScale;
-		this.render();
+		this.applyScale();
 
 		const newScrollLeft = relativeX * this.scale - (event.clientX - rect.left);
 		const newScrollTop = relativeY * this.scale - (event.clientY - rect.top);
@@ -333,35 +329,52 @@ export class StoryGraphView {
 		}
 	}
 
-	ensureSvg() {
-		if (this.svg || !this.container) {
-			return;
-		}
-		const svg = document.createElementNS(SVG_NS, "svg");
-		svg.classList.add("graph-svg");
-		svg.setAttribute("aria-hidden", "true");
-
-		const edgesGroup = document.createElementNS(SVG_NS, "g");
-		const nodesGroup = document.createElementNS(SVG_NS, "g");
-		edgesGroup.setAttribute("data-layer", "edges");
-		nodesGroup.setAttribute("data-layer", "nodes");
-
-		svg.appendChild(edgesGroup);
-		svg.appendChild(nodesGroup);
-		this.container.appendChild(svg);
-
-		this.svg = svg;
-		this.edgesGroup = edgesGroup;
-		this.nodesGroup = nodesGroup;
+	applyScale() {
+		if (!this.graphRoot) return;
+		this.graphRoot.style.transformOrigin = "0 0";
+		this.graphRoot.style.transform = `scale(${this.scale.toFixed(3)})`;
 	}
 
-	destroySvg() {
-		if (this.svg && this.container && this.container.contains(this.svg)) {
-			this.container.removeChild(this.svg);
+	applyNodeTooltips(nodeMeta) {
+		if (!nodeMeta || !nodeMeta.size || !this.graphRoot) {
+			return;
 		}
-		this.svg = null;
-		this.edgesGroup = null;
-		this.nodesGroup = null;
+		const svg = this.graphRoot.querySelector("svg");
+		if (!svg) return;
+		const groups = svg.querySelectorAll("g.node");
+		for (const group of groups) {
+			const sanitizedId = normalizeRenderNodeId(group);
+			if (!sanitizedId) continue;
+			const meta = nodeMeta.get(sanitizedId);
+			if (!meta || !meta.tooltip) continue;
+			let title = group.querySelector("title");
+			if (!title) {
+				title = document.createElementNS(SVG_NS, "title");
+				group.appendChild(title);
+			}
+			title.textContent = meta.tooltip;
+		}
+	}
+
+	clearGraph() {
+		if (this.graphRoot) {
+			this.graphRoot.innerHTML = "";
+		}
+	}
+
+	ensureGraphRoot() {
+		if (this.graphRoot && this.graphRoot.isConnected) {
+			return;
+		}
+		if (!this.container) {
+			return;
+		}
+		const root = document.createElement("div");
+		root.className = "graph-mermaid-root";
+		root.setAttribute("data-renderer", "mermaid");
+		this.container.appendChild(root);
+		this.graphRoot = root;
+		this.applyScale();
 	}
 
 	showPlaceholder(message) {
@@ -391,3 +404,37 @@ export class StoryGraphView {
 	}
 }
 
+function clamp(value, min, max) {
+	return Math.min(max, Math.max(min, value));
+}
+
+function normalizeRenderNodeId(group) {
+	if (!group) return "";
+	const dataId = group.getAttribute("data-id");
+	const rawId = dataId || group.getAttribute("id") || "";
+	if (!rawId) return "";
+	if (rawId.startsWith("flowchart-")) {
+		return rawId.slice("flowchart-".length);
+	}
+	return rawId;
+}
+
+async function loadMermaid() {
+	if (mermaidPromise) {
+		return mermaidPromise;
+	}
+	mermaidPromise = import(MERMAID_MODULE_URL)
+		.then((module) => {
+			const mermaid = module?.default ?? module;
+			if (!mermaid || typeof mermaid.initialize !== "function" || typeof mermaid.render !== "function") {
+				throw new Error("Mermaid module does not expose the expected API.");
+			}
+			mermaid.initialize(MERMAID_CONFIG);
+			return mermaid;
+		})
+		.catch((error) => {
+			mermaidPromise = null;
+			throw error;
+		});
+	return mermaidPromise;
+}

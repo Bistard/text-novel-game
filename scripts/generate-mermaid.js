@@ -74,27 +74,59 @@ function sanitizeEdgeLabel(s) {
 }
 
 function toMermaid(nodes, edges) {
+  const usedIds = new Set();
+  const idMap = new Map();
+  for (const id of nodes.keys()) {
+    idMap.set(id, createMermaidId(id, usedIds));
+  }
+
   const lines = [];
   lines.push("```mermaid");
-  lines.push("flowchart TD");
+  lines.push("graph LR");
+  lines.push("%% Nodes");
 
   for (const [id, node] of nodes) {
     const label = escapeLabel(node.title || id);
-    // Node IDs in Mermaid are case-sensitive; use branch id directly
-    lines.push(`${id}["${label}"]`);
+    const sanitized = idMap.get(id);
+    lines.push(`${sanitized}["${label}"]`);
   }
 
+  lines.push("%% Edges");
   for (const e of edges) {
     const lbl = sanitizeEdgeLabel(e.label || "");
-    if (lbl) {
-      lines.push(`${e.from} -->|${lbl}| ${e.to}`);
-    } else {
-      lines.push(`${e.from} --> ${e.to}`);
-    }
+    const from = idMap.get(e.from);
+    const to = idMap.get(e.to);
+    if (!from || !to) continue;
+    lines.push(lbl ? `${from} -->|${lbl}| ${to}` : `${from} --> ${to}`);
   }
 
+  lines.push("classDef default fill:#141a31,stroke:#49d2ff,stroke-width:2px;");
   lines.push("```");
   return lines.join("\n");
+}
+
+function createMermaidId(value, usedIds) {
+  const base = sanitizeMermaidId(value);
+  let candidate = base;
+  let counter = 1;
+  while (usedIds.has(candidate)) {
+    candidate = `${base}_${counter++}`;
+  }
+  usedIds.add(candidate);
+  return candidate;
+}
+
+function sanitizeMermaidId(value) {
+  const cleaned = String(value || "")
+    .trim()
+    .replace(/[^A-Za-z0-9_]/g, "_");
+  if (!cleaned) {
+    return "Node";
+  }
+  if (!/^[A-Za-z]/.test(cleaned)) {
+    return `N_${cleaned}`;
+  }
+  return cleaned;
 }
 
 function main() {
