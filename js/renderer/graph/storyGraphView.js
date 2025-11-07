@@ -1,5 +1,4 @@
 import { buildMermaidGraphDefinition } from "./storyGraphMermaid.js";
-import { buildVisitedSet, buildVisitedTransitionSet } from "./storyGraphStateUtils.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 const MIN_SCALE = 0.5;
@@ -65,10 +64,8 @@ export class StoryGraphView {
 		this.modeLabel = modeLabel;
 		this.placeholder = placeholder;
 
-		this.mode = "visited";
 		this.scale = 1;
 		this.story = null;
-		this.latestState = null;
 		this.currentBranchId = null;
 
 		this.graphRoot = null;
@@ -78,14 +75,18 @@ export class StoryGraphView {
 		this.panOrigin = null;
 		this.activePointerId = null;
 
-		this.handleToggle = this.handleToggle.bind(this);
 		this.handleWheel = this.handleWheel.bind(this);
 		this.handlePointerDown = this.handlePointerDown.bind(this);
 		this.handlePointerMove = this.handlePointerMove.bind(this);
 		this.handlePointerUp = this.handlePointerUp.bind(this);
 
 		if (this.toggleButton) {
-			this.toggleButton.addEventListener("click", this.handleToggle);
+			this.toggleButton.hidden = true;
+			this.toggleButton.setAttribute("aria-hidden", "true");
+			this.toggleButton.setAttribute("tabindex", "-1");
+		}
+		if (this.modeLabel) {
+			this.modeLabel.textContent = "Story Map";
 		}
 		if (this.container) {
 			this.container.addEventListener("wheel", this.handleWheel, { passive: false });
@@ -95,7 +96,6 @@ export class StoryGraphView {
 			this.container.addEventListener("pointercancel", this.handlePointerUp);
 			this.container.addEventListener("pointerleave", this.handlePointerUp);
 		}
-		this.updateToggle();
 	}
 
 	/**
@@ -122,41 +122,16 @@ export class StoryGraphView {
 	 * Updates the graph with the latest state data.
 	 * @param {{ story?: { start?: string, branches?: Record<string, import("../../parser/types.js").StoryBranch> }, state?: import("../../state/storyState.js").StoryState|null, currentBranchId?: string|null }} payload
 	 */
-	update({ story = null, state = null, currentBranchId = null } = {}) {
+	update({ story = null, currentBranchId = null } = {}) {
 		if (story && story !== this.story) {
 			this.setStory(story);
 		}
-		this.latestState = state || null;
 		this.currentBranchId = typeof currentBranchId === "string" ? currentBranchId : null;
-		this.render();
-	}
-
-	/**
-	 * Explicitly sets the current mode (visited-only or full map).
-	 * @param {"visited"|"all"} mode
-	 */
-	setMode(mode) {
-		if (mode !== "visited" && mode !== "all") {
-			return;
-		}
-		if (this.mode === mode) {
-			return;
-		}
-		this.mode = mode;
-		this.updateToggle();
 		this.render();
 	}
 
 	refresh() {
 		this.render();
-	}
-
-	toggleMode() {
-		this.setMode(this.mode === "visited" ? "all" : "visited");
-	}
-
-	handleToggle() {
-		this.toggleMode();
 	}
 
 	render() {
@@ -169,26 +144,15 @@ export class StoryGraphView {
 			return;
 		}
 
-		const visitedBranches = buildVisitedSet(this.latestState);
-		const visitedTransitions = buildVisitedTransitionSet(this.latestState);
 		const graph = buildMermaidGraphDefinition({
 			story: this.story,
-			mode: this.mode,
 			currentBranchId: this.currentBranchId,
-			visitedBranches,
-			visitedTransitions,
 		});
 
 		const hasDefinition = graph && typeof graph.definition === "string" && graph.definition.trim().length > 0;
 		if (!hasDefinition) {
 			this.clearGraph();
-			const message =
-				this.mode === "visited"
-					? visitedBranches.size
-						? "Play further to unlock more of the map."
-						: "Play the story to reveal the map."
-					: "Story map unavailable.";
-			this.showPlaceholder(message);
+			this.showPlaceholder("Story map unavailable.");
 			return;
 		}
 
@@ -389,17 +353,6 @@ export class StoryGraphView {
 	hidePlaceholder() {
 		if (this.placeholder) {
 			this.placeholder.hidden = true;
-		}
-	}
-
-	updateToggle() {
-		if (this.toggleButton) {
-			const pressed = this.mode === "all";
-			this.toggleButton.setAttribute("aria-pressed", pressed ? "true" : "false");
-			this.toggleButton.textContent = pressed ? "Show Visited Only" : "Show Full Map";
-		}
-		if (this.modeLabel) {
-			this.modeLabel.textContent = this.mode === "all" ? "Full Story" : "Visited Branches";
 		}
 	}
 }

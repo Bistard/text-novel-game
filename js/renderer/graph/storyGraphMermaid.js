@@ -1,33 +1,12 @@
-import {
-	buildVisitedSet,
-	buildVisitedTransitionSet,
-} from "./storyGraphStateUtils.js";
-import { createKey as createTransitionKey } from "../../state/transitionTracker.js";
-
 const MAX_LABEL_LENGTH = 16;
-
-const NODE_CLASS_DEFS = {
-	visited: "fill:#12374d,stroke:#63f5c0,stroke-width:2px",
-	unvisited: "fill:#1a2242,stroke:#6c789f,stroke-width:2px",
-	current: "stroke:#63f5c0,stroke-width:3px",
-};
-
-const LINK_STYLE_DEFS = {
-	visited: "stroke:#63f5c0,stroke-width:2.4px,color:#63f5c0",
-	locked: "stroke:#6c789f,stroke-width:2px,color:#b9c2f0,stroke-dasharray:6 6,opacity:0.85",
-};
 
 /**
  * Builds a Mermaid flowchart definition representing the story graph.
- * @param {{ story?: { branches?: Record<string, import("../../parser/types.js").StoryBranch> }, state?: import("../../state/storyState.js").StoryState|null, mode?: "visited"|"all", currentBranchId?: string|null }} options
+ * @param {{ story?: { branches?: Record<string, import("../../parser/types.js").StoryBranch> }, currentBranchId?: string|null }} options
  */
 export function buildMermaidGraphDefinition({
 	story = null,
-	state = null,
-	mode = "visited",
 	currentBranchId = null,
-	visitedBranches: providedVisitedBranches = null,
-	visitedTransitions: providedVisitedTransitions = null,
 } = {}) {
 	if (!story || !story.branches) {
 		return null;
@@ -38,28 +17,14 @@ export function buildMermaidGraphDefinition({
 		return null;
 	}
 
-	const visitedBranches = providedVisitedBranches ?? buildVisitedSet(state);
-	const visitedTransitions = providedVisitedTransitions ?? buildVisitedTransitionSet(state);
-
-	const visibleBranchIds =
-		mode === "visited"
-			? allIds.filter((id) => visitedBranches.has(id))
-			: allIds.slice();
-
-	if (!visibleBranchIds.length) {
-		return null;
-	}
-
 	const sanitizedMap = new Map();
 	const usedSanitized = new Set();
 	const nodeMeta = new Map();
 	const classAssignments = {
-		visited: new Set(),
-		unvisited: new Set(),
 		current: new Set(),
 	};
 
-	for (const branchId of visibleBranchIds) {
+	for (const branchId of allIds) {
 		const sanitized = createMermaidId(branchId, usedSanitized);
 		sanitizedMap.set(branchId, sanitized);
 
@@ -75,27 +40,14 @@ export function buildMermaidGraphDefinition({
 		}
 		const tooltip = tooltipParts.length ? tooltipParts.join(" | ") : labelSource;
 
-		const statuses = new Set();
-		if (visitedBranches.has(branchId)) {
-			statuses.add("visited");
-		} else {
-			statuses.add("unvisited");
-		}
 		if (currentBranchId && branchId === currentBranchId) {
-			statuses.add("current");
-		}
-
-		for (const status of statuses) {
-			const target = classAssignments[status];
-			if (target) {
-				target.add(sanitized);
-			}
+			classAssignments.current.add(sanitized);
 		}
 
 		nodeMeta.set(sanitized, { id: branchId, label, tooltip });
 	}
 
-	const edgeEntries = buildEdgeList(branches, sanitizedMap, mode, visitedTransitions);
+	const edgeEntries = buildEdgeList(branches, sanitizedMap);
 
 	const lines = [];
 	lines.push("%% Story graph generated at runtime");
@@ -117,48 +69,50 @@ export function buildMermaidGraphDefinition({
 	const classDefLines = buildClassDefLines(classAssignments);
 	lines.push(...classDefLines);
 
-	lines.push("  %% Edge Styles");
-	const linkStyleLines = buildLinkStyleLines(edgeEntries);
-	lines.push(...linkStyleLines);
-
 	return {
 		definition: lines.join("\n"),
 		nodeMeta,
 	};
 }
 
-function buildEdgeList(branches, sanitizedMap, mode, visitedTransitions) {
+function buildEdgeList(branches, sanitizedMap) {
 	const edges = [];
 	const seen = new Set();
 	for (const [branchId, branch] of Object.entries(branches)) {
 		const from = sanitizedMap.get(branchId);
 		if (!from || !branch?.choices) continue;
 		for (const choice of branch.choices) {
-			const targets = [];
 			if (choice.next) {
-				targets.push(choice.next);
+				const to = sanitizedMap.get(choice.next);
+				if (to) {
+					const key = `${from}->${to}`;
+					if (!seen.has(key)) {
+						seen.add(key);
+						edges.push({ from, to });
+					}
+				}
 			}
 			if (choice.roll) {
-				if (choice.roll.ok) targets.push(choice.roll.ok);
-				if (choice.roll.fail) targets.push(choice.roll.fail);
-			}
-			for (const targetId of targets) {
-				const to = sanitizedMap.get(targetId);
-				if (!to) continue;
-				const key = `${from}->${to}`;
-				if (seen.has(key)) continue;
-
-				const visited = visitedTransitions.has(createTransitionKey(branchId, targetId));
-				if (mode === "visited" && !visited) {
-					continue;
+				if (choice.roll.ok) {
+					const to = sanitizedMap.get(choice.roll.ok);
+					if (to) {
+						const key = `${from}->${to}`;
+						if (!seen.has(key)) {
+							seen.add(key);
+							edges.push({ from, to });
+						}
+					}
 				}
-
-				seen.add(key);
-				edges.push({
-					from,
-					to,
-					status: visited ? "visited" : "locked",
-				});
+				if (choice.roll.fail) {
+					const to = sanitizedMap.get(choice.roll.fail);
+					if (to) {
+						const key = `${from}->${to}`;
+						if (!seen.has(key)) {
+							seen.add(key);
+							edges.push({ from, to });
+						}
+					}
+				}
 			}
 		}
 	}
@@ -168,26 +122,16 @@ function buildEdgeList(branches, sanitizedMap, mode, visitedTransitions) {
 function buildClassDefLines(classAssignments) {
 	const lines = [];
 	const classDefs = [["default", "fill:#141a31,stroke:#49d2ff,stroke-width:2px"]];
-	for (const [className, definition] of Object.entries(NODE_CLASS_DEFS)) {
+	const definitions = [["current", "stroke:#63f5c0,stroke-width:3px"]];
+	for (const [className, definition] of definitions) {
 		classDefs.push([className, definition]);
 	}
 	for (const [name, definition] of classDefs) {
 		lines.push(`  classDef ${name} ${definition};`);
 	}
-	for (const [status, set] of Object.entries(classAssignments)) {
-		if (!set || !set.size) continue;
-		lines.push(`  class ${Array.from(set).join(",")} ${status};`);
+	if (classAssignments.current.size) {
+		lines.push(`  class ${Array.from(classAssignments.current).join(",")} current;`);
 	}
-	return lines;
-}
-
-function buildLinkStyleLines(edgeEntries) {
-	const lines = [];
-	edgeEntries.forEach((edge, index) => {
-		const style = LINK_STYLE_DEFS[edge.status];
-		if (!style) return;
-		lines.push(`  linkStyle ${index} ${style};`);
-	});
 	return lines;
 }
 
