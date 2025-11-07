@@ -328,7 +328,7 @@ Title: Power Through (C19)
 Branch: C19
 Description: You choose the direct approach through a heavily packed ice field. There is no way around; it is a test of raw force. If your vessel has the power, you might make it. If not, luck will decide.
 Choice: display=[(Plow through with power)]; roll=luck, dice=2d6, target=12, ok=C21, fail=C22
-Choice: display=[(Use powerful vessel)]; next=C20; optional=has(Medium Carcass Trawler)
+Choice: display=[(Use powerful vessel)]; optional=has(Medium Carcass Trawler); next=C20
 
 Title: Icebreaker Triumph (C20)
 Branch: C20
