@@ -71,6 +71,7 @@ export class StoryGraphView {
 		this.graphRoot = null;
 		this.currentRenderToken = null;
 		this.isRendering = false;
+		this.currentIndicator = null;
 
 		this.panOrigin = null;
 		this.activePointerId = null;
@@ -207,6 +208,7 @@ export class StoryGraphView {
 		this.graphRoot.innerHTML = renderResult.svg;
 		this.applyScale();
 		this.applyNodeTooltips(graph.nodeMeta);
+		this.renderCurrentIndicator(graph);
 		if (typeof renderResult.bindFunctions === "function") {
 			renderResult.bindFunctions(this.graphRoot);
 		}
@@ -320,10 +322,52 @@ export class StoryGraphView {
 		}
 	}
 
+	renderCurrentIndicator(graph) {
+		if (this.currentIndicator && this.currentIndicator.parentNode) {
+			this.currentIndicator.parentNode.removeChild(this.currentIndicator);
+		}
+		this.currentIndicator = null;
+
+		const sanitizedId = graph?.currentNodeId;
+		if (!sanitizedId || !this.graphRoot) {
+			return;
+		}
+		const svg = this.graphRoot.querySelector("svg");
+		if (!svg) return;
+		const nodeGroups = svg.querySelectorAll("g.node");
+		let targetGroup = null;
+		for (const group of nodeGroups) {
+			if (normalizeRenderNodeId(group) === sanitizedId) {
+				targetGroup = group;
+				break;
+			}
+		}
+		if (!targetGroup) {
+			return;
+		}
+		const center = getNodeCenter(targetGroup);
+		if (!center) {
+			return;
+		}
+		let labelY = center.y - 30;
+		if (!Number.isFinite(labelY) || labelY < 12) {
+			labelY = center.y + 24;
+		}
+		const indicator = document.createElementNS(SVG_NS, "text");
+		indicator.classList.add("graph-current-indicator");
+		indicator.setAttribute("x", center.x.toFixed(2));
+		indicator.setAttribute("y", labelY.toFixed(2));
+		indicator.setAttribute("text-anchor", "middle");
+		indicator.textContent = "You Are Here";
+		svg.appendChild(indicator);
+		this.currentIndicator = indicator;
+	}
+
 	clearGraph() {
 		if (this.graphRoot) {
 			this.graphRoot.innerHTML = "";
 		}
+		this.currentIndicator = null;
 	}
 
 	ensureGraphRoot() {
@@ -370,6 +414,32 @@ function normalizeRenderNodeId(group) {
 		return rawId.slice("flowchart-".length);
 	}
 	return rawId;
+}
+
+function getNodeCenter(group) {
+	if (!group) return null;
+	const transform = group.getAttribute("transform") || "";
+	const translateMatch = transform.match(/translate\(([^)]+)\)/i);
+	if (translateMatch) {
+		const parts = translateMatch[1].split(/[, ]+/).filter(Boolean);
+		const x = parseFloat(parts[0]);
+		const y = parseFloat(parts[1] ?? "0");
+		if (Number.isFinite(x) && Number.isFinite(y)) {
+			return { x, y };
+		}
+	}
+	try {
+		const bbox = group.getBBox();
+		if (bbox && Number.isFinite(bbox.x) && Number.isFinite(bbox.y)) {
+			return {
+				x: bbox.x + bbox.width / 2,
+				y: bbox.y + bbox.height / 2,
+			};
+		}
+	} catch (_) {
+		// ignore
+	}
+	return null;
 }
 
 async function loadMermaid() {

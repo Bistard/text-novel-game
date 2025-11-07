@@ -21,6 +21,7 @@ export function buildMermaidGraphDefinition({
 	const classAssignments = {
 		current: new Set(),
 	};
+	let currentNodeId = null;
 
 	for (const branchId of allIds) {
 		const sanitized = createMermaidId(branchId, usedSanitized);
@@ -40,6 +41,7 @@ export function buildMermaidGraphDefinition({
 
 		if (currentBranchId && branchId === currentBranchId) {
 			classAssignments.current.add(sanitized);
+			currentNodeId = sanitized;
 		}
 
 		nodeMeta.set(sanitized, { id: branchId, label, tooltip });
@@ -70,6 +72,7 @@ export function buildMermaidGraphDefinition({
 	return {
 		definition: lines.join("\n"),
 		nodeMeta,
+		currentNodeId,
 	};
 }
 
