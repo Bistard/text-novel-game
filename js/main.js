@@ -488,11 +488,6 @@ function handleUndoClick() {
 		return;
 	}
 
-	const secondPrompt = t("messages.undoPromptSecondary");
-	if (!window.confirm(secondPrompt)) {
-		return;
-	}
-
 	const undone = engine.undoLastChoice();
 	if (!undone) {
 		window.alert(t("messages.undoUnavailable"));

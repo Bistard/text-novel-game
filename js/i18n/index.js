@@ -71,7 +71,6 @@ const translations = {
 				"Returning home will leave the current story session. Do you want to go back to the home screen?",
 			undoPromptPrimary:
 				"Every choice carries weight; once a move is made, there's no taking it back. Do you still want to try to undo your last decision?",
-			undoPromptSecondary: "Are you absolutely sure you want to 'undo' your previous move?",
 			undoUnavailable: "There's no choice to undo right now.",
 			needRunningGameSave: "A game needs to be running before it can be saved.",
 			unableToCaptureState: "Unable to capture the current game state for saving.",
@@ -191,7 +190,6 @@ const translations = {
 				"Retourner à l'accueil quittera la session en cours. Voulez-vous revenir à l'écran d'accueil ?",
 			undoPromptPrimary:
 				"Chaque choix compte ; une fois fait, il n'y a pas de retour en arrière. Voulez-vous tout de même annuler votre dernière décision ?",
-			undoPromptSecondary: "Êtes-vous absolument certain de vouloir annuler votre précédente action ?",
 			undoUnavailable: "Aucun choix à annuler pour le moment.",
 			needRunningGameSave: "Une partie doit être en cours avant de pouvoir être sauvegardée.",
 			unableToCaptureState: "Impossible de capturer l'état actuel de la partie pour la sauvegarder.",
@@ -307,7 +305,6 @@ const translations = {
 			restartConfirm: "重新开始会清除当前进度并回到开头。确定要重新开始吗？",
 			returnHomeConfirm: "返回主页将退出当前剧情。是否回到主界面？",
 			undoPromptPrimary: "每一次选择都很重要，一旦做出就无法回头。仍然要撤销上一决定吗？",
-			undoPromptSecondary: "确定要撤销之前的行动吗？",
 			undoUnavailable: "当前没有可撤销的选择。",
 			needRunningGameSave: "需要先开始游戏才能进行保存。",
 			unableToCaptureState: "无法获取当前游戏状态，保存失败。",
