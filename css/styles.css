@@ -97,6 +97,58 @@ body::before {
 	flex-wrap: wrap;
 }
 
+.home-team {
+	display: grid;
+	gap: 12px;
+	margin-top: 8px;
+	padding: 18px;
+	text-align: left;
+	border-radius: calc(var(--radius) / 1.2);
+	background: linear-gradient(135deg, rgba(20, 28, 48, 0.6), rgba(10, 16, 32, 0.35));
+	border: 1px solid rgba(73, 210, 255, 0.18);
+	box-shadow: inset 0 0 22px rgba(7, 12, 28, 0.4);
+}
+
+.home-team-title {
+	margin: 0;
+	font-size: 1.05rem;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--fg-muted);
+}
+
+.home-team-list {
+	display: grid;
+	gap: 10px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.home-team-member {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 10px;
+	flex-wrap: wrap;
+}
+
+.home-team-name {
+	font-weight: 600;
+	letter-spacing: 0.04em;
+}
+
+.home-team-email {
+	color: var(--accent);
+	text-decoration: none;
+	word-break: break-word;
+}
+
+.home-team-email:hover,
+.home-team-email:focus-visible {
+	text-decoration: underline;
+}
+
 #app {
 	display: flex;
 	flex-direction: column;
