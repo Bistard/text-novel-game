@@ -55,7 +55,7 @@
 
 /**
  * @typedef {Object} ConditionDefinition
- * @property {"visited-all"|"visited-any"|"inventory-all"|"inventory-any"} kind
+ * @property {"visited-all"|"visited-any"|"visited-none"|"inventory-all"|"inventory-any"} kind
  * @property {string[]} values
  * @property {string} raw
  */

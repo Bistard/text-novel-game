@@ -127,6 +127,7 @@ A rolled choice does not need `next`, but you may still include it if the roll i
 |------------------|------|-----------|
 | `visited`, `visited-all` | `visited-all` | True only if the player has already visited **every** listed branch ID. |
 | `visitedAny`, `visited-any` | `visited-any` | True if **any** listed branch ID has been visited. |
+| `visitedNone`, `visited-none`, `not-visited`, `unvisited` | `visited-none` | True if **none** of the listed branch IDs have been visited yet. |
 | `has`, `inventory`, `has-all` | `inventory-all` | True when the inventory contains **all** listed item names (count ≥ 1). |
 | `hasAny`, `inventory-any` | `inventory-any` | True when the inventory contains at least **one** of the listed items. |
 

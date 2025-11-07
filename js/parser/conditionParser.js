@@ -38,6 +38,14 @@ export function parseCondition(raw, lineNumber, directive) {
 		case "visited-any":
 		case "visited_any":
 			return { kind: "visited-any", values: tokens, raw: value };
+		case "visitednone":
+		case "visited-none":
+		case "visited_none":
+		case "notvisited":
+		case "not-visited":
+		case "not_visited":
+		case "unvisited":
+			return { kind: "visited-none", values: tokens, raw: value };
 		case "has":
 		case "hasall":
 		case "inventory":

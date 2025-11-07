@@ -25,6 +25,8 @@ export function evaluateCondition(condition, subject) {
 			return values.every((id) => hasVisited(subject.visited, id));
 		case "visited-any":
 			return values.some((id) => hasVisited(subject.visited, id));
+		case "visited-none":
+			return values.every((id) => !hasVisited(subject.visited, id));
 		case "inventory-all":
 			return values.every((item) => hasInventoryItem(subject.inventory, item));
 		case "inventory-any":
