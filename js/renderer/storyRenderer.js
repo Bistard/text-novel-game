@@ -68,10 +68,13 @@ export class StoryRenderer {
 		}
 	}
 
-	refreshGraphView() {
-		if (this.graphView) {
-			this.graphView.refresh();
+	refreshGraphView(options = {}) {
+		if (!this.graphView) return;
+		const focusCurrent = Boolean(options && options.focusCurrent);
+		if (focusCurrent && typeof this.graphView.requestCenterOnCurrent === "function") {
+			this.graphView.requestCenterOnCurrent();
 		}
+		this.graphView.refresh();
 	}
 
 	/**

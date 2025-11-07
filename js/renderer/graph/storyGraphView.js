@@ -72,6 +72,7 @@ export class StoryGraphView {
 		this.currentRenderToken = null;
 		this.isRendering = false;
 		this.currentIndicator = null;
+		this.pendingCenterOnCurrent = false;
 
 		this.panOrigin = null;
 		this.activePointerId = null;
@@ -133,6 +134,11 @@ export class StoryGraphView {
 
 	refresh() {
 		this.render();
+	}
+
+	/** Request centering the viewport on the current node on next render. */
+	requestCenterOnCurrent() {
+		this.pendingCenterOnCurrent = true;
 	}
 
 	render() {
@@ -209,11 +215,47 @@ export class StoryGraphView {
 		this.applyScale();
 		this.applyNodeTooltips(graph.nodeMeta);
 		this.renderCurrentIndicator(graph);
+		// If a center request is pending (e.g., overlay was just opened), center now
+		if (this.pendingCenterOnCurrent) {
+			try {
+				this.centerOnCurrentNode(graph);
+			} finally {
+				this.pendingCenterOnCurrent = false;
+			}
+		}
 		if (typeof renderResult.bindFunctions === "function") {
 			renderResult.bindFunctions(this.graphRoot);
 		}
 
 		this.isRendering = false;
+	}
+
+	centerOnCurrentNode(graph) {
+		if (!this.container || !this.graphRoot) return;
+		const sanitizedId = graph?.currentNodeId;
+		if (!sanitizedId) return;
+		const svg = this.graphRoot.querySelector("svg");
+		if (!svg) return;
+		const nodes = svg.querySelectorAll("g.node");
+		let target = null;
+		for (const g of nodes) {
+			if (normalizeRenderNodeId(g) === sanitizedId) {
+				target = g;
+				break;
+			}
+		}
+		if (!target) return;
+		const center = getNodeCenter(target);
+		if (!center) return;
+		const scale = this.scale || 1;
+		const targetX = center.x * scale;
+		const targetY = center.y * scale;
+		const viewportW = this.container.clientWidth || 0;
+		const viewportH = this.container.clientHeight || 0;
+		const nextLeft = Math.max(0, targetX - viewportW / 2);
+		const nextTop = Math.max(0, targetY - viewportH / 2);
+		this.container.scrollLeft = nextLeft;
+		this.container.scrollTop = nextTop;
 	}
 
 	handleWheel(event) {

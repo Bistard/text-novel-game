@@ -177,9 +177,10 @@ function openGraphOverlay() {
 		elements.graphOpen.setAttribute("aria-expanded", "true");
 		elements.graphOpen.setAttribute("aria-pressed", "true");
 	}
-	if (typeof engine.renderer?.refreshGraphView === "function") {
-		engine.renderer.refreshGraphView();
-	}
+    if (typeof engine.renderer?.refreshGraphView === "function") {
+        // Center the view on the current node when opening
+        engine.renderer.refreshGraphView({ focusCurrent: true });
+    }
 	if (elements.graphOverlay instanceof HTMLElement) {
 		elements.graphOverlay.focus();
 	}
