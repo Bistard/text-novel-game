@@ -1002,137 +1002,171 @@ body.graph-open {
 	pointer-events: none;
 }
 
-.change-overlay .roll-overlay-dialog {
-	display: grid;
-	gap: 18px;
-	padding: clamp(28px, 5vw, 36px);
-}
-
-.change-overlay-header {
-	display: grid;
-	gap: 6px;
-	text-align: center;
-}
-
-.change-overlay-title {
-	margin: 0;
-	font-size: 1.45rem;
-	font-weight: 700;
-	letter-spacing: 0.1em;
-	text-transform: uppercase;
-	color: var(--accent);
-}
-
-.change-overlay-subtitle {
-	margin: 0;
-	color: var(--fg-muted);
-	font-size: 0.95rem;
-	letter-spacing: 0.04em;
-}
-
-.change-overlay-list {
-	display: grid;
-	gap: 12px;
-	width: 100%;
-}
-
-.change-overlay-section {
-	margin: 6px 0 0;
-	color: var(--accent);
-	font-size: 0.75rem;
-	font-weight: 600;
-	text-transform: uppercase;
-	letter-spacing: 0.12em;
-}
-
-.change-overlay-entry {
+.change-toast-host {
+	position: fixed;
+	right: clamp(16px, 4vw, 32px);
+	bottom: clamp(16px, 4vw, 32px);
 	display: flex;
-	align-items: baseline;
-	justify-content: space-between;
-	gap: 18px;
-	padding: 14px 20px;
-	border-radius: calc(var(--radius) / 1.4);
-	background: linear-gradient(135deg, rgba(18, 26, 44, 0.9), rgba(18, 22, 40, 0.65));
-	border: 1px solid rgba(73, 210, 255, 0.25);
-	box-shadow: 0 16px 38px rgba(5, 12, 28, 0.38);
-	position: relative;
-	overflow: hidden;
-	opacity: 1;
-	transform: none;
-}
-
-.change-overlay-entry::before {
-	content: "";
-	position: absolute;
-	inset: 0;
-	background: radial-gradient(ellipse at top, rgba(99, 245, 192, 0.18), transparent 60%);
-	opacity: 0;
-	transform: translateY(-20%);
-	transition: opacity var(--transition), transform var(--transition);
+	flex-direction: column;
+	gap: 14px;
+	z-index: 2600;
 	pointer-events: none;
 }
 
-.change-overlay-entry.gain::before {
-	background: radial-gradient(ellipse at top, rgba(73, 210, 255, 0.25), transparent 65%);
+.change-toast {
+	width: min(340px, 92vw);
+	padding: clamp(16px, 3vw, 22px);
+	border-radius: calc(var(--radius) / 1.15);
+	background: rgba(11, 15, 28, 0.92);
+	backdrop-filter: blur(22px);
+	border: 1px solid rgba(73, 210, 255, 0.2);
+	box-shadow: 0 22px 48px rgba(5, 10, 24, 0.42);
+	opacity: 0;
+	transform: translateY(12px) scale(0.96);
+	transition:
+		opacity 160ms ease,
+		transform 220ms cubic-bezier(0.22, 0.8, 0.22, 1);
+	pointer-events: auto;
 }
 
-.change-overlay-entry.loss::before {
-	background: radial-gradient(ellipse at top, rgba(255, 107, 107, 0.28), transparent 65%);
+.change-toast.visible {
+	opacity: 1;
+	transform: translateY(0) scale(1);
 }
 
-.change-overlay-label {
+.change-toast.leaving {
+	opacity: 0;
+	transform: translateY(8px) scale(0.96);
+}
+
+.change-toast-header {
+	display: grid;
+	gap: 4px;
+	margin-bottom: 12px;
+}
+
+.change-toast-title {
 	font-size: 1rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.12em;
+	color: var(--accent);
+}
+
+.change-toast-source {
+	font-size: 0.78rem;
+	text-transform: uppercase;
+	letter-spacing: 0.12em;
+	color: var(--fg-muted);
+}
+
+.change-toast-body {
+	display: grid;
+	gap: 10px;
+}
+
+.change-toast-section {
+	display: grid;
+	gap: 6px;
+}
+
+.change-toast-section-title {
+	font-size: 0.82rem;
+	text-transform: uppercase;
+	letter-spacing: 0.14em;
+	color: rgba(241, 244, 255, 0.64);
+}
+
+.change-toast-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: grid;
+	gap: 6px;
+}
+
+.change-toast-entry {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 14px;
+	padding: 10px 14px;
+	border-radius: calc(var(--radius) / 1.6);
+	background: linear-gradient(135deg, rgba(16, 24, 44, 0.95), rgba(16, 20, 40, 0.75));
+	border: 1px solid rgba(73, 210, 255, 0.22);
+	box-shadow: 0 16px 32px rgba(4, 10, 24, 0.3);
+	position: relative;
+	overflow: hidden;
+}
+
+.change-toast-entry::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background: radial-gradient(ellipse at top, rgba(99, 245, 192, 0.24), transparent 70%);
+	opacity: 0;
+	transform: translateY(-18%);
+	transition: opacity 160ms ease, transform 220ms ease;
+	pointer-events: none;
+}
+
+.change-toast-entry.gain::before {
+	background: radial-gradient(ellipse at top, rgba(73, 210, 255, 0.28), transparent 70%);
+}
+
+.change-toast-entry.loss::before {
+	background: radial-gradient(ellipse at top, rgba(255, 107, 107, 0.34), transparent 70%);
+}
+
+.change-toast-label {
+	font-size: 0.95rem;
 	font-weight: 600;
 	letter-spacing: 0.04em;
 }
 
-.change-overlay-delta {
-	font-size: 1.05rem;
+.change-toast-delta {
+	font-size: 1rem;
 	font-weight: 700;
 	color: var(--fg);
-	text-shadow: 0 0 12px rgba(73, 210, 255, 0.2);
+	text-shadow: 0 0 14px rgba(73, 210, 255, 0.28);
 }
 
-.change-overlay-entry.gain .change-overlay-delta {
+.change-toast-entry.gain .change-toast-delta {
 	color: var(--accent-strong);
-	text-shadow: 0 0 18px rgba(99, 245, 192, 0.45);
+	text-shadow: 0 0 18px rgba(99, 245, 192, 0.48);
 }
 
-.change-overlay-entry.loss .change-overlay-delta {
+.change-toast-entry.loss .change-toast-delta {
 	color: var(--danger);
-	text-shadow: 0 0 18px rgba(255, 107, 107, 0.45);
+	text-shadow: 0 0 18px rgba(255, 107, 107, 0.52);
 }
 
-.change-overlay-entry.animate {
+.change-toast.animate .change-toast-entry {
 	opacity: 0;
-	transform: translateY(16px) scale(0.96);
-	animation: change-overlay-rise 440ms cubic-bezier(0.24, 0.9, 0.32, 1.1) forwards;
-	animation-delay: var(--change-overlay-delay, 0ms);
+	transform: translateY(12px) scale(0.94);
+	animation: change-toast-rise 360ms cubic-bezier(0.23, 0.82, 0.22, 1.04) forwards;
+	animation-delay: var(--change-toast-delay, 0ms);
 }
 
-.change-overlay-entry.animate::before {
+.change-toast.animate .change-toast-entry::before {
 	opacity: 1;
 	transform: translateY(0);
 }
 
-.change-overlay-entry.animate .change-overlay-delta {
-	animation: change-overlay-pulse 520ms cubic-bezier(0.25, 0.85, 0.38, 1.15) forwards;
-	animation-delay: calc(var(--change-overlay-delay, 0ms) + 80ms);
+.change-toast.animate .change-toast-entry .change-toast-delta {
+	animation: change-toast-pulse 420ms cubic-bezier(0.28, 0.82, 0.32, 1.1) forwards;
+	animation-delay: calc(var(--change-toast-delay, 0ms) + 80ms);
 }
 
-.change-overlay-continue {
-	margin-top: 6px;
-}
-
-@keyframes change-overlay-rise {
+@keyframes change-toast-rise {
 	0% {
 		opacity: 0;
-		transform: translateY(24px) scale(0.95);
+		transform: translateY(20px) scale(0.9);
 	}
 
 	60% {
 		opacity: 1;
-		transform: translateY(-4px) scale(1.015);
+		transform: translateY(-6px) scale(1.02);
 	}
 
 	100% {
@@ -1141,14 +1175,14 @@ body.graph-open {
 	}
 }
 
-@keyframes change-overlay-pulse {
+@keyframes change-toast-pulse {
 	0% {
-		transform: scale(0.85);
-		opacity: 0.4;
+		transform: scale(0.88);
+		opacity: 0.5;
 	}
 
 	55% {
-		transform: scale(1.15);
+		transform: scale(1.18);
 		opacity: 1;
 	}
 
@@ -1163,13 +1197,14 @@ body.graph-open {
 		animation: none;
 	}
 
-	.change-overlay-entry.animate {
+	.change-toast {
+		transition: none;
+	}
+
+	.change-toast.animate .change-toast-entry,
+	.change-toast.animate .change-toast-entry .change-toast-delta {
 		animation: none;
 		opacity: 1;
 		transform: none;
-	}
-
-	.change-overlay-entry.animate .change-overlay-delta {
-		animation: none;
 	}
 }

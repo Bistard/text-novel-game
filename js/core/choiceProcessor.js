@@ -78,13 +78,13 @@ export async function processChoiceSelection({ choice, state, renderer, runRollI
 		state.appendJournal(journalEntry);
 		if (renderer && typeof renderer.showChangeSummary === "function") {
 			try {
-				await renderer.showChangeSummary({
+				renderer.showChangeSummary({
 					stats: appliedStats,
 					inventory: appliedInventoryEffects,
 					sourceLabel: choice.text,
 				});
 			} catch (error) {
-				console.error("Change overlay failed:", error);
+				console.error("Change notification failed:", error);
 			}
 		}
 	}

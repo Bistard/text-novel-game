@@ -230,14 +230,22 @@ export class StoryRenderer {
 	}
 
 	/**
-	 * Displays the overlay summarising stat or inventory updates.
+	 * Displays a non-blocking summary of stat or inventory updates.
 	 * @param {{ stats?: { stat: string, delta: number }[], inventory?: { item: string, delta: number }[], sourceLabel?: string|null }} [changes]
 	 */
-	async showChangeSummary(changes = {}) {
-		this.cancelCurrentAnimation();
-		this.setSkipButtonVisibility(false);
-		if (!this.changeOverlay) return;
-		await this.changeOverlay.show(changes);
+	showChangeSummary(changes = {}) {
+		if (!this.changeOverlay || typeof this.changeOverlay.show !== "function") {
+			return;
+		}
+		try {
+			const result = this.changeOverlay.show(changes);
+			if (result && typeof result.catch === "function") {
+				result.catch((error) => console.error("Change notification failed:", error));
+			}
+			return result;
+		} catch (error) {
+			console.error("Change notification failed:", error);
+		}
 	}
 
 	prefersReducedMotion() {
