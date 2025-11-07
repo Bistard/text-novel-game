@@ -16,19 +16,27 @@ Choice: display=[Put the manual away]; next=A3
 
 Title: Choose Your Vessel (A3)
 Branch: A3
-Description: Years pass, you are now a young and able adult employed at the biggest fishing company on the planet. You are excited as you are finally given the opportunity to use the company’s vessels for a special mission. This mission in question is meant as a test from your boss. He gives you a selection of vessels.
+Description: 
+Years pass, you are now a young and able adult employed at the biggest fishing company on the planet — AquaFrontier Corporation. As the leading provider of celestial seafood, they control almost all interplanetary food logistics within your solar system.  
+Your title reads Junior Expedition Specialist, though most call you simply "the fisher who dreams of the stars." You started from the docks, cleaning hulls and checking oxygen tanks, until your skill with both nets and engines caught the management’s attention.  
+Your supervisor, Director Halden, stands beside the company’s observation deck, looking out over a sky full of floating docks and orbital warehouses. “You’ve done well,” he says, his tone measured yet proud. “The company has been monitoring the steady decline in spacefish yields. The Board approved an independent expedition to find alternative food sources before the situation worsens.”  
+He slides a holo-tablet toward you — two vessel profiles appear, each glowing in pale blue light. “This will be your first solo assignment. Treat it as a test of your endurance and adaptability. Choose your ship wisely.”  
 Choice: display=[A Swift Agile Ship]; next=A4; item=Light Fishing Boat+
 Choice: display=[A Powerful Sturdy Ship]; next=A4; item=Medium Carcass Trawler+
 
 Title: Hunt Begins (A4)
 Branch: A4
-Description: You take your vessel to the local space in your solar system and go searching for the target of your mission, the beast of your solar system, the titanic arapaima. The species grow to be as big as adult blue whales in their later years.
-Choice: display=[Next]; next=A5; stat=stamina-1
+Description: 
+As you walk through the hangar, you can feel the hum of plasma engines and the faint salt in the recycled air. The shipyard is alive with mechanics, drones, and other expedition crews preparing for their own voyages.  
+You pass by a large display board: "AquaFrontier: Sustaining Life Beyond the Sea."
+It’s the company’s motto, a promise to keep civilization fed as natural ecosystems collapse. You’ve seen the numbers — the interstellar fish population has dropped by 32% in the last decade. Food shortages are not yet critical, but everyone knows that the crisis is coming.  
+A familiar voice buzzes through your comms — Director Halden again. “Your mission is to locate and capture a Titanic Arapaima specimen. Bring back proof of success — or the entire carcass if possible. The company’s future depends on it.”  
+Choice: display=[Next]; next=A5
 
 Title: Alpha Arapaima (A5)
 Branch: A5
 Description: You search and search through between planets and asteroid belts. Nothing. You say that you have to cut your losses and head home. However, a massive shadow blocks out the sun slowly but powerfully moving across the black expanse of space. That's it. It is the king of its species, the largest in history, an alpha titan arapaima. Frantically you search for your gear to catch it.
-Choice: display=[Next]; next=A6; stat=stamina-1
+Choice: display=[Next]; next=A6
 
 Title: Pick Your Gear (A6)
 Branch: A6
@@ -55,13 +63,14 @@ Choice: display=[(Roll 2d6 to determine your luck)]; roll=luck, dice=2d6, target
 Title: Wounded Titan (A10)
 Branch: A10
 Description: You manage to get a good grip on the beast. It fights relentlessly and trashes about. It breaks free. However, not unscathed. You retrieve your gear and there is a massive scale. You detach it and bring it back to the company proving that you are at least good enough to damage the biggest fish in the planet’s history. You can choose to attack the beast again using brute force, or rely on your skills for a calm, calculated strike.
-Choice: display=[Use brute force (cost 3 stamina)]; next=A11b; stat=stamina-3
+Choice: display=[Use brute force (cost 2 stamina)]; next=A11b; stat=stamina-2
 Choice: display=[(Attempt a calculated strike)]; roll=luck, dice=2d6, target=12, ok=A11b, fail=A11a
+Choice: display=[Charge head-on recklessly]; next=A11A
 
 Title: Strained Victory (A11a)
 Branch: A11a
 Description: You manage to hit the beast, though not with the precision you hoped for. The blow lands, injuring it enough to stop its thrashing. As the fight ends, your exhaustion takes hold, every muscle screaming from the strain. Though victorious, your body feels heavy — your stamina is fading.
-Choice: display=[Next]; next=A12; stat=stamina-4
+Choice: display=[Next]; next=A12; stat=stamina-3
 
 Title: Triumphant Catch (A11b)
 Branch: A11b
@@ -76,8 +85,8 @@ Choice: display=[Next]; next=A13; stat=stamina+3
 Title: A Galaxy Mission (A13)
 Branch: A13
 Description: “Here’s the graph tracking the fish population over the past decades. The higher-ups predict that with this downward trend, the planet will be in the greatest food shortage in its entire history!” He asks you to go to other planets in the galaxy to see if they have such a problem and to see how they are dealing with it in hopes to bring back a solution and most importantly, to find the root cause of this decline in population of the celestial aquatic life.
-Choice: display=[Warp travel to Mossara]; next=B1; stat=stamina-2
-Choice: display=[Warp travel to Glaciera]; next=C1; stat=stamina-2
+Choice: display=[Warp travel to Mossara]; next=B1
+Choice: display=[Warp travel to Glaciera]; next=C1
 
 Title: Mossara Arrival (B1)
 Branch: B1
