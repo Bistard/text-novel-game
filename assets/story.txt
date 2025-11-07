@@ -355,3 +355,146 @@ Branch: C24
 Description: You return to the Glaciera base under a sky thick with auroras. The people gather, celebrating the averted disaster. The gang leader claps you on the back. “Not bad, outsider.” Before you depart, someone hands you a scroll: an old record that mentions sightings of a great being near a black hole—massive enough to seed ecosystems in its wake. You board your ship, purpose renewed.
 Choice: display=[Head to Mossara]; optional=visited-any(B1); next=B1
 Choice: display=[Head to the Black Hole]; valid=visited-any(B1); next=D1
+ 
+Title: Before the Black Hole
+Branch: D1
+Description: From what you’ve been told on the other planets, it seems that finding the Leviathan could give you a solution to the food shortage issue. However, you have experienced quite a lot during your journey across Mossara and Glaciera. You could head back home and share your experiences and find a solution amongst them.
+Choice: display=[Enter the Black Hole]; next=D3
+Choice: display=[Return Home]; next=D2
+
+Title: Returning Home
+Branch: D2
+Description: You decide to return home with the knowledge you have collected during your travels through the various planets. Recounting your experiences, you and your peers back home try to come up with potential solutions. You eventually settle on one, it will stave off the crisis for a couple decades though if things don’t change an even worse crisis may await. You have a nagging feeling that if you had taken one more step forward, you would find a better solution.
+Choice: display=[Bad End]; next=Ending
+
+Title: Entering the Black Hole
+Branch: D3
+Description: You fly into the black hole. The moment you cross the horizon, your ship shakes from an intense turbulence. After what simultaneously feels like an eternity and a blink, you find yourself in what appears to be trashheap of a world. A mix of various types of ruined buildings, machines, and vegetation cover the land and are scattered in the air. Far in the distance, you can spot a massive towering mass, when you do, a nostalgic flash and a whisper in your mind echoes, “here”.
+Choice: display=[Head towards the distant shape]; next=D4
+
+Title: Flying Over
+Branch: D4
+Description: Passing over a crater in fields of trash, you think you spot a light shining in it. When you look again, you can’t seem to spot it.
+Choice: display=[Go to the crater and take a closer look]; next=D5
+Choice: display=[Continue flying]; next=D17
+ 
+Title: Crater Investigation
+Branch: D5
+Description: Hovering over the crater you try to pinpoint what you saw while flying. However it is difficult to make out specifics amongst the trash. What you do spot though is the trash shuffling as if there is something swimming underneath. The movement seems to be limited to only one side of the crater, but it may come over if it detects something. You determine that you won’t have enough time to safely get to the shining object you saw while flying unless you either distract whatever is underneath or know exactly where it is.
+Choice: display=[Create a distraction with Large Bait]; valid=has(Large Bait); next=D6
+Choice: display=[Create a distraction]; roll=luck, dice=2d6, target=9, ok=D7, fail=D8
+Choice: display=[Search with Flood Light]; valid=has(Flood Light); next=D9
+Choice: display=[Try a thorough search]; roll=luck, dice=2d6, target=9, ok=D10, fail=D11
+
+Title: Bait Great Success
+Branch: D6
+Description: After launching over pieces of the Large bait from your ship, you watch them sink into the ground as the shuffling trash moves towards each piece of bait. After a moment of silence, you see the underground movement calmly travel outside of the crater. With it gone, you can look through trash with peace of mind. A Great Success.
+Choice: display=[Search through the trash]; stat=luck+1; next=D10
+
+Title: Bait Success
+Branch: D7
+Description: Launching pieces of trash outside of the crater, you watch as the shuffling movement underground speeds out of the crater in the direction you sent the pieces you launched. Now you have time to look through the trash, though the uncertainty of when whatever was underneath will come back is unnerving.
+Choice: display=[Search through the trash]; next=D10
+
+Title: Bait Fail
+Branch: D8
+Description: You try to launch pieces of the garbage around you to distract the shuffling trash. However, it seems that one of your shots landed a bit too close to you and your ship. The ground underneath you shakes and you start to sink into the trash. It seems that you will be joining other pieces of the galaxy in this graveyard.
+Choice: display=[Bad End]; next=Ending
+ 
+Title: Discovery in the trash Great Success
+Branch: D9
+Description: Using the ship’s flood lights you’re able to get a much better look of the trash scattered around. As you scan through the rubble with ease, the light catches upon a reflective surface. You’ve found what you’re looking for. A slow blinking light shines above a slightly ajar metallic door. What you saw must have been the light’s reflection off the door. Taking a peek behind the door, you see a small office room with a computer inside. You determine that an old ship of some kind must have been buried underneath the trash.
+Choice: display=[Enter the room]; next=D12
+Choice: display=[Leave the crater and resume flying]; next=D17
+
+Title: Discovery in the trash
+Branch: D10
+Description: As you search through the trash, you find what you have been looking for. A slow blinking light shines above a slightly ajar metallic door. What you saw must have been the light’s reflection off the door. Taking a peek behind the door, you see a small office room with a computer inside. You determine that an old ship of some kind must have been buried underneath the trash.
+Choice: display=[Enter the room]; next=D12
+Choice: display=[Leave the crater and resume flying]; next=D17
+
+Title: Discovery Fail
+Branch: D11
+Description: Unable to discern the contents of the trash and rubble, you take your leave from the crater and resume your original plan.
+Choice: display=[Continue flying]; next=D17
+
+Title: Inside the old ship
+Branch: D12
+Description: With dust blanketing every surface you can tell that it has been ages since someone last passed through. The only movement in the room are your own steps and the blinking lights of a sleeping computer. Awakening the computer from its slumber, the screen lights up and reveals the ship logs of the person who came before you.
+Choice: display=[Read the logs]; next=D13
+ 
+Title: Log 1
+Branch: D13
+Description: “We have finally caught up to the great Leviathan! Though with its size it would be hard to lose track of it. Travel has been smooth, and fortunately the Leviathan seems to produce an unending supply of nutrition, so just like the celestial aquatic creatures that follow it, we’ll also be able to without worry!” The log starts shifting from a ship log to being research notes about the Leviathan.
+Choice: display=[Continue reading]; next=D14
+Choice: display=[Stop reading]; next=D16
+
+Title: Log 2
+Branch: D14
+Description: “It turns out rather than the Leviathan producing its own food, it is sustained off of starlight! Everything that is produced is simply a byproduct of the process! That explains why it is seemingly immortal. Its presence must help maintain the balance of ecosystems it passes through, letting everything that takes part in it thrive!” The logs start shifting from research notes to a personal journal.
+Choice: display=[Continue reading]; next=D15
+Choice: display=[Stop reading]; next=D16
+
+Title: Log 3
+Branch: D15
+Description: “It’s been a few days since the Leviathan fell into the black hole. It will be a one way trip, but deliberating with the crew, they agreed to let me follow it in.” … “I found it rather quickly but it seems to be in bad condition. There isn’t enough light to sustain its massive size.” … “I think I hear crying.” … “I wish I could help the Leviathan, if only I had the means to warp it out of this place”. When you try to go to the next, the monitor displays “No new entries”. With that last wish being the final entry of the logs, you take your leave of the old ship and return to your own.
+Choice: display=[Resume flying]; next=D17
+
+Title: Done Reading
+Branch: D16
+Description: While there is still more to read, you decide to stop there. You take your leave of the old ship and return to your own.
+Choice: display=[Resume flying]; next=D17
+ 
+Title: Flight Resumed
+Branch: D17
+Description: Moving on from the small detour, you continue your flight towards the distant mass. With the weird physics of being in the black hole, the flight takes minimal effort giving you time to recount your experiences. You have a feeling that your journey will soon reach its conclusion.
+Choice: display=[Next]; next=D18
+
+Title: Arrival & Meeting
+Branch: D18
+Description: Finally arriving at the once distant body, you land. To the mass that now appears to stretch out like an unending wall, you call out. Slowly revealing itself, you recognize the draconic eye that you saw in the vision during your youth. “You have come, thank you for answering my call.” echoes in your mind. With this you’re certain that the source of your call to act and the Leviathan that was mentioned during your journey are the same.
+Choice: display=[Next]; next=D19
+
+Title: The Leviathan’s Plea
+Branch: D19
+Description: “After falling into this place, I’ve been unable to soar, and have no means to replenish my strength. Being stuck here I can’t fulfill my duty. I hoped that my call would reach someone, someone who loved creatures, and that perhaps they could save me from this end.” Did you find how you could help the Leviathan?
+Choice: display=[No]; next=D20
+Choice: display=[Yes]; optional=visited-any(D15); next=D26
+ 
+Title: Hidden Ending (Balance)
+Branch: D26
+Description: Recalling the last wish written in the old ship’s logs, you prepare to warp the Leviathan out of the black hole. The Leviathan disappears with a blink as you warp it out, and you quickly follow suit. As you spot the welcoming sight of your home planet, your attention is hooked by the Leviathan, as its scales glisten like the stars that it draws sustenance from as they are revitalized under the warm light of the sun. The celestial aquatic creatures flock to the Leviathan as it swims. The familiar sensation of a flash and voice enter your mind. “Thank you, thank you for your help! I can now resume my stewardship of life among the stars. As you have granted me, I hope that your duty is fulfilled!” As the joyous voice leaves your mind, you return home to recount your journey to your boss. You successfully found the root cause of the declining fish population, being the disappearance of the Leviathan, which brought balance to the environment. With this realization, the solution you decide upon is to take on a similar role of being in balance with the environment, so both the planet’s people and fish thrive.
+Choice: display=[Decades later]; next=D27
+
+Title: Decades Later 3
+Branch: D27
+Description: It took some time, but the fish population returned to a healthy stable level, as the planet adopted your solution. Both people and the celestial aquatic creatures thrive. You’ve finally returned home after travelling the galaxy and sharing your findings with others. You now know what the starry expanse before you contains, and how to live in harmony with it as well. As you lie down under the stars, a familiar creature swims through the space above.
+ 
+Title: Your Answer
+Branch: D20
+Description: During your journey across Mossara, Glaciera and the flight in the black hole, you did not find any information on how you could potentially help the Leviathan. With a slow close to the draconic eye, the Leviathan understands your thoughts. “My wish has gone unfulfilled, however I am grateful that my final moments are not spent alone. I hope that our meeting can help you at the least.” The voice goes silent, and you can feel a connection in your mind cut. While unable to help the Leviathan, your mission is not done. The solution to the food crisis rests before you.
+Choice: display=[Reflect on your experiences]; next=D21
+
+Title: A Choice of Futures
+Branch: D21
+Description: After looking through the memories of your journey again, two ideas spring to mind, inspired by your travels. One is that like on Mossara, you could take the bounty that is the Leviathan to your home. With its size, even if the fish population disappeared the people of your planet could stay fed. The other, inspired by the people of Glaciera, would be to take the Leviathan and have it serve the galaxy as a whole by breaking down its body to spread nutrition. Doing this would replenish the diminishing populations and revitalize the ecosystems that it passes through. Now you just have to choose which one to go with.
+Choice: display=[Bring the Leviathan’s body home]; next=D22
+Choice: display=[Break down the Leviathan’s body across the galaxy]; next=D24
+ 
+Title: Main Ending 1
+Branch: D22
+Description: Setting the coordinates for the orbit of your home planet, you warp yourself and the Leviathan’s body out of the black hole. Momentarily blinded by the sudden change of brightness, you reopen your eyes to see the Leviathan’s body orbiting the welcoming sight of your home planet. Bringing the good news to your boss, you tell them of your journey and about the new body that is orbiting the planet. “You’ve done a fantastic job! You’re the hero of our planet!” While the praise is nice, you do hold the small regret of not being able to help the Leviathan.
+Choice: display=[Decades later]; next=D23
+
+Title: Decades Later 1
+Branch: D23
+Description: With the passing decades, the Leviathan has gotten smaller as it is harvested for food. The fish population slightly recovered as they were no longer necessary for your planet’s survival, though the population never did return to what it was before the decline. You’ve started to get travellers on a similar journey that you had gone through all those years ago. It leaves you with a nagging concern for the future.
+
+Title: Main Ending 2
+Branch: D24
+Description: Setting the coordinates for the orbit of your home planet, you warp yourself and the Leviathan’s body out of the black hole. Momentarily blinded by the sudden change of brightness, you reopen your eyes to see the Leviathan’s body orbiting the welcoming sight of your home planet. Bringing the good news to your boss, you tell them of your journey and your plan for the future. With approval from your boss, you prepare to head out on a new ship to spread the Leviathan’s remains across the galaxy, though you do hold the small regret of not being able to help the Leviathan.
+Choice: display=[Decades later]; next=D25
+
+Title: Decades Later 2
+Branch: D25
+Description: After spreading the Leviathan’s remains across the galaxy, the population of the celestial aquatic creatures reached new record highs, leading to bountiful years of food. However, now the populations have started to decline again, a similar trend reappearing. While the planet will be fine for a while, you foresee that someone may have to travel a similar path as you, though they may not be as fortunate in finding a solution.
