@@ -73,8 +73,7 @@ export function computeLayout(story) {
 		});
 	}
 
-	const depthMap = computeDepths(story.start, branches, children);
-	resolveRemainingDepths(branchIds, depthMap, parents);
+	const depthMap = computeDepths(branchIds, story.start, parents, children);
 
 	const depthBuckets = new Map();
 	let maxPerColumn = 1;
@@ -148,68 +147,199 @@ export function computeLayout(story) {
 	};
 }
 
-function computeDepths(startId, branches, childrenMap) {
+function computeDepths(branchIds, startId, parentsMap, childrenMap) {
 	const depthMap = new Map();
-	if (typeof startId === "string" && branches[startId]) {
-		depthMap.set(startId, 0);
-		const queue = [startId];
-		while (queue.length) {
-			const current = queue.shift();
-			const depth = depthMap.get(current) || 0;
-			const childSet = childrenMap.get(current);
-			if (!childSet) continue;
-			for (const child of childSet) {
-				if (!branches[child]) continue;
-				const nextDepth = depth + 1;
-				if (!depthMap.has(child) || nextDepth < (depthMap.get(child) ?? Infinity)) {
-					depthMap.set(child, nextDepth);
-					queue.push(child);
+	if (!branchIds.length) {
+		return depthMap;
+	}
+
+	const { componentIndex, components } = computeStronglyConnectedComponents(branchIds, childrenMap);
+	const componentCount = components.length;
+	const componentParents = Array.from({ length: componentCount }, () => new Set());
+	const componentChildren = Array.from({ length: componentCount }, () => new Set());
+
+	for (const [childId, parentSet] of parentsMap) {
+		const childComponent = componentIndex.get(childId);
+		if (childComponent == null) continue;
+		for (const parentId of parentSet) {
+			const parentComponent = componentIndex.get(parentId);
+			if (parentComponent == null || parentComponent === childComponent) continue;
+			componentParents[childComponent].add(parentComponent);
+			componentChildren[parentComponent].add(childComponent);
+		}
+	}
+
+	for (const id of branchIds) {
+		const fromComponent = componentIndex.get(id);
+		if (fromComponent == null) continue;
+		const childSet = childrenMap.get(id);
+		if (!childSet) continue;
+		for (const child of childSet) {
+			const toComponent = componentIndex.get(child);
+			if (toComponent == null || toComponent === fromComponent) continue;
+			componentParents[toComponent].add(fromComponent);
+			componentChildren[fromComponent].add(toComponent);
+		}
+	}
+
+	const indegree = componentParents.map((set) => set.size);
+	const pendingDepth = new Array(componentCount).fill(0);
+	const componentDepth = new Array(componentCount).fill(0);
+	const queue = [];
+	const processed = new Set();
+	const componentOrder = [];
+
+	for (let componentId = 0; componentId < componentCount; componentId += 1) {
+		if (indegree[componentId] === 0) {
+			queue.push(componentId);
+		}
+	}
+
+	while (queue.length) {
+		const componentId = queue.shift();
+		componentOrder.push(componentId);
+		const parents = componentParents[componentId];
+		let depth = pendingDepth[componentId];
+		if (parents.size) {
+			for (const parentId of parents) {
+				const parentDepth = componentDepth[parentId];
+				if (parentDepth + 1 > depth) {
+					depth = parentDepth + 1;
 				}
 			}
 		}
+		componentDepth[componentId] = depth;
+		processed.add(componentId);
+
+		for (const childComponent of componentChildren[componentId]) {
+			if (pendingDepth[childComponent] < depth + 1) {
+				pendingDepth[childComponent] = depth + 1;
+			}
+			indegree[childComponent] -= 1;
+			if (indegree[childComponent] === 0) {
+				queue.push(childComponent);
+			}
+		}
 	}
+
+	if (processed.size < componentCount) {
+		for (let componentId = 0; componentId < componentCount; componentId += 1) {
+			if (processed.has(componentId)) continue;
+			componentOrder.push(componentId);
+			let depth = pendingDepth[componentId];
+			const parents = componentParents[componentId];
+			if (parents.size) {
+				for (const parentId of parents) {
+					const parentDepth = componentDepth[parentId] ?? 0;
+					if (parentDepth + 1 > depth) {
+						depth = parentDepth + 1;
+					}
+				}
+			}
+			if (!Number.isFinite(depth)) {
+				depth = 0;
+			}
+			componentDepth[componentId] = depth;
+		}
+	}
+
+	// Shift components forward so they sit immediately before their earliest child.
+	for (let index = componentOrder.length - 1; index >= 0; index -= 1) {
+		const componentId = componentOrder[index];
+		const children = componentChildren[componentId];
+		if (!children.size) continue;
+		let minChildDepth = Infinity;
+		for (const childId of children) {
+			const depth = componentDepth[childId];
+			if (depth < minChildDepth) {
+				minChildDepth = depth;
+			}
+		}
+		if (minChildDepth === Infinity) {
+			continue;
+		}
+		const candidate = minChildDepth - 1;
+		if (candidate > componentDepth[componentId]) {
+			componentDepth[componentId] = candidate;
+		}
+	}
+
+	for (const id of branchIds) {
+		const index = componentIndex.get(id);
+		const depth = index == null ? 0 : componentDepth[index] ?? 0;
+		depthMap.set(id, depth);
+	}
+
+	if (typeof startId === "string" && depthMap.has(startId)) {
+		const shift = depthMap.get(startId) || 0;
+		if (shift) {
+			for (const [id, depth] of depthMap) {
+				depthMap.set(id, depth - shift);
+			}
+		}
+	}
+
 	return depthMap;
 }
 
-function resolveRemainingDepths(branchIds, depthMap, parentsMap) {
-	const pending = new Set();
-	for (const id of branchIds) {
-		if (!depthMap.has(id)) {
-			pending.add(id);
-		}
-	}
+function computeStronglyConnectedComponents(branchIds, childrenMap) {
+	const indexMap = new Map();
+	const lowLinkMap = new Map();
+	const componentIndex = new Map();
+	const stack = [];
+	const onStack = new Set();
+	const components = [];
+	let indexCounter = 0;
 
-	let updated = true;
-	while (updated) {
-		updated = false;
-		for (const id of Array.from(pending)) {
-			const parentSet = parentsMap.get(id);
-			if (!parentSet || !parentSet.size) {
-				continue;
-			}
-			let minParentDepth = Infinity;
-			for (const parentId of parentSet) {
-				if (!depthMap.has(parentId)) continue;
-				const parentDepth = depthMap.get(parentId);
-				if (parentDepth < minParentDepth) {
-					minParentDepth = parentDepth;
+	const visit = (id) => {
+		indexMap.set(id, indexCounter);
+		lowLinkMap.set(id, indexCounter);
+		indexCounter += 1;
+		stack.push(id);
+		onStack.add(id);
+
+		const neighbors = childrenMap.get(id);
+		if (neighbors) {
+			for (const neighbor of neighbors) {
+				if (!indexMap.has(neighbor)) {
+					visit(neighbor);
+					const currentLowlink = lowLinkMap.get(id);
+					const neighborLowlink = lowLinkMap.get(neighbor);
+					if (neighborLowlink < currentLowlink) {
+						lowLinkMap.set(id, neighborLowlink);
+					}
+				} else if (onStack.has(neighbor)) {
+					const currentLowlink = lowLinkMap.get(id);
+					const neighborIndex = indexMap.get(neighbor);
+					if (neighborIndex < currentLowlink) {
+						lowLinkMap.set(id, neighborIndex);
+					}
 				}
 			}
-			if (minParentDepth !== Infinity) {
-				depthMap.set(id, minParentDepth + 1);
-				pending.delete(id);
-				updated = true;
+		}
+
+		if (lowLinkMap.get(id) === indexMap.get(id)) {
+			const component = [];
+			while (stack.length) {
+				const member = stack.pop();
+				onStack.delete(member);
+				componentIndex.set(member, components.length);
+				component.push(member);
+				if (member === id) {
+					break;
+				}
 			}
+			components.push(component);
+		}
+	};
+
+	for (const id of branchIds) {
+		if (!indexMap.has(id)) {
+			visit(id);
 		}
 	}
 
-	const maxAssignedDepth = depthMap.size ? Math.max(...depthMap.values()) : 0;
-	let fallbackDepth = maxAssignedDepth + 1;
-	for (const id of pending) {
-		depthMap.set(id, fallbackDepth);
-		fallbackDepth += 1;
-	}
-	return depthMap;
+	return { componentIndex, components };
 }
 
 function compareByParentPosition(a, b, parentsMap, nodeMap) {
