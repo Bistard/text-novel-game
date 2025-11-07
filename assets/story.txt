@@ -1,383 +1,383 @@
-Title: Starry Awakening
+Title: Starry Awakening (A1)
 Branch: A1
 Description: You wake up, a light cool breeze flowing through your hair, grass flowing in the wind, the quiet of night. Your nap in the field was refreshing. You gaze at the stars, wondering "What is out there? Will I ever see beyond this starry expanse?" You say that as you see a stream of celestial aquatic creatures swim across the night sky. You make out that they are a myriad of various common fish, cephalopods, even sharks just from a glance. Your interest peaks yet your sadness valleys. The thought of such beautiful creatures slowly dying out crosses your mind like a flash flood.
 Choice: display=[Next]; next=A2
 
-Title: Omen and Resolve
+Title: Omen and Resolve (A2)
 Branch: A2
 Description: All over the news there is data from scientists saying that there is a gradual decline in the fish supply. You make the decision that it will be you, you will be the one to end this upcoming crisis. You gaze to the sky once more in determination and just as you make the decision, a flash comes across your mind. “Help…. me…..” A draconic eye opens, strained and tired. “A vision?” Your own mouth utters without prior thought “Who was that and where did it come from?” You say as you look to the centre of the galaxy in the starry night above as if some strange force pulls you there. Confused, you still go with your goal to end this crisis but with the lingering thought that the vision is connected.
 Choice: display=[Next]; next=A3
 
-Title: Choose Your Vessel
+Title: Choose Your Vessel (A3)
 Branch: A3
 Description: Years pass, you are now a young and able adult employed at the biggest fishing company on the planet. You are excited as you are finally given the opportunity to use the company’s vessels for a special mission. This mission in question is meant as a test from your boss. He gives you a selection of vessels.
 Choice: display=[A Swift Agile Ship]; next=A4; item=Light Fishing Boat+
 Choice: display=[A Powerful Sturdy Ship]; next=A4; item=Medium Carcass Trawler+
 
-Title: Hunt Begins
+Title: Hunt Begins (A4)
 Branch: A4
 Description: You take your vessel to the local space in your solar system and go searching for the target of your mission, the beast of your solar system, the titanic arapaima. The species grow to be as big as adult blue whales in their later years.
 Choice: display=[Next]; next=A5
 
-Title: Alpha Arapaima
+Title: Alpha Arapaima (A5)
 Branch: A5
 Description: You search and search through between planets and asteroid belts. Nothing. You say that you have to cut your losses and head home. However, a massive shadow blocks out the sun slowly but powerfully moving across the black expanse of space. That's it. It is the king of its species, the largest in history, an alpha titan arapaima. Frantically you search for your gear to catch it.
 Choice: display=[Next]; next=A6
 
-Title: Pick Your Gear
+Title: Pick Your Gear (A6)
 Branch: A6
 Description: You check your equipment for the upcoming hunt. What will you take with you?
 Choice: display=[A Harpoon Gun]; next=A7; item=Harpoon Gun+
 Choice: display=[A Massive Net]; next=A7; item=Massive Net+
 
-Title: Prepare Tools
+Title: Prepare Tools (A7)
 Branch: A7
 Description: You continue to prepare for your encounter, gathering the rest of your tools.
 Choice: display=[A Large Bait]; next=A8; item=Large Bait+
 Choice: display=[A Flood Light]; next=A8; item=Flood Light+
 
-Title: Second Wind
+Title: Second Wind (A8)
 Branch: A8
 Description: You struggle and struggle, wrestling with such a titanic foe. You want to give up. Suddenly a familiar flash crosses your mind, just like the one from your childhood.
 Choice: display=[Next]; next=A9
 
-Title: Test Your Luck
+Title: Test Your Luck (A9)
 Branch: A9
 Description: The nostalgic sensation empowers you, a second wind during this struggle. Roll 2d6 to determine your luck. Remember this number.
 Choice: display=[(Roll 2d6 to determine your luck)]; roll=luck, dice=2d6, target=10, ok=A11, fail=A10; stat=luck+roll
 
-Title: Wounded Titan
+Title: Wounded Titan (A10)
 Branch: A10
 Description: You manage to get a good grip on the beast. It fights relentlessly and trashes about. It breaks free. However, not unscathed. You retrieve your gear and there is a massive scale. You detach it and bring it back to the company proving that you are at least good enough to damage the biggest fish in the planet’s history.
 Choice: display=[Next]; next=A12
 
-Title: Triumphant Catch
+Title: Triumphant Catch (A11)
 Branch: A11
 Description: You overpower the massive beast and manage to subdue it. Life drains from its eyes as it thrashes its last. You return triumphant hauling the carcass of such a titanic foe. You have completed the mission with flying colours. The company can rest easy for now with such a supply of food to distribute.
 Choice: display=[Next]; next=A12
 
-Title: New Assignment
+Title: New Assignment (A12)
 Branch: A12
 Description: “Excellent job. You are my greatest employee. You’ve proven your skills, so I have another mission for you and this time, it’s an even bigger one.” Your boss then proceeds to tell you more.
 Choice: display=[Next]; next=A13
 
-Title: A Galaxy Mission
+Title: A Galaxy Mission (A13)
 Branch: A13
 Description: “Here’s the graph tracking the fish population over the past decades. The higher-ups predict that with this downward trend, the planet will be in the greatest food shortage in its entire history!” He asks you to go to other planets in the galaxy to see if they have such a problem and to see how they are dealing with it in hopes to bring back a solution and most importantly, to find the root cause of this decline in population of the celestial aquatic life.
 Choice: display=[Warp travel to Mossara]; next=B1
 Choice: display=[Warp travel to Glaciera]; next=C1
 
-Title: Mossara Arrival
+Title: Mossara Arrival (B1)
 Branch: B1
 Description: Warping into the orbit of Mossara, you gaze upon the vast landmasses of the planet. The rich greenery is viewable from space, though dark patches of gray and brown seem to dot the land as well. As you descend upon the planet, you get a closer look of those darkened patches of Mossara, seeing abandoned factories, tainted waters and dying vegetation. When you exit your ship, your ears ring from the pressure from the chimes of small voices singing. The hypnotic and enchanting hums make your eyes feel heavy.
 Choice: display=[(Fight it, resist the seductive singing)]; roll=luck, dice=2d6, target=8, ok=B2, fail=B6
 Choice: display=[Fall asleep]; next=B6
 
-Title: Flower Guides
+Title: Flower Guides (B2)
 Branch: B2
 Description: The singing pauses, perhaps with surprise that you have resisted. The singing resumes but without the hypnotic weight it had before. You see little flower people, dancing all around. Led by the tiger lily, they sway beckoning you to the groves of a desolated village.
 Choice: display=[Ask who they are and what they are]; next=B3
 Choice: display=[Follow the flowers]; next=B5
 
-Title: Whispering Lily
+Title: Whispering Lily (B3)
 Branch: B3
 Description: The little flowers glide across your skin, using your body as a resting place. The tiger lily lays upon your shoulder and whispers in your ear. Its voice is high but filled with assurance. It borders on incoherent but you can make out the words one by one.
 Choice: display=[Listen to the flower]; next=B4
 
-Title: Petal Plea
+Title: Petal Plea (B4)
 Branch: B4
 Description: “No … Harm … Help … Please”. Then with a sudden gust of wind, the little flowers disperse, twirling, and leaving petals everywhere. The tiger lily glows with radiance in the distance as its voice hums moving towards the desolated village.
 Choice: display=[Chase after the flower]; next=B5
 
-Title: Desolate Village
+Title: Desolate Village (B5)
 Branch: B5
 Description: As you follow, the flowers lead you through the village filled with artifacts of a once bustling civilization, now overtaken by nature. The abundance of agriculture catches your eye. You pass by fields of farmland carrying stalks of corn, wheat and freshly planted seedlings. The tiger lily comes to stop by a body of greenbrier no different from the rest.
 Choice: display=[Follow the little flowers' gaze, drawn to encapsulate attention]; next=B7
 
-Title: Village Awakening
+Title: Village Awakening (B6)
 Branch: B6
 Description: You wake up surrounded by little flower people in a desolated village filled with artifacts of a once bustling civilization, now overtaken by nature. The abundance of agriculture catches your eye. You pass by fields of farmland carrying stalks of corn, wheat and freshly planted seedlings. A prominent tiger lily directs you towards a body of greenbrier.
 Choice: display=[Follow the flowers’ gaze]; next=B7
 
-Title: Verdant Statue
+Title: Verdant Statue (B7)
 Branch: B7
 Description: Hard to make out at first, you finally notice it. A topiary statue of a giant woman is sitting within the forest. Her green eyes are lowered as she plays along with the little flower people. The tiger lily lets out an echoing laugh and places itself at the top of her crown.
 Choice: display=[Interrupt the moment]; next=B8
 Choice: display=[Wait for them to finish]; stat=luck+1; next=B8
 
-Title: Gaia's Path
+Title: Gaia's Path (B8)
 Branch: B8
 Description: Ending their song, the statue lady gracefully rises, as the little flower people dance around her ridges, going into her hollow crevices. She wasn’t human, she was sculpted by nature herself with leaves intertwining around. Every step she took, a flower would sprout from beneath her. Strolling deeper into the forest, she leaves a carpet of bright red tiger lilies trailing behind her.
 Choice: display=[Follow the path]; next=B9
 
-Title: Forked Trail
+Title: Forked Trail (B9)
 Branch: B9
 Description: After following the trail, you're taken to a pathway that splits into two routes. Red tiger lilies line both paths. The first leads to an overgrown building, with the tiger lilies wilting. The second leads to a bridge with freshly bloomed tiger lilies.
 Choice: display=[Head to the Building]; next=B10
 Choice: display=[Head to the Bridge]; next=B15
 
-Title: Oil-Stained Hall
+Title: Oil-Stained Hall (B10)
 Branch: B10
 Description: You make your way to the overgrown building. Shrubs grow in between wooden floor boards, vines hanging off stone walls. Abandoned tools scattered along the dirt road. Pillars deteriorating from years of holding up inhabited rooms. Beyond the view, the forest greenery shone upon the village showing nature's habitat consuming the structures that once lay there. The place was frozen between hidden memories, mysteries, and nature. Passing through a bundle of vines reveals an entrance inside. Looking in, you see it, massive mosaics of oil spilled everywhere surrounding the place. The black liquid seeped into the soil, leaving only dying plants, brown and wilted.
 Choice: display=[Stop the spreading liquid]; next=B11
 Choice: display=[Leave the room]; next=B12
 
-Title: Contain the Spill
+Title: Contain the Spill (B11)
 Branch: B11
 Description: Taking one of the abandoned shovels from outside, you pile dirt around the oil to contain it. Once you have finished, the little flower people burst through the entrance. Colourful petals passing by you with extraordinary speed. A few flower people start planting the newly laid soil with vegetation, reinforcing the walls of dirt containing the oil. As you leave the building, and head back to the other path, a tiger lily gently places itself upon your head.
 Choice: display=[Head towards the bridge]; stat=luck+2; next=B15
 
-Title: Slippery Exit
+Title: Slippery Exit (B12)
 Branch: B12
 Description: Wanting to stay clear of the spreading liquid you swiftly move towards the exit. However in your rush you slip on the dying vegetation.
 Choice: display=[(Attempt to recover your balance)]; roll=luck, dice=2d6, target=9, ok=B13, fail=B14
 
-Title: Steady Steps
+Title: Steady Steps (B13)
 Branch: B13
 Description: You manage to catch yourself before landing yourself among the fallen plants. You make your way back to the path towards the bridge, but with a bit more caution.
 Choice: display=[Head towards the bridge]; next=B15
 
-Title: Stumble Forward
+Title: Stumble Forward (B14)
 Branch: B14
 Description: You join the fallen plants on ground. After a pause, you dust yourself off and make your way to the path towards the bridge, practicing more caution as you do so.
 Choice: display=[Head towards the bridge]; stat=luck-1; next=B15
 
-Title: Mossy Bridge
+Title: Mossy Bridge (B15)
 Branch: B15
 Description: Following the path, you are greeted to a small, decaying bridge overlaying against a trickling stream. Moss completely engulfs the old stone it was laid with. It looked as if life was once there, occupying the desolated forest. The statue lady waits further ahead as red tiger lilies stand before you jumping in motion.
 Choice: display=[Cross the bridge]; next=B16
 
-Title: Blighted Grove
+Title: Blighted Grove (B16)
 Branch: B16
 Description: After crossing, you can smell the ocean in the distance. However, the closer you get to the aroma of water, the more dying trees you encounter. Further in, tree stumps and rotting logs are the only thing left. It’s hard to believe this is the same planet, but the statue lady strides strongly, determined to show you something.
 Choice: display=[Follow her along the path]; next=B17
 
-Title: Ruined Falls
+Title: Ruined Falls (B17)
 Branch: B17
 Description: Following her lead, you enter a clearing with a waterfall that was once full of life but now stood in ruin. The water that was once clear and streaming with life, ran completely ruined and dark, carrying the weight and decay of oil beneath the lost area. The earth was scarred with plants wilted, the bodies of once lively creatures now floated dead lifeless through the stream. The air was full of mourning as if the land lost all life to breath.
 Choice: display=[Ask her what happened]; next=B18
 
-Title: Gaia's Lament
+Title: Gaia's Lament (B18)
 Branch: B18
 Description: For the first time, the statue lady parted her lips and spoke with weight. “Humans destroyed this world. They polluted the land and hoarded its wealth. They took the gift of surplus agriculture and used it to create a hierarchy among themselves. It left me, Gaia, in a weakened state unable to help the lives that they forsook. It resulted in bountiful excess for them, but it wasn’t enough. They continued to fight each other for more, leaving the environment and others to die. Eventually, when there was nothing left for them to take, they left this planet. With them gone, the enduring pieces of life were able to regrow, and I was once again able to be a steward for this land. However, I still cannot fix all the problems they created.”
 Choice: display=[Inquire about the problems]; next=B19
 
-Title: Two Crises
+Title: Two Crises (B19)
 Branch: B19
 Description: The two pressing problems are a mechanical beast that has reawoken and is pillaging the land, spreading the oil as it does so. The other is a mountain of debris that is damming the river, causing the tainted water to stagnate and rot the land. Together these problems have created a stalemate, where we can’t make progress on either issue without the other interfering. If one is dealt with, I can remedy the other over time. Could you help us with one of these problems?
 Choice: display=[Agree to help with mechanical beast problem]; next=B20
 Choice: display=[Agree to help with debris problem]; next=B24
 
-Title: Hunt the Machine
+Title: Hunt the Machine (B20)
 Branch: B20
 Description: Gaia shares what she knows of the beast to you, “There is a button on the beast that will shut it down for good, however you’ll have to strike it with substantial force”. Calling your ship over to the clearing, you make preparations to deal with the beast. Gaia directs you deeper into the forest where the beast lies. As you approach, you see the hulking machination wading through the forest plundering its bounty. You’ve found your target.
 Choice: display=[(Fire the Harpoon Gun at the shutdown switch)]; valid=has(Harpoon Gun); next=B21
 Choice: display=[(Improvise a strike)]; roll=luck, dice=2d6, target=11, ok=B22, fail=B23
 
-Title: Shutdown Strike
+Title: Shutdown Strike (B21)
 Branch: B21
 Description: With your ship’s harpoon gun, you’re able to precisely aim for the button on the beast. With a perfect strike on the button, the beast comes to a screeching halt. A great success.
 Choice: display=[Return to Gaia]; stat=luck+1; next=B29
 
-Title: Improvised Shutdown
+Title: Improvised Shutdown (B22)
 Branch: B22
 Description: After darting around the beast, you’re able to find the button. Swooping to the ground to pick up debris from the beast’s rampage, you aim to drop it on your target. With some good luck you successfully strike true bringing the beast to a screeching halt.
 Choice: display=[Return to Gaia]; next=B29
 
-Title: Beast's Reprisal
+Title: Beast's Reprisal (B23)
 Branch: B23
 Description: After darting around the beast, you’re able to find the button. Swooping to the ground to pick up debris from the beast’s rampage, you aim to drop it on your target. Unfortunately, luck was not on your side. The beast swings towards your ship damaging it. Unable to continue, you make your retreat.
 Choice: display=[Return to Gaia]; next=B28
 
-Title: Clear the Dam
+Title: Clear the Dam (B24)
 Branch: B24
 Description: Gaia describes the debris situation to you, “After dislodging the debris it will have to be moved away from the river to prevent it from damming again”. Calling your ship over to the clearing, you make preparations to deal with the debris. Gaia directs you upstream of the bridge you had crossed earlier. As you head up, you see the mound of the debris blocking the flow of water.
 Choice: display=[(Deploy the Massive Net to clear debris)]; valid=has(Massive Net); next=B25
 Choice: display=[(Clear the debris carefully)]; roll=luck, dice=2d6, target=11, ok=B26, fail=B27
 
-Title: River Restored
+Title: River Restored (B25)
 Branch: B25
 Description: With your ship’s massive net, you’re able to scoop up large amounts of debris at a time, making quick work of the debris and moving safely to the side. The water flows, refilling the stream and carrying away tainted water. A great success.
 Choice: display=[Return to Gaia]; stat=luck+1; next=B29
 
-Title: Careful Clearance
+Title: Careful Clearance (B26)
 Branch: B26
 Description: As you carefully make your way through clearing the debris, you finish in a timely manner. The water flows, refilling the stream and carrying away tainted water.
 Choice: display=[Return to Gaia]; next=B29
 
-Title: Debris Setback
+Title: Debris Setback (B27)
 Branch: B27
 Description: As you try to clear the debris, pieces of the mound crumble and hit your ship. While it is still operable, it's not in a condition to continue clearing the debris.
 Choice: display=[Return to Gaia]; next=B28
 
-Title: Unfinished Stewardship
+Title: Unfinished Stewardship (B28)
 Branch: B28
 Description: After bringing back the bad news to Gaia, you make your return home as your ship is not in a condition to continue your travels. Back on your home planet you recount your experiences to your boss, and they take a liking to the methods of the humans of Mossara. You have brought back a solution, though you’re not sure if it is the best one.
 Choice: display=[Bad End]; next=Ending
 
-Title: Gaia's Thanks
+Title: Gaia's Thanks (B29)
 Branch: B29
 Description: As you bring back news of your success, the flower people celebrate and quickly head out to replenish the damaged areas. Gaia calls out to you, “Thank you for your help. Is there anything I could offer you in return”?
 Choice: display=[Explain the purpose of your journey]; next=B30
 
-Title: Leviathan Rumors
+Title: Leviathan Rumors (B30)
 Branch: B30
 Description: Gaia responds, “While I don’t have an exact solution for you, I hope that your experiences here will help guide you towards one. Something else that may help would be to search for the great Leviathan. It’s a massive creature that could be seen swimming around the planet. It hasn’t been sighted for a long time, even when the humans of this planet were still around. Perhaps they left in hunt of it�? With these new experiences and information you take off from Mossara and head to your next destination.
 Choice: display=[Head to Glaciera]; next=C1
 Choice: display=[Head to the Black Hole]; valid=visited-any(C1); next=D1
 
-Title: Bad Ending
+Title: Bad Ending (Ending)
 Branch: Ending
 Description: Your journey on Mossara ends here. Perhaps another path awaits if you restart and make different choices.
 
-Title: Glaciera Approach
+Title: Glaciera Approach (C1)
 Branch: C1
 Description: As you slowly descend toward the planet from orbit, the local star hangs at the edge of the globe, revealing a clear crust. It looks almost like it's coated in glass... suddenly, something hits your windshield. You glance back to find a strange-looking fish covered with white fur. As it fades into the distance, you turn your gaze back to the planet.
 Choice: display=[Land]; next=C2
 
-Title: Chained by Bikers
+Title: Chained by Bikers (C2)
 Branch: C2
 Description: Your eyes remain fixed on the planet, but you notice small dots forming. They grow larger. Too large. They are not dots anymore; they stretch into lines. The lines twist into bicycles, and you are the target. Suddenly, heavy chains shoot out from the bicycles and cling to your ship. The riders surround you, pulling in opposite directions until you are immobilized. They stand up from their bikes and walk down the chains onto your rig.
 Choice: display=[Speak to them]; next=C3
 
-Title: Gang's Demand
+Title: Gang's Demand (C3)
 Branch: C3
 Description: A towering figure lands at your hatch and raps on it twice before it slides open. "A foreign rig in our territory?" he booms with a crooked grin. "Welcome to Glaciera. We'll be taking your ship and whatever's inside. Redistribution, you know?" The rest of the bikers fan out, scanning your vessel as tension thickens.
 Choice: display=[Ask for an explanation]; next=C4
 Choice: display=[Try to barter]; next=C5
 
-Title: Collective Creed
+Title: Collective Creed (C4)
 Branch: C4
 Description: He scoffs, folding his arms. "You really don't know anything about our planet? Well then, this is Glaciera. We collect all the resources and distribute them among everyone. Even if someone complains, it's better off supporting the group as a whole than letting people focus on themselves."
 Choice: display=[Offer your ship as support]; next=C5
 
-Title: Offer to Fish
+Title: Offer to Fish (C5)
 Branch: C5
 Description: You take a deep breath. "My ship's capable of deep-space fishing," you say. "That's more useful than whatever you'll scrap from it. Let me help your cause, not waste what I can offer." The gang murmurs among themselves as the leader eyes you sharply.
 Choice: display=[(Persuade)]; roll=luck, dice=2d6, target=11, ok=C6, fail=C10
 
-Title: Crewed Up
+Title: Crewed Up (C6)
 Branch: C6
 Description: The gang leader lets out a low whistle. "Heh... got some guts and gears, huh?" He signals to his crew. "Mount up. You're fishing for Glaciera now." Several members climb aboard your ship. "Don't get clever. We'll be watching." As you launch toward the polar sea, the assigned crew brief you on the planet's collectivist ideals and their fragile food systems. You begin to understand what balance here truly means.
 Choice: display=[Head to fishing grounds]; next=C7
 
-Title: Crew Stories
+Title: Crew Stories (C7)
 Branch: C7
 Description: As you talk with the assigned gang members, your new crewmates give you a rundown of life on the planet. They explain the planet's collectivist system: resources pooled, no leaders, all shared. They also share tales of a Leviathan once seen swimming past the planet. "Whenever the Leviathan came by there would be a bounty of food for a good while, at least that's what the elders told us. None of us have seen it in our lifetime." As they finish sharing stories, the ship arrives at the fishing spot.
 Choice: display=[(Cast the line)]; roll=luck, dice=2d6, target=7, ok=C8, fail=C9
 
-Title: Bountiful Haul
+Title: Bountiful Haul (C8)
 Branch: C8
 Description: The waters below churn as your harpoons lock onto something beneath the ice shelf. With teamwork and quick reflexes, you pull in a catch unlike any other: thick-furred aquatic beasts that shimmer with radiant scales. The crew cheers as you set course for base. Looks like you've made a good impression.
 Choice: display=[Return to central base]; stat=luck+1; next=C13
 
-Title: Empty Nets
+Title: Empty Nets (C9)
 Branch: C9
 Description: You cast the line, but something feels off. A sudden jolt pulls the harpoon rig, but the tension snaps as quickly as it came. The crew scrambles to recover the equipment, but it's clear nothing was caught. One of the gang members clicks their tongue. "No haul. That won't look good." You set course back to the base, empty-handed.
 Choice: display=[Return to central base]; next=C13
 
-Title: Confiscated Ship
+Title: Confiscated Ship (C10)
 Branch: C10
 Description: The gang confiscates your ship and sets you to work in one of the igloos. The boss does not specify which, so you choose. You look around the tribe and see several members within their domes. One igloo catches your interest with a wooden interior and a desk full of unorganized items. Another is larger than the others, with smoke curling from a chimney on top.
 Choice: display=[Enter the smaller igloo]; next=C11
 Choice: display=[Enter the larger igloo]; next=C12
 
-Title: Scholar's Igloo
+Title: Scholar's Igloo (C11)
 Branch: C11
 Description: You step inside the smaller igloo. The interior is cluttered but warm. Scrolls, books, and maps lie scattered across a wooden desk. An elderly figure looks up. "Ah, a stranger. Curious about how we survive?" They explain the planet's collectivist system: resources pooled, no leaders, all shared. A worn book mentions something massive that once swam through the stars, something called the Leviathan. As you read, it recounts how every region it passed would thrive for a time.
 Choice: display=[Return to the camp]; next=C13
 
-Title: Kitchen Igloo
+Title: Kitchen Igloo (C12)
 Branch: C12
 Description: You step inside the larger igloo. The heat of a kitchen instantly warms you as you enter. "Perfect, another helping hand!" shouts one of the cooks. You smoothly join the flow as they instruct you. While you work, the cooks explain the planet's collectivist system: resources pooled, no leaders, all shared. They also speak about old tales of a Leviathan once spotted swimming by the planet. "The records say that every time it came by, there would be a bountiful amount of food, though that has never happened in our lifetime."
 Choice: display=[Return to the camp]; next=C13
 
-Title: Glacier Alarm
+Title: Glacier Alarm (C13)
 Branch: C13
 Description: As night falls, alarms blare across the settlement. A nearby glacier is breaking apart, threatening to flood the lower domes. You approach the gang leader and offer your help. He hesitates, then nods. "You've earned some trust. Let's see if you follow through."
 Choice: display=[Depart for the glacier]; next=C14
 
-Title: Plan the Route
+Title: Plan the Route (C14)
 Branch: C14
 Description: You chart a path through the narrow ice canyons. The terrain is tight, the turns sharp, the air filled with shards of drifting frost. Each second you hesitate, the glacier moves closer to collapse. You can almost feel the weight of the planet's expectation pressing on your hull. You have to plan your strategy through the collapsing glacier.
 Choice: display=[Try swift maneuvers]; next=C15
 Choice: display=[Try powering through]; next=C19
 
-Title: Swift Run
+Title: Swift Run (C15)
 Branch: C15
 Description: The engines roar to life, the vibrations shaking the console beneath your hands. You push the throttle forward, the ship darting into the icy maze. The controls fight back as each gust of frozen wind threatens to throw you off course. Your mind races: this is it, a test of both your ship and your resolve.
 Choice: display=[(If you have the Light Fishing Boat, attempt the run)]; optional=has(Light Fishing Boat); next=C16
 Choice: display=[(Attempt the run relying on luck)]; roll=luck, dice=2d6, target=12, ok=C17, fail=C18
 
-Title: Clean Sweep
+Title: Clean Sweep (C16)
 Branch: C16
 Description: Your light vessel slices through the narrow canyons like a blade. Frozen cliffs blur past. You reach the fracture point ahead of the collapse and trigger a detonation that diverts the ice flow safely. The danger is avoided entirely.
 Choice: display=[Return victorious]; next=C24
 
-Title: Narrow Success
+Title: Narrow Success (C17)
 Branch: C17
 Description: You steer through the icy gauntlet with expert timing. Just before the last corner, a ridge crumbles and your ship grazes it but pulls through. Shaken yet successful, you make it to the collapse zone and carry out your task just in time.
 Choice: display=[Return to base]; next=C24
 
-Title: Icy Crash
+Title: Icy Crash (C18)
 Branch: C18
 Description: The turns are too sharp. The weight of your ship proves too much to control. A misstep sends it careening into the glacier wall. Systems fail. The collapse begins. There's no time to recover. You are forced to abandon the operation and return defeated.
 Choice: display=[Return to home planet]; next=C23
 
-Title: Power Through
+Title: Power Through (C19)
 Branch: C19
 Description: You choose the direct approach through a heavily packed ice field. There is no way around; it is a test of raw force. If your vessel has the power, you might make it. If not, luck will decide.
 Choice: display=[(Plow through with power)]; roll=luck, dice=2d6, target=12, ok=C21, fail=C22; optional=has(Medium Carcass Trawler)
 Choice: display=[(Use powerful vessel)]; next=C20; optional=has(Medium Carcass Trawler)
 
-Title: Icebreaker Triumph
+Title: Icebreaker Triumph (C20)
 Branch: C20
 Description: With sheer momentum, your vessel crushes through the wall of ice. Chunks scatter in every direction as you forge a tunnel straight to the impact zone. You arrive well ahead of schedule, giving the settlement time to respond and reinforce.
 Choice: display=[Return victorious]; next=C24
 
-Title: Forceful Success
+Title: Forceful Success (C21)
 Branch: C21
 Description: Despite the odds, your ship thunders forward. The ice groans and fractures, but you hold course. You emerge at the critical point, battered but intact. The emergency systems deploy, and the damage is contained.
 Choice: display=[Return to base]; next=C24
 
-Title: Frozen Failure
+Title: Frozen Failure (C22)
 Branch: C22
 Description: The ice field proves too dense. Your vessel gets stuck midway, unable to continue. Reinforcements arrive too late, and the glacier collapses into the lower domes. The mission is a failure.
 Choice: display=[Return to home planet]; next=C23
 
-Title: Quiet Return
+Title: Quiet Return (C23)
 Branch: C23
 Description: With your vessel damaged and the mission failed, the people of Glaciera offer no harsh words, but they no longer need your help. You are released from duty and return to your home planet with empty hands and a heavy heart.
 Choice: display=[Bad Ending]; next=Ending
 
-Title: Aurora Celebration
+Title: Aurora Celebration (C24)
 Branch: C24
 Description: You return to the Glaciera base under a sky thick with auroras. The people gather, celebrating the averted disaster. The gang leader claps you on the back. "Not bad, outsider." Before you depart, someone hands you a scroll: an old record that mentions sightings of a great being near a black hole, massive enough to seed ecosystems in its wake. You board your ship, purpose renewed.
 Choice: display=[Head to Mossara]; optional=visited-any(B1); next=B1
 Choice: display=[Head to the Black Hole]; valid=visited-any(B1); next=D1
-Title: Before the Abyss
+Title: Before the Abyss (D1)
 Branch: D1
 Description: From what you’ve been told on the other planets, it seems that finding the Leviathan could give you a solution to the food shortage issue. However, you have experienced quite a lot during your journey across Mossara and Glaciera. You could head back home and share your experiences and find a solution amongst them.
 Choice: display=[Enter the Black Hole]; next=D3
 Choice: display=[Return Home]; next=D2
 
-Title: Turn Back
+Title: Turn Back (D2)
 Branch: D2
 Description: You decide to return home with the knowledge you have collected during your travels through the various planets. Recounting your experiences, you and your peers back home try to come up with potential solutions. You eventually settle on one, it will stave off the crisis for a couple decades though if things don’t change an even worse crisis may await. You have a nagging feeling that if you had taken one more step forward, you would find a better solution.
 Choice: display=[Bad End]; next=Ending
 
-Title: Into the Abyss
+Title: Into the Abyss (D3)
 Branch: D3
 Description: You fly into the black hole. The moment you cross the horizon, your ship shakes from an intense turbulence. After what simultaneously feels like an eternity and a blink, you find yourself in what appears to be trashheap of a world. A mix of various types of ruined buildings, machines, and vegetation cover the land and are scattered in the air. Far in the distance, you can spot a massive towering mass, when you do, a nostalgic flash and a whisper in your mind echoes, “here”.
 Choice: display=[Head towards the distant shape]; next=D4
 
-Title: Faint Glimmer
+Title: Faint Glimmer (D4)
 Branch: D4
 Description: Passing over a crater in fields of trash, you think you spot a light shining in it. When you look again, you can’t seem to spot it.
 Choice: display=[Go to the crater and take a closer look]; next=D5
 Choice: display=[Continue flying]; next=D17
  
-Title: Crater Search
+Title: Crater Search (D5)
 Branch: D5
 Description: Hovering over the crater you try to pinpoint what you saw while flying. However it is difficult to make out specifics amongst the trash. What you do spot though is the trash shuffling as if there is something swimming underneath. The movement seems to be limited to only one side of the crater, but it may come over if it detects something. You determine that you won’t have enough time to safely get to the shining object you saw while flying unless you either distract whatever is underneath or know exactly where it is.
 Choice: display=[(Create a distraction with Large Bait)]; valid=has(Large Bait); next=D6
@@ -385,115 +385,115 @@ Choice: display=[(Create a distraction)]; roll=luck, dice=2d6, target=9, ok=D7, 
 Choice: display=[(Search with Flood Light)]; valid=has(Flood Light); next=D9
 Choice: display=[(Try a thorough search)]; roll=luck, dice=2d6, target=9, ok=D10, fail=D11
 
-Title: Perfect Distraction
+Title: Perfect Distraction (D6)
 Branch: D6
 Description: After launching over pieces of the Large bait from your ship, you watch them sink into the ground as the shuffling trash moves towards each piece of bait. After a moment of silence, you see the underground movement calmly travel outside of the crater. With it gone, you can look through trash with peace of mind. A Great Success.
 Choice: display=[Search through the trash]; stat=luck+1; next=D10
 
-Title: Good Distraction
+Title: Good Distraction (D7)
 Branch: D7
 Description: Launching pieces of trash outside of the crater, you watch as the shuffling movement underground speeds out of the crater in the direction you sent the pieces you launched. Now you have time to look through the trash, though the uncertainty of when whatever was underneath will come back is unnerving.
 Choice: display=[Search through the trash]; next=D10
 
-Title: Trash Pitfall
+Title: Trash Pitfall (D8)
 Branch: D8
 Description: You try to launch pieces of the garbage around you to distract the shuffling trash. However, it seems that one of your shots landed a bit too close to you and your ship. The ground underneath you shakes and you start to sink into the trash. It seems that you will be joining other pieces of the galaxy in this graveyard.
 Choice: display=[Bad End]; next=Ending
  
-Title: Hidden Door Found
+Title: Hidden Door Found (D9)
 Branch: D9
 Description: Using the ship’s flood lights you’re able to get a much better look of the trash scattered around. As you scan through the rubble with ease, the light catches upon a reflective surface. You’ve found what you’re looking for. A slow blinking light shines above a slightly ajar metallic door. What you saw must have been the light’s reflection off the door. Taking a peek behind the door, you see a small office room with a computer inside. You determine that an old ship of some kind must have been buried underneath the trash.
 Choice: display=[Enter the room]; next=D12
 Choice: display=[Leave the crater and resume flying]; next=D17
 
-Title: Hidden Door
+Title: Hidden Door (D10)
 Branch: D10
 Description: As you search through the trash, you find what you have been looking for. A slow blinking light shines above a slightly ajar metallic door. What you saw must have been the light’s reflection off the door. Taking a peek behind the door, you see a small office room with a computer inside. You determine that an old ship of some kind must have been buried underneath the trash.
 Choice: display=[Enter the room]; next=D12
 Choice: display=[Leave the crater and resume flying]; next=D17
 
-Title: Search Abandoned
+Title: Search Abandoned (D11)
 Branch: D11
 Description: Unable to discern the contents of the trash and rubble, you take your leave from the crater and resume your original plan.
 Choice: display=[Continue flying]; next=D17
 
-Title: Old Ship Cabin
+Title: Old Ship Cabin (D12)
 Branch: D12
 Description: With dust blanketing every surface you can tell that it has been ages since someone last passed through. The only movement in the room are your own steps and the blinking lights of a sleeping computer. Awakening the computer from its slumber, the screen lights up and reveals the ship logs of the person who came before you.
 Choice: display=[Read the logs]; next=D13
  
-Title: Log: Sustenance
+Title: Log: Sustenance (D13)
 Branch: D13
 Description: “We have finally caught up to the great Leviathan! Though with its size it would be hard to lose track of it. Travel has been smooth, and fortunately the Leviathan seems to produce an unending supply of nutrition, so just like the celestial aquatic creatures that follow it, we’ll also be able to without worry!” The log starts shifting from a ship log to being research notes about the Leviathan.
 Choice: display=[Continue reading]; next=D14
 Choice: display=[Stop reading]; next=D16
 
-Title: Log: Starlight
+Title: Log: Starlight (D14)
 Branch: D14
 Description: “It turns out rather than the Leviathan producing its own food, it is sustained off of starlight! Everything that is produced is simply a byproduct of the process! That explains why it is seemingly immortal. Its presence must help maintain the balance of ecosystems it passes through, letting everything that takes part in it thrive!” The logs start shifting from research notes to a personal journal.
 Choice: display=[Continue reading]; next=D15
 Choice: display=[Stop reading]; next=D16
 
-Title: Log: Last Wish
+Title: Log: Last Wish (D15)
 Branch: D15
 Description: “It’s been a few days since the Leviathan fell into the black hole. It will be a one way trip, but deliberating with the crew, they agreed to let me follow it in.” … “I found it rather quickly but it seems to be in bad condition. There isn’t enough light to sustain its massive size.” … “I think I hear crying.” … “I wish I could help the Leviathan, if only I had the means to warp it out of this place”. When you try to go to the next, the monitor displays “No new entries”. With that last wish being the final entry of the logs, you take your leave of the old ship and return to your own.
 Choice: display=[Resume flying]; next=D17
 
-Title: Leave the Logs
+Title: Leave the Logs (D16)
 Branch: D16
 Description: While there is still more to read, you decide to stop there. You take your leave of the old ship and return to your own.
 Choice: display=[Resume flying]; next=D17
  
-Title: Onward Flight
+Title: Onward Flight (D17)
 Branch: D17
 Description: Moving on from the small detour, you continue your flight towards the distant mass. With the weird physics of being in the black hole, the flight takes minimal effort giving you time to recount your experiences. You have a feeling that your journey will soon reach its conclusion.
 Choice: display=[Next]; next=D18
 
-Title: Meet the Leviathan
+Title: Meet the Leviathan (D18)
 Branch: D18
 Description: Finally arriving at the once distant body, you land. To the mass that now appears to stretch out like an unending wall, you call out. Slowly revealing itself, you recognize the draconic eye that you saw in the vision during your youth. “You have come, thank you for answering my call.” echoes in your mind. With this you’re certain that the source of your call to act and the Leviathan that was mentioned during your journey are the same.
 Choice: display=[Next]; next=D19
 
-Title: Leviathan's Plea
+Title: Leviathan's Plea (D19)
 Branch: D19
 Description: “After falling into this place, I’ve been unable to soar, and have no means to replenish my strength. Being stuck here I can’t fulfill my duty. I hoped that my call would reach someone, someone who loved creatures, and that perhaps they could save me from this end.” Did you find how you could help the Leviathan?
 Choice: display=[No]; next=D20
 Choice: display=[Yes]; optional=visited-any(D15); next=D26
  
-Title: Hidden Ending: Balance
+Title: Hidden Ending: Balance (D26)
 Branch: D26
 Description: Recalling the last wish written in the old ship’s logs, you prepare to warp the Leviathan out of the black hole. The Leviathan disappears with a blink as you warp it out, and you quickly follow suit. As you spot the welcoming sight of your home planet, your attention is hooked by the Leviathan, as its scales glisten like the stars that it draws sustenance from as they are revitalized under the warm light of the sun. The celestial aquatic creatures flock to the Leviathan as it swims. The familiar sensation of a flash and voice enter your mind. “Thank you, thank you for your help! I can now resume my stewardship of life among the stars. As you have granted me, I hope that your duty is fulfilled!” As the joyous voice leaves your mind, you return home to recount your journey to your boss. You successfully found the root cause of the declining fish population, being the disappearance of the Leviathan, which brought balance to the environment. With this realization, the solution you decide upon is to take on a similar role of being in balance with the environment, so both the planet’s people and fish thrive.
 Choice: display=[Decades later]; next=D27
 
-Title: Decades Later: Balance
+Title: Decades Later: Balance (D27)
 Branch: D27
 Description: It took some time, but the fish population returned to a healthy stable level, as the planet adopted your solution. Both people and the celestial aquatic creatures thrive. You’ve finally returned home after travelling the galaxy and sharing your findings with others. You now know what the starry expanse before you contains, and how to live in harmony with it as well. As you lie down under the stars, a familiar creature swims through the space above.
  
-Title: Final Lessons
+Title: Final Lessons (D20)
 Branch: D20
 Description: During your journey across Mossara, Glaciera and the flight in the black hole, you did not find any information on how you could potentially help the Leviathan. With a slow close to the draconic eye, the Leviathan understands your thoughts. “My wish has gone unfulfilled, however I am grateful that my final moments are not spent alone. I hope that our meeting can help you at the least.” The voice goes silent, and you can feel a connection in your mind cut. While unable to help the Leviathan, your mission is not done. The solution to the food crisis rests before you.
 Choice: display=[Reflect on your experiences]; next=D21
 
-Title: Choose the Future
+Title: Choose the Future (D21)
 Branch: D21
 Description: After looking through the memories of your journey again, two ideas spring to mind, inspired by your travels. One is that like on Mossara, you could take the bounty that is the Leviathan to your home. With its size, even if the fish population disappeared the people of your planet could stay fed. The other, inspired by the people of Glaciera, would be to take the Leviathan and have it serve the galaxy as a whole by breaking down its body to spread nutrition. Doing this would replenish the diminishing populations and revitalize the ecosystems that it passes through. Now you just have to choose which one to go with.
 Choice: display=[Bring the Leviathan’s body home]; next=D22
 Choice: display=[Break down the Leviathan’s body across the galaxy]; next=D24
  
-Title: Ending: Harvest Home
+Title: Ending: Harvest Home (D22)
 Branch: D22
 Description: Setting the coordinates for the orbit of your home planet, you warp yourself and the Leviathan’s body out of the black hole. Momentarily blinded by the sudden change of brightness, you reopen your eyes to see the Leviathan’s body orbiting the welcoming sight of your home planet. Bringing the good news to your boss, you tell them of your journey and about the new body that is orbiting the planet. “You’ve done a fantastic job! You’re the hero of our planet!” While the praise is nice, you do hold the small regret of not being able to help the Leviathan.
 Choice: display=[Decades later]; next=D23
 
-Title: Decades Later: Harvest
+Title: Decades Later: Harvest (D23)
 Branch: D23
 Description: With the passing decades, the Leviathan has gotten smaller as it is harvested for food. The fish population slightly recovered as they were no longer necessary for your planet’s survival, though the population never did return to what it was before the decline. You’ve started to get travellers on a similar journey that you had gone through all those years ago. It leaves you with a nagging concern for the future.
 
-Title: Ending: Galactic Aid
+Title: Ending: Galactic Aid (D24)
 Branch: D24
 Description: Setting the coordinates for the orbit of your home planet, you warp yourself and the Leviathan’s body out of the black hole. Momentarily blinded by the sudden change of brightness, you reopen your eyes to see the Leviathan’s body orbiting the welcoming sight of your home planet. Bringing the good news to your boss, you tell them of your journey and your plan for the future. With approval from your boss, you prepare to head out on a new ship to spread the Leviathan’s remains across the galaxy, though you do hold the small regret of not being able to help the Leviathan.
 Choice: display=[Decades later]; next=D25
 
-Title: Decades Later: Cycle
+Title: Decades Later: Cycle (D25)
 Branch: D25
 Description: After spreading the Leviathan’s remains across the galaxy, the population of the celestial aquatic creatures reached new record highs, leading to bountiful years of food. However, now the populations have started to decline again, a similar trend reappearing. While the planet will be fine for a while, you foresee that someone may have to travel a similar path as you, though they may not be as fortunate in finding a solution.
