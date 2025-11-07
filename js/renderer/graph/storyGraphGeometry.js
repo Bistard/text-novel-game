@@ -53,24 +53,36 @@ export function buildEdgePathData(edge, fromNode, toNode) {
 
 	const startY = fromY + offset;
 	const endY = toY + offset;
-	const pathSegments = [`M ${fromX} ${fromY}`];
+	const departDirection = elbowX >= fromX ? 1 : -1;
+	const arriveDirection = elbowX <= toX ? 1 : -1;
+	const startX = fromX + departDirection * NODE_RADIUS;
+	const endX = toX - arriveDirection * NODE_RADIUS;
+	const pathSegments = [`M ${startX} ${fromY}`];
+	const boundsPoints = [[startX, fromY]];
 	if (offset !== 0) {
-		pathSegments.push(`L ${fromX} ${startY}`);
+		pathSegments.push(`L ${startX} ${startY}`);
+		boundsPoints.push([startX, startY]);
 	}
 	pathSegments.push(`L ${elbowX} ${startY}`);
+	boundsPoints.push([elbowX, startY]);
 	if (startY !== endY) {
 		pathSegments.push(`L ${elbowX} ${endY}`);
+		boundsPoints.push([elbowX, endY]);
 	}
-	pathSegments.push(`L ${toX} ${endY}`);
+	pathSegments.push(`L ${endX} ${endY}`);
+	boundsPoints.push([endX, endY]);
 	if (offset !== 0) {
-		pathSegments.push(`L ${toX} ${toY}`);
+		pathSegments.push(`L ${endX} ${toY}`);
+		boundsPoints.push([endX, toY]);
 	}
 
+	const xValues = boundsPoints.map(([x]) => x);
+	const yValues = boundsPoints.map(([, y]) => y);
 	const bounds = {
-		minX: Math.min(fromX, elbowX, toX),
-		maxX: Math.max(fromX, elbowX, toX),
-		minY: Math.min(fromY, startY, endY, toY),
-		maxY: Math.max(fromY, startY, endY, toY),
+		minX: Math.min(...xValues),
+		maxX: Math.max(...xValues),
+		minY: Math.min(...yValues),
+		maxY: Math.max(...yValues),
 	};
 
 	return {
