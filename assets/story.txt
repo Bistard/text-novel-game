@@ -1,7 +1,7 @@
 ﻿Title: Starry Awakening (A1)
 Branch: A1
 Description: You wake up, a light cool breeze flowing through your hair, grass flowing in the wind, the quiet of night. Your nap in the field was refreshing. You gaze at the stars, wondering "What is out there? Will I ever see beyond this starry expanse?" You say that as you see a stream of celestial aquatic creatures swim across the night sky. You make out that they are a myriad of various common fish, cephalopods, even sharks just from a glance. Your interest peaks yet your sadness valleys. The thought of such beautiful creatures slowly dying out crosses your mind like a flash flood.
-Choice: display=[Next]; next=A30
+Choice: display=[Next]; next=A2
 
 Title: Omen and Resolve (A2)
 Branch: A2
