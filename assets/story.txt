@@ -92,7 +92,19 @@ Title: Mossara Arrival (B1)
 Branch: B1
 Description: Warping into the orbit of Mossara, you gaze upon the vast landmasses of the planet. The rich greenery is viewable from space, though dark patches of gray and brown seem to dot the land as well. As you descend upon the planet, you get a closer look of those darkened patches of Mossara, seeing abandoned factories, tainted waters and dying vegetation. When you exit your ship, your ears ring from the pressure from the chimes of small voices singing. The hypnotic and enchanting hums make your eyes feel heavy.
 Choice: display=[(Fight it, resist the seductive singing)]; roll=luck, dice=2d6, target=8, ok=B2, fail=B6
-Choice: display=[Fall asleep]; next=B6
+Choice: display=[Fall asleep]; next=B6; stat=stamina-1
+Choice: display=[Record the singing with your ship's scanner]; next=B1a; stat=stamina-1
+Choice: display=[Observe from afar using telescope]; next=B1b
+
+Title: Acoustic Data (B1a)
+Branch: B1a
+Description: You activate your ship's scanner, recording the hypnotic resonance from a distance. The readings show fluctuating frequencies that resemble a living organism’s pulse. You gain useful data for later analysis, though the lingering vibrations make you feel slightly drained.
+Choice: display=[Land and investigate the source]; next=B2; item=Sound Record+
+
+Title: Distant Observation (B1b)
+Branch: B1b
+Description: From afar, you watch groups of flower-like figures gathering near a glowing grove. The melody originates from them. You resist the urge to interfere for now, and prepare to land where the hum weakens.
+Choice: display=[Land near the quieter grove]; next=B2
 
 Title: Flower Guides (B2)
 Branch: B2
@@ -125,6 +137,12 @@ Branch: B7
 Description: Hard to make out at first, you finally notice it. A topiary statue of a giant woman is sitting within the forest. Her green eyes are lowered as she plays along with the little flower people. The tiger lily lets out an echoing laugh and places itself at the top of her crown.
 Choice: display=[Interrupt the moment]; next=B8; stat=luck-1;
 Choice: display=[Wait for them to finish]; stat=luck+1; stat=stamina+1; next=B8
+Choice: display=[Synchronize the sound (Sound Recorder)]; valid=has(Sound Record); next=B7a
+
+Title: Sound Resonance（B7a)
+Branch: B7a
+Description: You hold up the device that recorded the earlier song. The moment it plays, the melody synchronizes with the statue’s rhythm. The entire forest vibrates gently as petals shimmer in the air. The giant’s eyes flicker open — not in anger, but in recognition. “So you carry the echo of my children’s voice,” her tone reverberates in your mind. “You have listened, rather than taken.” The flowers circle around you joyfully, showering you in a wave of crimson light. You feel your strength returning.
+Choice: display=[Follow her into the forest]; next=B8; stat=stamina+3; stat=luck+2
 
 Title: Gaia's Path (B8)
 Branch: B8
@@ -171,11 +189,17 @@ Choice: display=[Cross the bridge]; next=B16
 Title: Blighted Grove (B16)
 Branch: B16
 Description: After crossing, you can smell the ocean in the distance. However, the closer you get to the aroma of water, the more dying trees you encounter. Further in, tree stumps and rotting logs are the only thing left. It’s hard to believe this is the same planet, but the statue lady strides strongly, determined to show you something.
-Choice: display=[Follow her along the path]; next=B17; stat=stamina-1
+Choice: display=[Follow her along the path]; optional=visited(B11); next=B17a; stat=luck+1
+Choice: display=[Follow her along the path]; optional=visited-any(B12, B14); next=B17b; stat=luck-1
 
-Title: Ruined Falls (B17)
-Branch: B17
-Description: Following her lead, you enter a clearing with a waterfall that was once full of life but now stood in ruin. The water that was once clear and streaming with life, ran completely ruined and dark, carrying the weight and decay of oil beneath the lost area. The earth was scarred with plants wilted, the bodies of once lively creatures now floated dead lifeless through the stream. The air was full of mourning as if the land lost all life to breath.
+Title: Ruined Falls (Good Impression)（B17a）
+Branch: B17a
+Description: Following her lead, you enter a clearing with a waterfall that was once full of life but now stood in ruin. Yet, when Gaia turns toward you, her expression carries both sorrow and gratitude. “You… the earth remembers your hands that shielded it from the black oil.” Her tone softens, like the sound of rain over leaves. “You tried to heal what others ignored. The land recognizes your kindness.” You suddenly realize—she is referring to when you helped contain the oil spill earlier. Your past action has not been forgotten.
+Choice: display=[Ask her what happened]; next=B18
+
+Title: Ruined Falls (Cold Reception) (B17b)
+Branch: B17b
+Description: You follow her to a ruined waterfall, the air heavy with the scent of decay. When Gaia faces you, her tone is colder. “The land remembers your hesitation,” she murmurs. “When corruption spread, you turned away. Every moment of inaction feeds this rot.” The weight of her words presses down on you—you realize she somehow knows about the choice you made before, when you avoided the spreading oil. The silence between you feels heavier than the poisoned air.
 Choice: display=[Ask her what happened]; next=B18
 
 Title: Gaia's Lament (B18)
