@@ -14,6 +14,7 @@ const translations = {
 			gameTitle: "Equilibrium",
 			tagline: "An Interactive Narrative Game",
 			teamTitle: "Team",
+			version: "Version {{version}}",
 		},
 		common: {
 			language: "Language",
@@ -139,6 +140,7 @@ const translations = {
 			gameTitle: "Equilibrium",
 			tagline: "Un jeu narratif interactif",
 			teamTitle: "Équipe",
+			version: "Version {{version}}",
 		},
 		common: {
 			language: "Langue",
@@ -264,6 +266,7 @@ const translations = {
 			gameTitle: "Equilibrium",
 			tagline: "互动叙事游戏",
 			teamTitle: "团队",
+			version: "版本 {{version}}",
 		},
 		common: {
 			language: "语言",

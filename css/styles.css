@@ -94,6 +94,14 @@ body::before {
 	font-size: clamp(1rem, 2.2vw, 1.2rem);
 }
 
+.home-version {
+	margin: 0;
+	color: var(--fg-muted);
+	font-size: 0.9rem;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+
 .home-language {
 	justify-self: end;
 }

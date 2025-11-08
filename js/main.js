@@ -10,6 +10,8 @@ import {
 	bindAttribute,
 } from "./i18n/index.js";
 
+const APP_VERSION = "0.7.1";
+
 // Cache references to key DOM elements
 const elements = {
 	title: document.getElementById("game-title"),
@@ -44,6 +46,7 @@ const homeNote = document.getElementById("home-note");
 const appContainer = document.getElementById("app");
 const homeTitle = document.getElementById("home-title");
 const homeTagline = document.querySelector(".home-tagline");
+const homeVersion = document.getElementById("app-version");
 const homeLanguageInfo = document.getElementById("home-language-info");
 const homeTeamTitle = document.getElementById("team-title");
 const languageSelectHome = document.getElementById("language-select-home");
@@ -119,6 +122,11 @@ function initializeLanguageSelectors() {
 function setupStaticBindings() {
 	bindText(homeTitle, "app.gameTitle");
 	bindText(homeTagline, "app.tagline");
+	bindText(homeVersion, "app.version", {
+		replacements: () => ({
+			version: APP_VERSION,
+		}),
+	});
 	bindText(homeTeamTitle, "app.teamTitle");
 
 	bindText(languageLabelHome, "common.language");
