@@ -108,7 +108,7 @@ Choice: display=[Listen to the flower]; next=B4
 Title: Petal Plea (B4)
 Branch: B4
 Description: “No … Harm … Help … Please”. Then with a sudden gust of wind, the little flowers disperse, twirling, and leaving petals everywhere. The tiger lily glows with radiance in the distance as its voice hums moving towards the desolated village.
-Choice: display=[Chase after the flower]; next=B5
+Choice: display=[Chase after the flower]; next=B5; stat=stamina-1
 
 Title: Desolate Village (B5)
 Branch: B5
@@ -123,8 +123,8 @@ Choice: display=[Follow the flowers’ gaze]; next=B7
 Title: Verdant Statue (B7)
 Branch: B7
 Description: Hard to make out at first, you finally notice it. A topiary statue of a giant woman is sitting within the forest. Her green eyes are lowered as she plays along with the little flower people. The tiger lily lets out an echoing laugh and places itself at the top of her crown.
-Choice: display=[Interrupt the moment]; next=B8
-Choice: display=[Wait for them to finish]; stat=luck+1; next=B8
+Choice: display=[Interrupt the moment]; next=B8; stat=luck-1;
+Choice: display=[Wait for them to finish]; stat=luck+1; stat=stamina+1; next=B8
 
 Title: Gaia's Path (B8)
 Branch: B8
@@ -146,7 +146,7 @@ Choice: display=[Leave the room]; next=B12
 Title: Contain the Spill (B11)
 Branch: B11
 Description: Taking one of the abandoned shovels from outside, you pile dirt around the oil to contain it. Once you have finished, the little flower people burst through the entrance. Colourful petals passing by you with extraordinary speed. A few flower people start planting the newly laid soil with vegetation, reinforcing the walls of dirt containing the oil. As you leave the building, and head back to the other path, a tiger lily gently places itself upon your head.
-Choice: display=[Head towards the bridge]; stat=luck+2; next=B15
+Choice: display=[Head towards the bridge]; stat=luck+2; stat=stamina-1; next=B15
 
 Title: Slippery Exit (B12)
 Branch: B12
@@ -156,12 +156,12 @@ Choice: display=[(Attempt to recover your balance)]; roll=luck, dice=2d6, target
 Title: Steady Steps (B13)
 Branch: B13
 Description: You manage to catch yourself before landing yourself among the fallen plants. You make your way back to the path towards the bridge, but with a bit more caution.
-Choice: display=[Head towards the bridge]; next=B15
+Choice: display=[Head towards the bridge]; next=B15; stat=stamina-1
 
 Title: Stumble Forward (B14)
 Branch: B14
 Description: You join the fallen plants on ground. After a pause, you dust yourself off and make your way to the path towards the bridge, practicing more caution as you do so.
-Choice: display=[Head towards the bridge]; stat=luck-1; next=B15
+Choice: display=[Head towards the bridge]; stat=luck-1; stat=stamina-1; next=B15
 
 Title: Mossy Bridge (B15)
 Branch: B15
@@ -171,7 +171,7 @@ Choice: display=[Cross the bridge]; next=B16
 Title: Blighted Grove (B16)
 Branch: B16
 Description: After crossing, you can smell the ocean in the distance. However, the closer you get to the aroma of water, the more dying trees you encounter. Further in, tree stumps and rotting logs are the only thing left. It’s hard to believe this is the same planet, but the statue lady strides strongly, determined to show you something.
-Choice: display=[Follow her along the path]; next=B17
+Choice: display=[Follow her along the path]; next=B17; stat=stamina-1
 
 Title: Ruined Falls (B17)
 Branch: B17
@@ -198,17 +198,17 @@ Choice: display=[(Improvise a strike)]; roll=luck, dice=2d6, target=11, ok=B22, 
 Title: Shutdown Strike (B21)
 Branch: B21
 Description: With your ship’s harpoon gun, you’re able to precisely aim for the button on the beast. With a perfect strike on the button, the beast comes to a screeching halt. A great success.
-Choice: display=[Return to Gaia]; stat=luck+1; next=B29
+Choice: display=[Return to Gaia]; stat=luck+1; stat=stamina+2; next=B29
 
 Title: Improvised Shutdown (B22)
 Branch: B22
 Description: After darting around the beast, you’re able to find the button. Swooping to the ground to pick up debris from the beast’s rampage, you aim to drop it on your target. With some good luck you successfully strike true bringing the beast to a screeching halt.
-Choice: display=[Return to Gaia]; next=B29
+Choice: display=[Return to Gaia]; next=B29; stat=stamina+1
 
 Title: Beast's Reprisal (B23)
 Branch: B23
 Description: After darting around the beast, you’re able to find the button. Swooping to the ground to pick up debris from the beast’s rampage, you aim to drop it on your target. Unfortunately, luck was not on your side. The beast swings towards your ship damaging it. Unable to continue, you make your retreat.
-Choice: display=[Return to Gaia]; next=B28
+Choice: display=[Return to Gaia]; next=B28; stat=stamina-2
 
 Title: Clear the Dam (B24)
 Branch: B24
@@ -219,17 +219,17 @@ Choice: display=[(Clear the debris carefully)]; roll=luck, dice=2d6, target=11, 
 Title: River Restored (B25)
 Branch: B25
 Description: With your ship’s massive net, you’re able to scoop up large amounts of debris at a time, making quick work of the debris and moving safely to the side. The water flows, refilling the stream and carrying away tainted water. A great success.
-Choice: display=[Return to Gaia]; stat=luck+1; next=B29
+Choice: display=[Return to Gaia]; stat=luck+1; next=B29; stat=stamina+1
 
 Title: Careful Clearance (B26)
 Branch: B26
 Description: As you carefully make your way through clearing the debris, you finish in a timely manner. The water flows, refilling the stream and carrying away tainted water.
-Choice: display=[Return to Gaia]; next=B29
+Choice: display=[Return to Gaia]; next=B29; stat=stamina+1
 
 Title: Debris Setback (B27)
 Branch: B27
 Description: As you try to clear the debris, pieces of the mound crumble and hit your ship. While it is still operable, it's not in a condition to continue clearing the debris.
-Choice: display=[Return to Gaia]; next=B28
+Choice: display=[Return to Gaia]; next=B28; stat=stamina-1
 
 Title: Unfinished Stewardship (B28)
 Branch: B28
