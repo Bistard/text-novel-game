@@ -268,8 +268,8 @@ Choice: display=[Explain the purpose of your journey]; next=B30
 Title: Leviathan Rumors (B30)
 Branch: B30
 Description: Gaia responds, “While I don’t have an exact solution for you, I hope that your experiences here will help guide you towards one. Something else that may help would be to search for the great Leviathan. It’s a massive creature that could be seen swimming around the planet. It hasn’t been sighted for a long time, even when the humans of this planet were still around. Perhaps they left in hunt of it?” With these new experiences and information you take off from Mossara and head to your next destination.
-Choice: display=[Head to Glaciera]; valid=visited-none(C1); next=C1
-Choice: display=[Head to the Black Hole]; valid=visited-any(C1); next=D1
+Choice: display=[Head to Glaciera]; valid=visited-none(C1); next=C1; stat=stamina+3
+Choice: display=[Head to the Black Hole]; valid=visited-any(C1); next=D1; stat=stamina+3
 
 Title: Bad Ending (Ending)
 Branch: Ending
@@ -277,8 +277,16 @@ Description: Your journey ends here. Perhaps another path awaits if you restart 
 
 Title: Glaciera Approach (C1)
 Branch: C1
-Description: As you slowly descend toward the planet from orbit, the local star hangs at the edge of the globe, revealing a clear crust. It looks almost like it's coated in glass... suddenly, something hits your windshield. You glance back to find a strange-looking fish covered with white fur. As it fades into the distance, you turn your gaze back to the planet.
-Choice: display=[Land]; next=C2
+Description: As you slowly descend toward the planet from orbit, the local star hangs at the edge of the globe, revealing a clear crust. It looks almost like it's coated in glass... suddenly, something hits your windshield. You glance back to find a strange-looking fish covered with white fur. As it fades into the distance, you turn your gaze back to the planet. The entry path flickers on your screen — three potential landing vectors appear, each marked with risk ratings and energy costs. The cold atmosphere of Glaciera crackles with static storms. How will you proceed?
+Choice: display=[Descend carefully through the northern polar winds]; next=C2; stat=stamina-2
+Choice: display=[Dive swiftly through the equatorial storm]; roll=luck, dice=2d6, target=9, ok=C2, fail=C1a
+Choice: display=[Use your ship’s power thrusters to stabilize the descent (Medium Carcass Trawler)]; valid=has(Medium Carcass Trawler); next=C2; stat=stamina-1
+Choice: display=[Glide with minimal fuel usage (Light Fishing Boat)]; valid=has(Light Fishing Boat); next=C2
+
+Title: Turbulence Strike (C1a)
+Branch: C1a
+Description: You dive into the equatorial storm, the lightning crackling across the hull as the frozen air claws at your ship. The storm proves far stronger than expected — your controls jam, the stabilizers freeze, and an impact sends your vessel spinning off course. By the time you regain control, warning lights flood your cockpit. The ship manages to touch down, but the landing leaves you drained and shaken.
+Choice: display=[Step out to assess the damage]; next=C2; stat=stamina-3
 
 Title: Chained by Bikers (C2)
 Branch: C2
@@ -304,28 +312,28 @@ Choice: display=[(Persuade)]; roll=luck, dice=2d6, target=11, ok=C6, fail=C10
 Title: Crewed Up (C6)
 Branch: C6
 Description: The gang leader lets out a low whistle. "Heh... got some guts and gears, huh?" He signals to his crew. "Mount up. You're fishing for Glaciera now." Several members climb aboard your ship. "Don't get clever. We'll be watching." As you launch toward the polar sea, the assigned crew brief you on the planet's collectivist ideals and their fragile food systems. You begin to understand what balance here truly means.
-Choice: display=[Head to fishing grounds]; next=C7
+Choice: display=[Head to fishing grounds]; next=C7; stat=stamina+1
 
 Title: Crew Stories (C7)
 Branch: C7
 Description: As you talk with the assigned gang members, your new crewmates give you a rundown of life on the planet. They explain the planet's collectivist system: resources pooled, no leaders, all shared. They also share tales of a Leviathan once seen swimming past the planet. "Whenever the Leviathan came by there would be a bounty of food for a good while, at least that's what the elders told us. None of us have seen it in our lifetime." As they finish sharing stories, the ship arrives at the fishing spot.
-Choice: display=[(Cast the line)]; roll=luck, dice=2d6, target=7, ok=C8, fail=C9
+Choice: display=[(Cast the line)]; roll=luck, dice=2d6, target=10, ok=C8, fail=C9; stat=stamina-1
 
 Title: Bountiful Haul (C8)
 Branch: C8
 Description: The waters below churn as your harpoons lock onto something beneath the ice shelf. With teamwork and quick reflexes, you pull in a catch unlike any other: thick-furred aquatic beasts that shimmer with radiant scales. The crew cheers as you set course for base. Looks like you've made a good impression.
-Choice: display=[Return to central base]; stat=luck+1; next=C13
+Choice: display=[Return to central base]; stat=luck+1; next=C13; stat=stamina+1
 
 Title: Empty Nets (C9)
 Branch: C9
 Description: You cast the line, but something feels off. A sudden jolt pulls the harpoon rig, but the tension snaps as quickly as it came. The crew scrambles to recover the equipment, but it's clear nothing was caught. One of the gang members clicks their tongue. "No haul. That won't look good." You set course back to the base, empty-handed.
-Choice: display=[Return to central base]; next=C13
+Choice: display=[Return to central base]; next=C13; stat=stamina-1
 
 Title: Confiscated Ship (C10)
 Branch: C10
 Description: The gang confiscates your ship and sets you to work in one of the igloos. The boss does not specify which, so you choose. You look around the tribe and see several members within their domes. One igloo catches your interest with a wooden interior and a desk full of unorganized items. Another is larger than the others, with smoke curling from a chimney on top.
-Choice: display=[Enter the smaller igloo]; next=C11
-Choice: display=[Enter the larger igloo]; next=C12
+Choice: display=[Enter the smaller igloo]; next=C11; stat=stamina+4
+Choice: display=[Enter the larger igloo]; next=C12; stat=stamina+3
 
 Title: Scholar's Igloo (C11)
 Branch: C11
@@ -340,7 +348,7 @@ Choice: display=[Return to the camp]; next=C13
 Title: Glacier Alarm (C13)
 Branch: C13
 Description: As night falls, alarms blare across the settlement. A nearby glacier is breaking apart, threatening to flood the lower domes. You approach the gang leader and offer your help. He hesitates, then nods. "You've earned some trust. Let's see if you follow through."
-Choice: display=[Depart for the glacier]; next=C14
+Choice: display=[Depart for the glacier]; next=C14; stat=stamina-1
 
 Title: Plan the Route (C14)
 Branch: C14
@@ -351,8 +359,8 @@ Choice: display=[Try powering through]; next=C19
 Title: Swift Run (C15)
 Branch: C15
 Description: The engines roar to life, the vibrations shaking the console beneath your hands. You push the throttle forward, the ship darting into the icy maze. The controls fight back as each gust of frozen wind threatens to throw you off course. Your mind races: this is it, a test of both your ship and your resolve.
-Choice: display=[(If you have the Light Fishing Boat, attempt the run)]; optional=has(Light Fishing Boat); next=C16
-Choice: display=[(Attempt the run relying on luck)]; roll=luck, dice=2d6, target=12, ok=C17, fail=C18
+Choice: display=[attempt the run (Light Fishing Boat)]; valid=has(Light Fishing Boat); next=C16
+Choice: display=[(Attempt the run relying on luck)]; roll=luck, dice=2d6, target=12, ok=C17, fail=C18; stat=stamina-1
 
 Title: Clean Sweep (C16)
 Branch: C16
@@ -367,18 +375,18 @@ Choice: display=[Return to base]; next=C24
 Title: Icy Crash (C18)
 Branch: C18
 Description: The turns are too sharp. The weight of your ship proves too much to control. A misstep sends it careening into the glacier wall. Systems fail. The collapse begins. There's no time to recover. You are forced to abandon the operation and return defeated.
-Choice: display=[Return to home planet]; next=C23
+Choice: display=[Return to home planet]; next=C23; stat=stamina-1
 
 Title: Power Through (C19)
 Branch: C19
 Description: You choose the direct approach through a heavily packed ice field. There is no way around; it is a test of raw force. If your vessel has the power, you might make it. If not, luck will decide.
-Choice: display=[(Plow through with power)]; roll=luck, dice=2d6, target=12, ok=C21, fail=C22
-Choice: display=[(Use powerful vessel)]; optional=has(Medium Carcass Trawler); next=C20
+Choice: display=[(Plow through with power)]; roll=luck, dice=2d6, target=12, ok=C21, fail=C22; stat=stamina-1
+Choice: display=[(Use powerful vessel)]; valid=has(Medium Carcass Trawler); next=C20
 
 Title: Icebreaker Triumph (C20)
 Branch: C20
 Description: With sheer momentum, your vessel crushes through the wall of ice. Chunks scatter in every direction as you forge a tunnel straight to the impact zone. You arrive well ahead of schedule, giving the settlement time to respond and reinforce.
-Choice: display=[Return victorious]; next=C24
+Choice: display=[Return victorious]; next=C24; stat=stamina+1
 
 Title: Forceful Success (C21)
 Branch: C21
@@ -388,7 +396,7 @@ Choice: display=[Return to base]; next=C24
 Title: Frozen Failure (C22)
 Branch: C22
 Description: The ice field proves too dense. Your vessel gets stuck midway, unable to continue. Reinforcements arrive too late, and the glacier collapses into the lower domes. The mission is a failure.
-Choice: display=[Return to home planet]; next=C23
+Choice: display=[Return to home planet]; next=C23; stat=stamina-1
 
 Title: Quiet Return (C23)
 Branch: C23
@@ -398,8 +406,9 @@ Choice: display=[Bad Ending]; next=Ending
 Title: Aurora Celebration (C24)
 Branch: C24
 Description: You return to the Glaciera base under a sky thick with auroras. The people gather, celebrating the averted disaster. The gang leader claps you on the back. "Not bad, outsider." Before you depart, someone hands you a scroll: an old record that mentions sightings of a great being near a black hole, massive enough to seed ecosystems in its wake. You board your ship, purpose renewed.
-Choice: display=[Head to Mossara]; valid=visited-none(B1); next=B1
-Choice: display=[Head to the Black Hole]; valid=visited-any(B1); next=D1
+Choice: display=[Head to Mossara]; valid=visited-none(B1); next=B1; stat=stamina+3
+Choice: display=[Head to the Black Hole]; valid=visited-any(B1); next=D1; stat=stamina+3
+
 Title: Before the Abyss (D1)
 Branch: D1
 Description: From what you’ve been told on the other planets, it seems that finding the Leviathan could give you a solution to the food shortage issue. However, you have experienced quite a lot during your journey across Mossara and Glaciera. You could head back home and share your experiences and find a solution amongst them.
@@ -503,7 +512,7 @@ Title: Leviathan's Plea (D19)
 Branch: D19
 Description: “After falling into this place, I’ve been unable to soar, and have no means to replenish my strength. Being stuck here I can’t fulfill my duty. I hoped that my call would reach someone, someone who loved creatures, and that perhaps they could save me from this end.” Did you find how you could help the Leviathan?
 Choice: display=[No]; next=D20
-Choice: display=[Yes]; optional=visited-any(D15); next=D26
+Choice: display=[Yes]; valid=visited-any(D15); next=D26
  
 Title: Hidden Ending: Balance (D26)
 Branch: D26
