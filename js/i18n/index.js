@@ -21,7 +21,7 @@ const translations = {
 			storyMap: "Story Map",
 			saveGame: "Save Game",
 			loadGame: "Load Game",
-			returnHome: "Return Home",
+			returnHome: "Return Title",
 			restart: "Restart",
 			undo: "Undo Last Choice",
 			skip: "Skip",
@@ -86,6 +86,7 @@ const translations = {
 			loadCancelled: "Load cancelled.",
 			failedToReadSave: "Failed to read the save file.",
 			loadingSaveFailed: "Loading the save file failed.",
+			gameOver: "Game over. Your stamina is depleted.",
 		},
 		choices: {
 			noFurtherChoices: "This path has no further choices.",
@@ -210,6 +211,7 @@ const translations = {
 			loadCancelled: "Chargement annulé.",
 			failedToReadSave: "Lecture du fichier de sauvegarde impossible.",
 			loadingSaveFailed: "Le chargement du fichier de sauvegarde a échoué.",
+			gameOver: "Fin de partie. Votre endurance est épuisée.",
 		},
 		choices: {
 			noFurtherChoices: "Cette voie n'a plus de choix.",
@@ -330,6 +332,7 @@ const translations = {
 			loadCancelled: "已取消读取。",
 			failedToReadSave: "读取存档文件失败。",
 			loadingSaveFailed: "载入存档失败。",
+			gameOver: "游戏结束，体力已经耗尽。",
 		},
 		choices: {
 			noFurtherChoices: "此路线没有更多可选项。",

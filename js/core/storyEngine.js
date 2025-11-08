@@ -5,6 +5,7 @@ import { runRoll } from "../rollSystem.js";
 import { formatSigned } from "../storyUtilities.js";
 import { loadStatConfig } from "../statConfig.js";
 import { processChoiceSelection } from "./choiceProcessor.js";
+import { t } from "../i18n/index.js";
 
 export class StoryEngine {
 	/**
@@ -29,6 +30,7 @@ export class StoryEngine {
 		this.stateChangeCallback = null;
 		this.storyUrl = null;
 		this.statsConfigUrl = null;
+		this.staminaAlertShown = false;
 	}
 
 	/**
@@ -67,6 +69,7 @@ export class StoryEngine {
 		if (!this.story) return;
 		this.clearUndoHistory({ silent: true });
 		this.state.reset(this.story.start);
+		this.staminaAlertShown = false;
 	}
 
 	/** Returns the active branch, or null if unavailable. */
@@ -183,6 +186,7 @@ export class StoryEngine {
 	render() {
 		const branch = this.getCurrentBranch();
 		this.renderer.render(branch, this.state, (choiceId) => this.handleChoice(choiceId));
+		this.checkStaminaDepletion();
 		this.notifyStateChange();
 	}
 
@@ -200,6 +204,30 @@ export class StoryEngine {
 			isProcessingChoice: this.choiceInProgress,
 			currentBranchId: this.state.getCurrentBranchId(),
 		});
+	}
+
+	checkStaminaDepletion() {
+		if (!this.state || !this.state.stats || !Object.prototype.hasOwnProperty.call(this.state.stats, "stamina")) {
+			this.staminaAlertShown = false;
+			return;
+		}
+
+		const stamina = this.state.getStatValue("stamina");
+		if (!Number.isFinite(stamina)) {
+			return;
+		}
+
+		if (stamina <= 0) {
+			if (this.staminaAlertShown) {
+				return;
+			}
+			this.staminaAlertShown = true;
+			if (typeof window !== "undefined" && typeof window.alert === "function") {
+				window.alert(t("messages.gameOver"));
+			}
+		} else if (this.staminaAlertShown) {
+			this.staminaAlertShown = false;
+		}
 	}
 
 	canUndo() {
@@ -281,6 +309,7 @@ export class StoryEngine {
 
 		this.clearUndoHistory({ silent: true });
 		this.state.restoreSnapshot(saveData.state);
+		this.staminaAlertShown = false;
 		const branchId = this.state.getCurrentBranchId();
 		if (!branchId || !this.story.branches[branchId]) {
 			const fallback = this.story.start;
