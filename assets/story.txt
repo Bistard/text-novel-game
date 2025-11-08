@@ -58,7 +58,7 @@ Choice: display=[Next]; next=A9; stat=stamina-2
 Title: Test Your Luck (A9)
 Branch: A9
 Description: The nostalgic sensation empowers you, a second wind during this struggle. Roll 2d6 to determine your luck. Remember this number.
-Choice: display=[(Roll 2d6 to determine your luck)]; roll=luck, dice=2d6, target=10, ok=A11, fail=A10; stat=luck+roll
+Choice: display=[(Roll 2d6 to determine your luck)]; roll=luck, dice=2d6, target=10, ok=A11b, fail=A10; stat=luck+roll
 
 Title: Wounded Titan (A10)
 Branch: A10
