@@ -10,7 +10,7 @@ import {
 	bindAttribute,
 } from "./i18n/index.js";
 
-const APP_VERSION = "0.7.4";
+const APP_VERSION = "0.8.1";
 
 // Cache references to key DOM elements
 const elements = {
