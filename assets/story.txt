@@ -6,10 +6,10 @@ Choice: display=[Next]; next=A2
 Title: Omen and Resolve (A2)
 Branch: A2
 Description: All over the news there is data from scientists saying that there is a gradual decline in the fish supply. You make the decision that it will be you, you will be the one to end this upcoming crisis. You gaze to the sky once more in determination and just as you make the decision, a flash comes across your mind. “Help…. me…..” A draconic eye opens, strained and tired. “A vision?” Your own mouth utters without prior thought “Who was that and where did it come from?” You say as you look to the centre of the galaxy in the starry night above as if some strange force pulls you there. Confused, you still go with your goal to end this crisis but with the lingering thought that the vision is connected.
-Choice: display=[Pick up the manual on your desk]; next=A14
+Choice: display=[Pick up the manual on your desk]; next=A2a
 
-Title: Stamina Manual (A14)
-Branch: A14
+Title: Stamina Manual (A2a)
+Branch: A2a
 Description: Before departing, you find a slim handbook left in the cabin. On its cover: "Explorer's Survival Manual." You flip through it, finding a simple note: "Your stamina reflects your will and endurance. Walk carefully. Rest wisely. Failure drains it. Success restores it. When it's gone, so are you."  
 You feel a strange comfort holding it.
 Choice: display=[Put the manual away]; next=A3
