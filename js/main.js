@@ -79,6 +79,7 @@ const engine = new StoryEngine({
 	graphToggle: elements.graphToggle,
 	graphModeLabel: elements.graphModeLabel,
 	graphPlaceholder: elements.graphPlaceholder,
+	onGameOver: handleGameOver,
 });
 
 engine.setStateChangeListener(updateUndoButtonState);
@@ -317,6 +318,17 @@ function returnHome() {
 	}
 	gameVisible = false;
 	resetHomeState();
+}
+
+function handleGameOver({ reason } = {}) {
+	if (!gameVisible) {
+		return;
+	}
+
+	returnHome();
+	if (reason === "stamina") {
+		setHomeMessage(t("messages.gameOver"));
+	}
 }
 
 async function startGame() {

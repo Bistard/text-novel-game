@@ -20,9 +20,11 @@ export class StoryEngine {
 	 * @param {HTMLElement} options.titleElement
 	 * @param {HTMLElement} [options.skipButton]
 	 * @param {HTMLElement} [options.skipToggle]
+	 * @param {(details: { reason: string }) => void} [options.onGameOver]
 	 */
-	constructor(options) {
-		this.renderer = new StoryRenderer(options);
+	constructor(options = {}) {
+		const { onGameOver, ...rendererOptions } = options;
+		this.renderer = new StoryRenderer(rendererOptions);
 		this.state = new StoryState();
 		this.story = null;
 		this.choiceInProgress = false;
@@ -31,6 +33,7 @@ export class StoryEngine {
 		this.storyUrl = null;
 		this.statsConfigUrl = null;
 		this.staminaAlertShown = false;
+		this.gameOverCallback = typeof onGameOver === "function" ? onGameOver : null;
 	}
 
 	/**
@@ -206,6 +209,30 @@ export class StoryEngine {
 		});
 	}
 
+	scheduleGameOverCallback(details) {
+		if (typeof this.gameOverCallback !== "function") {
+			return;
+		}
+		const invoke = () => {
+			try {
+				const result = this.gameOverCallback(details);
+				if (result && typeof result.then === "function") {
+					result.then(null, (error) => {
+						console.error("Game over callback failed:", error);
+					});
+				}
+			} catch (error) {
+				console.error("Game over callback failed:", error);
+			}
+		};
+
+		if (typeof globalThis.queueMicrotask === "function") {
+			globalThis.queueMicrotask(invoke);
+		} else {
+			globalThis.setTimeout(invoke, 0);
+		}
+	}
+
 	checkStaminaDepletion() {
 		if (!this.state || !this.state.stats || !Object.prototype.hasOwnProperty.call(this.state.stats, "stamina")) {
 			this.staminaAlertShown = false;
@@ -225,6 +252,7 @@ export class StoryEngine {
 			if (typeof window !== "undefined" && typeof window.alert === "function") {
 				window.alert(t("messages.gameOver"));
 			}
+			this.scheduleGameOverCallback({ reason: "stamina" });
 		} else if (this.staminaAlertShown) {
 			this.staminaAlertShown = false;
 		}
