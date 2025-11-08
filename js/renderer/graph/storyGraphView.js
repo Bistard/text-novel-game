@@ -1,4 +1,5 @@
 import { buildMermaidGraphDefinition } from "./storyGraphMermaid.js";
+import { buildVisitedSet } from "./storyGraphStateUtils.js";
 import { t } from "../../i18n/index.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
@@ -68,6 +69,7 @@ export class StoryGraphView {
 		this.scale = 1;
 		this.story = null;
 		this.currentBranchId = null;
+		this.visitedBranches = new Set();
 
 		this.graphRoot = null;
 		this.currentRenderToken = null;
@@ -125,10 +127,11 @@ export class StoryGraphView {
 	 * Updates the graph with the latest state data.
 	 * @param {{ story?: { start?: string, branches?: Record<string, import("../../parser/types.js").StoryBranch> }, state?: import("../../state/storyState.js").StoryState|null, currentBranchId?: string|null }} payload
 	 */
-	update({ story = null, currentBranchId = null } = {}) {
+	update({ story = null, state = null, currentBranchId = null } = {}) {
 		if (story && story !== this.story) {
 			this.setStory(story);
 		}
+		this.visitedBranches = buildVisitedSet(state);
 		this.currentBranchId = typeof currentBranchId === "string" ? currentBranchId : null;
 		this.render();
 	}
@@ -155,6 +158,7 @@ export class StoryGraphView {
 		const graph = buildMermaidGraphDefinition({
 			story: this.story,
 			currentBranchId: this.currentBranchId,
+			visitedBranches: this.visitedBranches,
 		});
 
 		const hasDefinition = graph && typeof graph.definition === "string" && graph.definition.trim().length > 0;

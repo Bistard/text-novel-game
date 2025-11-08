@@ -1,10 +1,11 @@
 /**
  * Builds a Mermaid flowchart definition representing the story graph.
- * @param {{ story?: { branches?: Record<string, import("../../parser/types.js").StoryBranch> }, currentBranchId?: string|null }} options
+ * @param {{ story?: { branches?: Record<string, import("../../parser/types.js").StoryBranch> }, currentBranchId?: string|null, visitedBranches?: Iterable<string>|null }} options
  */
 export function buildMermaidGraphDefinition({
 	story = null,
 	currentBranchId = null,
+	visitedBranches = null,
 } = {}) {
 	if (!story || !story.branches) {
 		return null;
@@ -20,8 +21,11 @@ export function buildMermaidGraphDefinition({
 	const nodeMeta = new Map();
 	const classAssignments = {
 		current: new Set(),
+		unvisited: new Set(),
 	};
 	let currentNodeId = null;
+	const visitedSet = normalizeVisitedBranches(visitedBranches);
+	const hasVisitedData = visitedSet.size > 0;
 
 	for (const branchId of allIds) {
 		const sanitized = createMermaidId(branchId, usedSanitized);
@@ -39,12 +43,18 @@ export function buildMermaidGraphDefinition({
 		}
 		const tooltip = tooltipParts.length ? tooltipParts.join(" | ") : labelSource;
 
+		let isVisited = hasVisitedData ? visitedSet.has(branchId) : false;
 		if (currentBranchId && branchId === currentBranchId) {
 			classAssignments.current.add(sanitized);
 			currentNodeId = sanitized;
+			isVisited = true;
 		}
 
 		nodeMeta.set(sanitized, { id: branchId, label, tooltip });
+
+		if (hasVisitedData && !isVisited) {
+			classAssignments.unvisited.add(sanitized);
+		}
 	}
 
 	const edgeEntries = buildEdgeList(branches, sanitizedMap);
@@ -122,16 +132,31 @@ function buildEdgeList(branches, sanitizedMap) {
 
 function buildClassDefLines(classAssignments) {
 	const lines = [];
-	const classDefs = [["default", "fill:#141a31,stroke:#49d2ff,stroke-width:2px"]];
-	const definitions = [["current", "stroke:#63f5c0,stroke-width:3px"]];
-	for (const [className, definition] of definitions) {
-		classDefs.push([className, definition]);
-	}
-	for (const [name, definition] of classDefs) {
+	const classDefinitions = [
+		["default", "fill:#141a31,stroke:#49d2ff,stroke-width:2px"],
+		["unvisited", "fill:#1a1d29,stroke:#3a3f55,stroke-width:1.5px,color:#8590b5"],
+		["current", "stroke:#63f5c0,stroke-width:3px"],
+	];
+
+	for (const [name, definition] of classDefinitions) {
 		lines.push(`  classDef ${name} ${definition};`);
 	}
-	if (classAssignments.current.size) {
-		lines.push(`  class ${Array.from(classAssignments.current).join(",")} current;`);
+
+	if (!classAssignments || typeof classAssignments !== "object") {
+		return lines;
+	}
+
+	const assignmentOrder = ["unvisited", "current"];
+	for (const className of assignmentOrder) {
+		const nodes = classAssignments[className];
+		if (!nodes || !(nodes instanceof Set) || nodes.size === 0) {
+			continue;
+		}
+		const identifiers = Array.from(nodes);
+		if (!identifiers.length) {
+			continue;
+		}
+		lines.push(`  class ${identifiers.join(",")} ${className};`);
 	}
 	return lines;
 }
@@ -166,4 +191,33 @@ function escapeMermaidLabel(value) {
 		.replace(/"/g, '\\"')
 		.replace(/\r?\n|\r/g, " ")
 		.trim();
+}
+
+function normalizeVisitedBranches(input) {
+	const visited = new Set();
+	if (!input) {
+		return visited;
+	}
+	if (input instanceof Set) {
+		for (const entry of input) {
+			addVisitedEntry(visited, entry);
+		}
+		return visited;
+	}
+	if (typeof input[Symbol.iterator] === "function") {
+		for (const entry of input) {
+			addVisitedEntry(visited, entry);
+		}
+	}
+	return visited;
+}
+
+function addVisitedEntry(visited, entry) {
+	if (typeof entry !== "string") {
+		return;
+	}
+	const id = entry.trim();
+	if (id) {
+		visited.add(id);
+	}
 }
