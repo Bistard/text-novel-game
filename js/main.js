@@ -27,6 +27,7 @@ const elements = {
 	systemMessages: document.getElementById("system-messages"),
 	skipButton: document.getElementById("skip-button"),
 	skipToggle: document.getElementById("skip-toggle"),
+	undoWarningToggle: document.getElementById("undo-warning-toggle"),
 	graphOverlay: document.getElementById("graph-overlay"),
 	graphOpen: document.getElementById("graph-open"),
 	graphClose: document.getElementById("graph-close"),
@@ -82,6 +83,7 @@ engine.setStateChangeListener(updateUndoButtonState);
 let gameVisible = false;
 let loadingGame = false;
 let hasLoadedStory = false;
+let ignoreUndoWarning = false;
 
 initializeLanguageSelectors();
 setupStaticBindings();
@@ -192,6 +194,7 @@ function handleLanguageChange(language) {
 	syncLanguageSelectors(current);
 	updateDynamicLabels();
 	updateLanguageNotices(current);
+	updateUndoWarningToggleState();
 	if (hasLoadedStory) {
 		engine.render();
 		if (engine?.renderer && typeof engine.renderer.refreshGraphView === "function") {
@@ -369,6 +372,11 @@ if (elements.undo) {
 	elements.undo.addEventListener("click", handleUndoClick);
 }
 
+if (elements.undoWarningToggle) {
+	elements.undoWarningToggle.addEventListener("click", handleUndoWarningToggleClick);
+	updateUndoWarningToggleState();
+}
+
 if (homeStart) {
 	homeStart.addEventListener("click", () => {
 		if (gameVisible) {
@@ -472,6 +480,33 @@ function updateUndoButtonState(status = {}) {
 	button.setAttribute("aria-disabled", shouldEnable ? "false" : "true");
 }
 
+function handleUndoWarningToggleClick() {
+	setIgnoreUndoWarning(!ignoreUndoWarning);
+}
+
+function setIgnoreUndoWarning(shouldIgnore) {
+	const nextValue = Boolean(shouldIgnore);
+	if (ignoreUndoWarning === nextValue) {
+		updateUndoWarningToggleState();
+		return;
+	}
+	ignoreUndoWarning = nextValue;
+	updateUndoWarningToggleState();
+}
+
+function updateUndoWarningToggleState() {
+	const toggle = elements.undoWarningToggle;
+	if (!toggle) {
+		return;
+	}
+	const pressed = Boolean(ignoreUndoWarning);
+	toggle.setAttribute("aria-pressed", pressed ? "true" : "false");
+	const labelKey = pressed ? "common.undoWarningDisable" : "common.undoWarningEnable";
+	const textKey = pressed ? "common.undoWarningToggleOn" : "common.undoWarningToggleOff";
+	toggle.textContent = t(textKey);
+	toggle.setAttribute("aria-label", t(labelKey));
+}
+
 function handleUndoClick() {
 	const button = elements.undo;
 	if (!button || button.disabled) {
@@ -483,9 +518,11 @@ function handleUndoClick() {
 		return;
 	}
 
-	const firstPrompt = t("messages.undoPromptPrimary");
-	if (!window.confirm(firstPrompt)) {
-		return;
+	if (!ignoreUndoWarning) {
+		const firstPrompt = t("messages.undoPromptPrimary");
+		if (!window.confirm(firstPrompt)) {
+			return;
+		}
 	}
 
 	const undone = engine.undoLastChoice();

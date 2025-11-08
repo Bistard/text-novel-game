@@ -169,10 +169,6 @@ export class StoryEngine {
 			}
 			this.state.setCurrentBranch(nextBranchId);
 
-			if (this.choiceHistory.length > 1) {
-				this.choiceHistory.splice(0, this.choiceHistory.length - 1);
-			}
-
 			this.render();
 		} catch (error) {
 			this.choiceHistory.splice(previousHistoryLength);
@@ -229,7 +225,6 @@ export class StoryEngine {
 			return false;
 		}
 
-		this.clearUndoHistory({ silent: true });
 		this.state.restoreSnapshot(snapshot);
 		this.render();
 		return true;
